@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react"
+import emailjs from '@emailjs/browser'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -21,30 +22,33 @@ export default function ContactPage() {
     e.preventDefault()
     setIsSubmitting(true)
     
-    // Create a mailto link with all the information
-    const subject = `Contact Form - ${formData.subject}`
-    const body = `
-CUSTOMER DETAILS:
-Name: ${formData.name}
-Email: ${formData.email}
-Phone: ${formData.phone}
-Subject: ${formData.subject}
+    try {
+      // Initialize EmailJS (only needs to be done once)
+      emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || '')
 
-MESSAGE:
-${formData.message}
+      const templateParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject,
+        message: formData.message,
+        to_email: 'parker@drakehomesllc.com',
+      }
 
----
-This message was sent from your Drake Homes LLC contact form.
-    `.trim()
-
-    const mailtoLink = `mailto:parker@drakehomesllc.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-    
-    // Open user's email client
-    window.location.href = mailtoLink
-    
-    setSubmitStatus('success')
-    setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
-    setIsSubmitting(false)
+      await emailjs.send(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || '',
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID_CONTACT || '',
+        templateParams
+      )
+      
+      setSubmitStatus('success')
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
+    } catch (error) {
+      console.error('Email send failed:', error)
+      setSubmitStatus('error')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
