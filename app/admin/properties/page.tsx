@@ -1500,102 +1500,99 @@ export default function AdminProperties() {
         {/* Properties Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProperties.map((property) => (
-            <Card key={property.id} className={`hover:shadow-lg transition-all duration-200 relative border-2 ${selectedProperties.has(property.id) ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200' : 'hover:border-gray-300'}`}>
-              <CardContent className="p-5">
-                {/* Selection Checkbox */}
-                <div className="absolute top-3 left-3 z-10">
+            <Card key={property.id} className={`hover:shadow-md transition-shadow duration-200 border ${selectedProperties.has(property.id) ? 'ring-2 ring-blue-500 border-blue-300 bg-blue-50' : 'hover:border-gray-300'}`}>
+              <CardContent className="p-4">
+                {/* Header with Checkbox and Title */}
+                <div className="flex items-start gap-3 mb-3">
                   <button
                     onClick={() => togglePropertySelection(property.id)}
-                    className="p-1 rounded bg-white/90 backdrop-blur-sm hover:bg-white transition-colors shadow-sm"
+                    className="mt-1 p-0.5 rounded hover:bg-gray-100 transition-colors"
                   >
                     {selectedProperties.has(property.id) ? (
                       <CheckSquare className="w-4 h-4 text-blue-600" />
                     ) : (
-                      <Square className="w-4 h-4 text-gray-600" />
+                      <Square className="w-4 h-4 text-gray-400" />
                     )}
                   </button>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1 line-clamp-2">{property.title}</h3>
+                    <p className="text-lg font-bold text-green-600">{property.price}</p>
+                  </div>
                 </div>
                 
-                {/* Property Info */}
-                <div className="space-y-3">
-                  {/* Title and Price */}
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-gray-900 text-base line-clamp-2 leading-tight">{property.title}</h3>
-                    <p className="text-xl font-bold text-green-600">{property.price}</p>
+                {/* Location */}
+                <div className="flex items-center text-gray-600 mb-3">
+                  <MapPin className="w-3 h-3 mr-1.5 flex-shrink-0" />
+                  <p className="text-sm line-clamp-1">{property.location}</p>
+                </div>
+                
+                {/* Property Details - Simple Row */}
+                <div className="flex items-center justify-between text-sm text-gray-700 mb-3 py-2 px-3 bg-gray-50 rounded-md">
+                  <div className="flex items-center">
+                    <Bed className="w-3 h-3 mr-1" />
+                    <span className="font-medium">{property.beds} bed</span>
                   </div>
-                  
-                  {/* Location */}
-                  <div className="flex items-center text-gray-600">
-                    <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
-                    <p className="text-sm line-clamp-1">{property.location}</p>
+                  <div className="flex items-center">
+                    <Bath className="w-3 h-3 mr-1" />
+                    <span className="font-medium">{property.baths} bath</span>
                   </div>
-                  
-                  {/* Property Details with Icons */}
-                  <div className="grid grid-cols-3 gap-2 py-2 text-sm text-gray-700">
-                    <div className="flex items-center justify-center bg-gray-50 rounded-md py-1">
-                      <Bed className="w-3 h-3 mr-1" />
-                      <span className="font-medium">{property.beds}</span>
-                    </div>
-                    <div className="flex items-center justify-center bg-gray-50 rounded-md py-1">
-                      <Bath className="w-3 h-3 mr-1" />
-                      <span className="font-medium">{property.baths}</span>
-                    </div>
-                    <div className="flex items-center justify-center bg-gray-50 rounded-md py-1">
-                      <Square className="w-3 h-3 mr-1" />
-                      <span className="font-medium text-xs">{property.sqft}</span>
-                    </div>
+                  <div className="flex items-center">
+                    <Square className="w-3 h-3 mr-1" />
+                    <span className="font-medium">{property.sqft}</span>
                   </div>
-                  
-                  {/* Status and Completion */}
-                  <div className="flex items-center justify-between">
-                    <Badge 
-                      className={`text-xs px-2 py-1 ${
-                        property.status === 'Move-In Ready' ? 'bg-green-500' :
-                        property.status === 'Nearly Complete' ? 'bg-blue-500' :
-                        property.status === 'Under Construction' ? 'bg-orange-500' :
-                        'bg-purple-500'
-                      } text-white`}
-                    >
-                      {property.status}
-                    </Badge>
-                    <p className="text-xs text-red-600 font-medium">{property.completion_date}</p>
-                  </div>
-                  
-                  {/* Features */}
-                  {property.features.length > 0 && (
+                </div>
+                
+                {/* Status and Date Row */}
+                <div className="flex items-center justify-between mb-3">
+                  <Badge 
+                    className={`text-xs px-2 py-1 font-medium ${
+                      property.status === 'Move-In Ready' ? 'bg-green-500' :
+                      property.status === 'Nearly Complete' ? 'bg-blue-500' :
+                      property.status === 'Under Construction' ? 'bg-orange-500' :
+                      'bg-purple-500'
+                    } text-white`}
+                  >
+                    {property.status}
+                  </Badge>
+                  <span className="text-xs text-gray-600">{property.completion_date}</span>
+                </div>
+                
+                {/* Features - Simplified */}
+                {property.features.length > 0 && (
+                  <div className="mb-4">
                     <div className="flex flex-wrap gap-1">
                       {property.features.slice(0, 2).map((feature, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs px-2 py-0.5">
+                        <span key={index} className="inline-block text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
                           {feature}
-                        </Badge>
+                        </span>
                       ))}
                       {property.features.length > 2 && (
-                        <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                        <span className="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
                           +{property.features.length - 2} more
-                        </Badge>
+                        </span>
                       )}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
                 
                 {/* Action Buttons */}
-                <div className="flex gap-2 mt-4 pt-3 border-t border-gray-200">
+                <div className="flex gap-2 pt-3 border-t border-gray-100">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1 h-8 text-sm font-medium"
+                    className="flex-1 h-8 text-xs"
                     onClick={() => startEdit(property)}
                   >
-                    <Edit className="w-4 h-4 mr-1" />
+                    <Edit className="w-3 h-3 mr-1" />
                     Edit
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-8 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    className="h-8 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
                     onClick={() => handleDelete(property.id)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 h-3" />
                   </Button>
                 </div>
               </CardContent>
