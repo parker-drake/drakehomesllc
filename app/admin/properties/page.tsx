@@ -364,7 +364,7 @@ export default function AdminProperties() {
     setIsAddingNew(true)
     setEditingProperty(null)
     setPropertyImages([])
-    resetForm()
+    resetFormDataOnly()
   }
 
   const resetForm = () => {
@@ -386,6 +386,24 @@ export default function AdminProperties() {
     setEditingProperty(null)
     setIsAddingNew(false)
     setPropertyImages([])
+  }
+
+  const resetFormDataOnly = () => {
+    setFormData({
+      title: '',
+      price: '',
+      location: '',
+      beds: 0,
+      baths: 0,
+      sqft: '',
+      main_image: '',
+      status: 'Pre-Construction',
+      description: '',
+      features: [],
+      completion_date: '',
+      latitude: 0,
+      longitude: 0
+    })
   }
 
   const addFeature = () => {
