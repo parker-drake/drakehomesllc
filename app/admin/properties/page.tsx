@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon, Star, StarOff, ArrowLeft, Search, Filter, SlidersHorizontal, RotateCcw, Check, CheckSquare, Square, Users, Edit2, Trash } from "lucide-react"
+import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon, Star, StarOff, ArrowLeft, Search, Filter, SlidersHorizontal, RotateCcw, Check, CheckSquare, Square, Users, Edit2, Trash, MapPin, Bed, Bath } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { v4 as uuidv4 } from "uuid"
 import Image from "next/image"
@@ -1498,10 +1498,10 @@ export default function AdminProperties() {
         )}
 
         {/* Properties Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProperties.map((property) => (
-            <Card key={property.id} className={`hover:shadow-lg transition-shadow relative ${selectedProperties.has(property.id) ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
-              <CardContent className="p-4">
+            <Card key={property.id} className={`hover:shadow-lg transition-all duration-200 relative border-2 ${selectedProperties.has(property.id) ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200' : 'hover:border-gray-300'}`}>
+              <CardContent className="p-5">
                 {/* Selection Checkbox */}
                 <div className="absolute top-2 left-2 z-10">
                   <button
@@ -1517,8 +1517,8 @@ export default function AdminProperties() {
                 </div>
 
                 {/* Property Image */}
-                {property.main_image && (
-                  <div className="relative w-full h-32 mb-3 rounded-md overflow-hidden">
+                {property.main_image ? (
+                  <div className="relative w-full h-36 mb-4 rounded-lg overflow-hidden">
                     <Image
                       src={property.main_image}
                       alt={property.title}
@@ -1526,73 +1526,92 @@ export default function AdminProperties() {
                       className="object-cover"
                     />
                   </div>
+                ) : (
+                  <div className="w-full h-36 mb-4 rounded-lg bg-gray-100 flex items-center justify-center">
+                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                  </div>
                 )}
                 
                 {/* Property Info */}
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 leading-tight">{property.title}</h3>
-                  
-                  <p className="text-lg font-bold text-green-600">{property.price}</p>
-                  
-                  <p className="text-xs text-gray-600 line-clamp-1">{property.location}</p>
-                  
-                  {/* Beds/Baths/Sqft */}
-                  <div className="flex justify-between text-xs text-gray-600">
-                    <span>{property.beds}br</span>
-                    <span>{property.baths}ba</span>
-                    <span>{property.sqft}</span>
+                <div className="space-y-3">
+                  {/* Title and Price */}
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-gray-900 text-base line-clamp-2 leading-tight">{property.title}</h3>
+                    <p className="text-xl font-bold text-green-600">{property.price}</p>
                   </div>
                   
-                  {/* Status Badge */}
-                  <Badge 
-                    className={`text-xs ${
-                      property.status === 'Move-In Ready' ? 'bg-green-500' :
-                      property.status === 'Nearly Complete' ? 'bg-blue-500' :
-                      property.status === 'Under Construction' ? 'bg-orange-500' :
-                      'bg-purple-500'
-                    } text-white`}
-                  >
-                    {property.status}
-                  </Badge>
+                  {/* Location */}
+                  <div className="flex items-center text-gray-600">
+                    <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
+                    <p className="text-sm line-clamp-1">{property.location}</p>
+                  </div>
                   
-                  {/* Features (max 2) */}
+                  {/* Property Details with Icons */}
+                  <div className="grid grid-cols-3 gap-2 py-2 text-sm text-gray-700">
+                    <div className="flex items-center justify-center bg-gray-50 rounded-md py-1">
+                      <Bed className="w-3 h-3 mr-1" />
+                      <span className="font-medium">{property.beds}</span>
+                    </div>
+                    <div className="flex items-center justify-center bg-gray-50 rounded-md py-1">
+                      <Bath className="w-3 h-3 mr-1" />
+                      <span className="font-medium">{property.baths}</span>
+                    </div>
+                    <div className="flex items-center justify-center bg-gray-50 rounded-md py-1">
+                      <Square className="w-3 h-3 mr-1" />
+                      <span className="font-medium text-xs">{property.sqft}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Status and Completion */}
+                  <div className="flex items-center justify-between">
+                    <Badge 
+                      className={`text-xs px-2 py-1 ${
+                        property.status === 'Move-In Ready' ? 'bg-green-500' :
+                        property.status === 'Nearly Complete' ? 'bg-blue-500' :
+                        property.status === 'Under Construction' ? 'bg-orange-500' :
+                        'bg-purple-500'
+                      } text-white`}
+                    >
+                      {property.status}
+                    </Badge>
+                    <p className="text-xs text-red-600 font-medium">{property.completion_date}</p>
+                  </div>
+                  
+                  {/* Features */}
                   {property.features.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {property.features.slice(0, 2).map((feature, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs px-1 py-0">
+                        <Badge key={index} variant="secondary" className="text-xs px-2 py-0.5">
                           {feature}
                         </Badge>
                       ))}
                       {property.features.length > 2 && (
-                        <Badge variant="secondary" className="text-xs px-1 py-0">
-                          +{property.features.length - 2}
+                        <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                          +{property.features.length - 2} more
                         </Badge>
                       )}
                     </div>
                   )}
-                  
-                  {/* Completion Date */}
-                  <p className="text-xs text-red-600">Due: {property.completion_date}</p>
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="flex gap-1 mt-3 pt-3 border-t border-gray-100">
+                <div className="flex gap-2 mt-4 pt-3 border-t border-gray-200">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1 h-7 text-xs"
+                    className="flex-1 h-8 text-sm font-medium"
                     onClick={() => startEdit(property)}
                   >
-                    <Edit className="w-3 h-3 mr-1" />
+                    <Edit className="w-4 h-4 mr-1" />
                     Edit
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="h-8 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
                     onClick={() => handleDelete(property.id)}
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </CardContent>
