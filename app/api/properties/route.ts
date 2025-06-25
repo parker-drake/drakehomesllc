@@ -17,8 +17,13 @@ export async function GET() {
       )
     }
 
-    // Features are already stored as JSON arrays in Supabase
-    return NextResponse.json(properties)
+    // Map main_image to image for frontend compatibility
+    const mappedProperties = properties.map(property => ({
+      ...property,
+      image: property.main_image
+    }))
+
+    return NextResponse.json(mappedProperties)
   } catch (error) {
     console.error('Error fetching properties:', error)
     return NextResponse.json(

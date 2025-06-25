@@ -20,7 +20,13 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(property)
+    // Map main_image to image for frontend compatibility
+    const mappedProperty = {
+      ...property,
+      image: property.main_image
+    }
+
+    return NextResponse.json(mappedProperty)
   } catch (error) {
     console.error('Error fetching property:', error)
     return NextResponse.json(
@@ -90,7 +96,13 @@ export async function PUT(
       )
     }
 
-    return NextResponse.json(property)
+    // Map main_image to image for frontend compatibility
+    const mappedProperty = {
+      ...property,
+      image: property.main_image
+    }
+
+    return NextResponse.json(mappedProperty)
   } catch (error) {
     console.error('Error updating property:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
