@@ -124,14 +124,14 @@ export default function AvailableHomes() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {properties.map((property) => (
             <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
-              <div className="relative">
+              <div className="relative overflow-hidden">
                 <Link href={`/available-homes/${property.id}`}>
                   <Image
                     src={property.image || "/placeholder.svg"}
                     alt={property.title}
                     width={400}
                     height={300}
-                    className="w-full h-64 object-cover cursor-pointer group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-56 object-cover cursor-pointer group-hover:scale-105 transition-transform duration-500"
                   />
                 </Link>
                 <Badge className={`absolute top-4 left-4 text-white ${getStatusColor(property.status)}`}>
@@ -140,7 +140,7 @@ export default function AvailableHomes() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-4 right-4 bg-white/80 hover:bg-white z-10"
+                  className="absolute top-4 right-4 bg-white/90 hover:bg-white z-10"
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -155,30 +155,37 @@ export default function AvailableHomes() {
                 </Button>
               </div>
 
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <div className="flex items-center text-gray-700 mb-4">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    <span className="text-base font-medium">{property.location}</span>
+              <CardContent className="p-5">
+                <div className="flex items-center text-gray-700 mb-4">
+                  <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+                  <span className="text-base font-medium">{property.location}</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 mb-5 text-sm">
+                  <div className="text-center">
+                    <div className="flex flex-col items-center">
+                      <Bed className="h-4 w-4 mb-1 text-gray-500" />
+                      <span className="text-gray-700 font-medium">{property.beds}</span>
+                      <span className="text-xs text-gray-500">beds</span>
+                    </div>
+                  </div>
+                  <div className="text-center border-x border-gray-200">
+                    <div className="flex flex-col items-center">
+                      <Bath className="h-4 w-4 mb-1 text-gray-500" />
+                      <span className="text-gray-700 font-medium">{property.baths}</span>
+                      <span className="text-xs text-gray-500">baths</span>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex flex-col items-center">
+                      <Square className="h-4 w-4 mb-1 text-gray-500" />
+                      <span className="text-gray-700 font-medium">{property.sqft}</span>
+                      <span className="text-xs text-gray-500">sqft</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mb-6 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <Bed className="h-4 w-4 mr-1" />
-                    <span>{property.beds} beds</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Bath className="h-4 w-4 mr-1" />
-                    <span>{property.baths} baths</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Square className="h-4 w-4 mr-1" />
-                    <span>{property.sqft} sqft</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   <div className="text-2xl font-bold text-green-600">{property.price}</div>
                   <Link href={`/available-homes/${property.id}`}>
                     <Button size="sm" className="bg-red-600 hover:bg-red-700">
