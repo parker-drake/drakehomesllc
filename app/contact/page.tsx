@@ -35,7 +35,7 @@ export default function ContactPage() {
         phone: formData.phone,
         subject: formData.subject,
         message: formData.message,
-        to_email: 'your-email@drakehomesllc.com', // Replace with your email
+        to_email: 'parker@drakehomesllc.com',
       }
 
       await emailjs.send(serviceId, templateId, templateParams, publicKey)

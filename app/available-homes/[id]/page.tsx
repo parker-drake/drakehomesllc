@@ -160,7 +160,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
         property_location: property?.location,
         property_id: property?.id,
         property_url: window.location.href,
-        to_email: 'your-email@drakehomesllc.com', // Replace with your email
+        to_email: 'parker@drakehomesllc.com',
       }
 
       await emailjs.send(serviceId, templateId, templateParams, publicKey)
