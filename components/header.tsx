@@ -9,6 +9,20 @@ import { Building } from "lucide-react"
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+  // Prevent body scroll when mobile menu is open
+  React.useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [mobileMenuOpen])
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex items-center justify-between h-20 px-4 md:px-6">
@@ -53,8 +67,8 @@ export function Header() {
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="md:hidden">
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed top-0 right-0 z-[60] h-full w-80 bg-white border-l border-gray-200 p-6 shadow-lg">
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
+          <div className="fixed top-0 right-0 z-[60] h-full w-80 bg-white border-l border-gray-200 p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2">
                 <img 
