@@ -156,21 +156,14 @@ export default function AvailableHomes() {
               </div>
 
               <CardContent className="p-6">
-                <Link href={`/available-homes/${property.id}`}>
-                  <div className="mb-4 cursor-pointer">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-red-600 transition-colors">
-                      {property.title}
-                    </h3>
-                    <div className="flex items-center text-gray-600 mb-2">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{property.location}</span>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">{property.description}</p>
-                    <p className="text-sm font-medium text-red-600">Expected Completion: {property.completion_date}</p>
+                <div className="mb-4">
+                  <div className="flex items-center text-gray-700 mb-4">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    <span className="text-base font-medium">{property.location}</span>
                   </div>
-                </Link>
+                </div>
 
-                <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
+                <div className="flex items-center justify-between mb-6 text-sm text-gray-600">
                   <div className="flex items-center">
                     <Bed className="h-4 w-4 mr-1" />
                     <span>{property.beds} beds</span>
@@ -185,32 +178,13 @@ export default function AvailableHomes() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {property.features.slice(0, 3).map((feature, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {feature}
-                    </Badge>
-                  ))}
-                  {property.features.length > 3 && (
-                    <Badge variant="secondary" className="text-xs">
-                      +{property.features.length - 3} more
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="text-xl sm:text-2xl font-bold text-green-600">{property.price}</div>
-                  <div className="flex gap-2 justify-end sm:justify-start">
-                    <Button variant="outline" size="sm" className="flex-1 sm:flex-initial">
-                      <Phone className="h-4 w-4 mr-1" />
-                      <span className="hidden xs:inline">Call</span>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold text-green-600">{property.price}</div>
+                  <Link href={`/available-homes/${property.id}`}>
+                    <Button size="sm" className="bg-red-600 hover:bg-red-700">
+                      View Details
                     </Button>
-                    <Link href={`/available-homes/${property.id}`} className="flex-1 sm:flex-initial">
-                      <Button size="sm" className="bg-red-600 hover:bg-red-700 w-full">
-                        View Details
-                      </Button>
-                    </Link>
-                  </div>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
