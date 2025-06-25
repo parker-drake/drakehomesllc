@@ -93,8 +93,9 @@ export async function PUT(
     return NextResponse.json(property)
   } catch (error) {
     console.error('Error updating property:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to update property', details: error.message || 'Unknown error' },
+      { error: 'Failed to update property', details: errorMessage },
       { status: 500 }
     )
   }

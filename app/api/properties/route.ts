@@ -87,8 +87,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(property, { status: 201 })
   } catch (error) {
     console.error('Error creating property:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to create property', details: error.message || 'Unknown error' },
+      { error: 'Failed to create property', details: errorMessage },
       { status: 500 }
     )
   }

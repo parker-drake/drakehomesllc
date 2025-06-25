@@ -332,7 +332,8 @@ export default function AdminProperties() {
       }
     } catch (error) {
       console.error('Error saving property:', error)
-      alert(`Network error saving property: ${error.message || 'Unknown error'}`)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Network error saving property: ${errorMessage}`)
     }
   }
 
