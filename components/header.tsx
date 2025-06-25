@@ -24,47 +24,49 @@ export function Header() {
   }, [mobileMenuOpen])
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex items-center justify-between h-20 px-4 md:px-6">
-        <Link href="/" className="flex items-center">
-          <img 
-            src="/DrakeHomes_Logo.jpg" 
-            alt="Drake Homes LLC Logo" 
-            className="h-16 w-auto object-contain"
-            onError={(e) => {
-              // Fallback to Building icon if logo not found
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-            }}
-          />
-          <Building className="w-8 h-8 hidden" />
-        </Link>
-        <nav className="hidden md:flex gap-6">
-          <Link href="/" className="text-sm font-medium hover:underline underline-offset-4">
-            Home
+    <>
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex items-center justify-between h-20 px-4 md:px-6">
+          <Link href="/" className="flex items-center">
+            <img 
+              src="/DrakeHomes_Logo.jpg" 
+              alt="Drake Homes LLC Logo" 
+              className="h-16 w-auto object-contain"
+              onError={(e) => {
+                // Fallback to Building icon if logo not found
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <Building className="w-8 h-8 hidden" />
           </Link>
-          <Link href="/available-homes" className="text-sm font-medium hover:underline underline-offset-4">
-            Available Homes
-          </Link>
-          <Link href="/gallery" className="text-sm font-medium hover:underline underline-offset-4">
-            Gallery
-          </Link>
-          <Link href="/about" className="text-sm font-medium hover:underline underline-offset-4">
-            About
-          </Link>
-          <Link href="/contact" className="text-sm font-medium hover:underline underline-offset-4">
-            Contact
-          </Link>
-        </nav>
-        <div className="flex items-center gap-4">
-          <Button asChild className="hidden md:flex bg-red-600 hover:bg-red-700">
-            <Link href="/contact">Get a Quote</Link>
-          </Button>
-          <MobileNav mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+          <nav className="hidden md:flex gap-6">
+            <Link href="/" className="text-sm font-medium hover:underline underline-offset-4">
+              Home
+            </Link>
+            <Link href="/available-homes" className="text-sm font-medium hover:underline underline-offset-4">
+              Available Homes
+            </Link>
+            <Link href="/gallery" className="text-sm font-medium hover:underline underline-offset-4">
+              Gallery
+            </Link>
+            <Link href="/about" className="text-sm font-medium hover:underline underline-offset-4">
+              About
+            </Link>
+            <Link href="/contact" className="text-sm font-medium hover:underline underline-offset-4">
+              Contact
+            </Link>
+          </nav>
+          <div className="flex items-center gap-4">
+            <Button asChild className="hidden md:flex bg-red-600 hover:bg-red-700">
+              <Link href="/contact">Get a Quote</Link>
+            </Button>
+            <MobileNav mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - Moved outside header */}
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-[9999]">
           <div className="absolute inset-0 bg-black bg-opacity-90" onClick={() => setMobileMenuOpen(false)} />
@@ -132,7 +134,7 @@ export function Header() {
           </div>
         </div>
       )}
-    </header>
+    </>
   )
 }
 
