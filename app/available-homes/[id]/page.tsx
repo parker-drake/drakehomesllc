@@ -22,7 +22,7 @@ import {
   ArrowLeft
 } from "lucide-react"
 import PropertyMap from "@/components/property-map"
-import emailjs from '@emailjs/browser'
+import emailjs from '@emailjs/browser' // EmailJS for contact forms
 
 interface Property {
   id: string

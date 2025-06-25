@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react"
-import emailjs from '@emailjs/browser'
+import emailjs from '@emailjs/browser' // EmailJS for contact forms
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
