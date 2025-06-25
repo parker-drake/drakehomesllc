@@ -1,12 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+interface PropertyImage {
+  id: string
+  image_url: string
+  is_main: boolean
+  display_order: number
+}
+
 // GET /api/properties - Get all properties
 export async function GET() {
   try {
     const { data: properties, error } = await supabaseAdmin
       .from('properties')
-      .select('*')
+      .select(`
+        *,
+        property_images (
+          id,
+          image_url,
+          is_main,
+          display_order
+        )
+      `)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -18,10 +33,26 @@ export async function GET() {
     }
 
     // Map main_image to image for frontend compatibility
-    const mappedProperties = properties.map(property => ({
-      ...property,
-      image: property.main_image
-    }))
+    const mappedProperties = properties.map(property => {
+      let imageUrl = property.main_image
+
+      // If no main_image, look for main image in property_images table
+      if (!imageUrl && property.property_images && property.property_images.length > 0) {
+        // First try to find image marked as main
+        const mainImage = property.property_images.find((img: PropertyImage) => img.is_main)
+        if (mainImage) {
+          imageUrl = mainImage.image_url
+        } else {
+          // If no main image marked, use first image
+          imageUrl = property.property_images[0].image_url
+        }
+      }
+
+      return {
+        ...property,
+        image: imageUrl
+      }
+    })
 
     return NextResponse.json(mappedProperties)
   } catch (error) {
