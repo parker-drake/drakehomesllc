@@ -98,10 +98,6 @@ export default function AvailableHomes() {
 
       {/* Properties Map */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Property Locations</h2>
-          <p className="text-gray-600">Explore our available homes across Wisconsin</p>
-        </div>
         {!loading && <PropertiesMap properties={properties} />}
       </div>
 
