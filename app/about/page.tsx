@@ -66,7 +66,7 @@ export default function AboutPage() {
             {/* Values Cards */}
             <div className="space-y-6">
               <Card className="border-l-4 border-l-red-600 h-32">
-                <CardContent className="p-6 h-full flex flex-col justify-center">
+                <CardContent className="p-6 h-full flex flex-col justify-center items-center text-center">
                   <div className="flex items-center gap-3 mb-3">
                     <CheckCircle className="w-6 h-6 text-red-600" />
                     <h3 className="text-xl font-semibold text-gray-900">Quality First</h3>
@@ -78,7 +78,7 @@ export default function AboutPage() {
               </Card>
 
               <Card className="border-l-4 border-l-red-600 h-32">
-                <CardContent className="p-6 h-full flex flex-col justify-center">
+                <CardContent className="p-6 h-full flex flex-col justify-center items-center text-center">
                   <div className="flex items-center gap-3 mb-3">
                     <Users className="w-6 h-6 text-red-600" />
                     <h3 className="text-xl font-semibold text-gray-900">Strong Partnerships</h3>
@@ -90,7 +90,7 @@ export default function AboutPage() {
               </Card>
 
               <Card className="border-l-4 border-l-red-600 h-32">
-                <CardContent className="p-6 h-full flex flex-col justify-center">
+                <CardContent className="p-6 h-full flex flex-col justify-center items-center text-center">
                   <div className="flex items-center gap-3 mb-3">
                     <Clock className="w-6 h-6 text-red-600" />
                     <h3 className="text-xl font-semibold text-gray-900">20+ Years Experience</h3>
