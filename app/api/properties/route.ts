@@ -49,9 +49,9 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Validate required fields (latitude, longitude, and main_image are optional)
-    if (!title || !price || !location || !beds || !baths || !sqft || !status || !description || !completion_date) {
+    if (!title || !price || !location || beds === undefined || beds === null || baths === undefined || baths === null || !sqft || !status || !description || !completion_date) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields. Required: title, price, location, beds, baths, sqft, status, description, completion_date' },
         { status: 400 }
       )
     }
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating property:', error)
     return NextResponse.json(
-      { error: 'Failed to create property' },
+      { error: 'Failed to create property', details: error.message || 'Unknown error' },
       { status: 500 }
     )
   }

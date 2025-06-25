@@ -53,6 +53,14 @@ export async function PUT(
       longitude
     } = body
 
+    // Validate required fields
+    if (!title || !price || !location || beds === undefined || beds === null || baths === undefined || baths === null || !sqft || !status || !description || !completion_date) {
+      return NextResponse.json(
+        { error: 'Missing required fields. Required: title, price, location, beds, baths, sqft, status, description, completion_date' },
+        { status: 400 }
+      )
+    }
+
     const { data: property, error } = await supabaseAdmin
       .from('properties')
       .update({
@@ -77,7 +85,7 @@ export async function PUT(
     if (error) {
       console.error('Supabase error:', error)
       return NextResponse.json(
-        { error: 'Failed to update property' },
+        { error: 'Failed to update property', details: error.message },
         { status: 500 }
       )
     }
@@ -86,7 +94,7 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating property:', error)
     return NextResponse.json(
-      { error: 'Failed to update property' },
+      { error: 'Failed to update property', details: error.message || 'Unknown error' },
       { status: 500 }
     )
   }

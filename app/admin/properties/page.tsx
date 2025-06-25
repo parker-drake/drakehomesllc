@@ -295,8 +295,16 @@ export default function AdminProperties() {
 
   const handleSave = async () => {
     try {
+      // Validate required fields
+      if (!formData.title || !formData.price || !formData.location) {
+        alert('Please fill in all required fields: Title, Price, and Location')
+        return
+      }
+
       const url = editingProperty ? `/api/properties/${editingProperty.id}` : '/api/properties'
       const method = editingProperty ? 'PUT' : 'POST'
+      
+      console.log('Saving property:', formData)
       
       const response = await fetch(url, {
         method,
@@ -309,12 +317,22 @@ export default function AdminProperties() {
       if (response.ok) {
         fetchProperties()
         resetForm()
+        alert('Property saved successfully!')
       } else {
-        alert('Error saving property')
+        try {
+          const errorData = await response.json()
+          console.error('Server error:', errorData)
+          const errorMessage = errorData.details || errorData.error || 'Unknown server error'
+          alert(`Error saving property: ${errorMessage}`)
+        } catch (parseError) {
+          const errorText = await response.text()
+          console.error('Server error:', errorText)
+          alert(`Error saving property: ${errorText || 'Unknown server error'}`)
+        }
       }
     } catch (error) {
       console.error('Error saving property:', error)
-      alert('Error saving property')
+      alert(`Network error saving property: ${error.message || 'Unknown error'}`)
     }
   }
 
