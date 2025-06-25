@@ -1051,6 +1051,120 @@ export default function AdminProperties() {
                   <p className="text-xs text-gray-500">West = negative, East = positive</p>
                 </div>
               </div>
+
+              {/* Property Information Section */}
+              <div className="bg-gray-50 rounded-lg p-6 space-y-4 mt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Information (Optional)</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Lot Size</label>
+                    <Input
+                      placeholder="e.g., 0.25 acres, 8,500 sq ft"
+                      value={formData.lot_size}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lot_size: e.target.value }))}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Year Built</label>
+                    <Input
+                      type="number"
+                      placeholder="e.g., 2024"
+                      value={formData.year_built || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, year_built: parseInt(e.target.value) || 0 }))}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Property Type</label>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={formData.property_type}
+                      onChange={(e) => setFormData(prev => ({ ...prev, property_type: e.target.value }))}
+                    >
+                      <option value="Single Family Home">Single Family Home</option>
+                      <option value="Townhome">Townhome</option>
+                      <option value="Condo">Condo</option>
+                      <option value="Duplex">Duplex</option>
+                      <option value="Custom Home">Custom Home</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Garage Spaces</label>
+                    <Input
+                      type="number"
+                      placeholder="e.g., 2"
+                      value={formData.garage_spaces || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, garage_spaces: parseInt(e.target.value) || 0 }))}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Heating & Cooling</label>
+                    <Input
+                      placeholder="e.g., Central Air, Heat Pump"
+                      value={formData.heating_cooling}
+                      onChange={(e) => setFormData(prev => ({ ...prev, heating_cooling: e.target.value }))}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Flooring Type</label>
+                    <Input
+                      placeholder="e.g., Hardwood, Carpet, Tile"
+                      value={formData.flooring_type}
+                      onChange={(e) => setFormData(prev => ({ ...prev, flooring_type: e.target.value }))}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">School District</label>
+                    <Input
+                      placeholder="e.g., Appleton Area School District"
+                      value={formData.school_district}
+                      onChange={(e) => setFormData(prev => ({ ...prev, school_district: e.target.value }))}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">HOA Fee</label>
+                    <Input
+                      placeholder="e.g., $150/month, None"
+                      value={formData.hoa_fee}
+                      onChange={(e) => setFormData(prev => ({ ...prev, hoa_fee: e.target.value }))}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Utilities Included</label>
+                    <Input
+                      placeholder="e.g., Water, Sewer, Electric"
+                      value={formData.utilities_included}
+                      onChange={(e) => setFormData(prev => ({ ...prev, utilities_included: e.target.value }))}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Exterior Materials</label>
+                    <Input
+                      placeholder="e.g., Brick, Vinyl Siding, Stone"
+                      value={formData.exterior_materials}
+                      onChange={(e) => setFormData(prev => ({ ...prev, exterior_materials: e.target.value }))}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              </div>
               
               {/* Image Management Section */}
               <div className="mt-6">
