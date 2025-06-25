@@ -53,6 +53,7 @@ export default function AdminProperties() {
   const [loading, setLoading] = useState(true)
   const [editingProperty, setEditingProperty] = useState<Property | null>(null)
   const [isAddingNew, setIsAddingNew] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({})
   const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([])
@@ -94,6 +95,22 @@ export default function AdminProperties() {
   useEffect(() => {
     filterAndSortProperties()
   }, [properties, searchTerm, statusFilter, priceRange, bedroomFilter, bathroomFilter, sortBy])
+
+  // Keyboard shortcut for opening add property modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === 'n') {
+        event.preventDefault()
+        startAddNew()
+      }
+      if (event.key === 'Escape' && showAddModal) {
+        resetForm()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showAddModal])
 
   const fetchProperties = async () => {
     try {
@@ -383,6 +400,7 @@ export default function AdminProperties() {
     setIsAddingNew(true)
     setEditingProperty(null)
     setPropertyImages([])
+    setShowAddModal(true)
     resetFormDataOnly()
   }
 
@@ -404,6 +422,7 @@ export default function AdminProperties() {
     })
     setEditingProperty(null)
     setIsAddingNew(false)
+    setShowAddModal(false)
     setPropertyImages([])
   }
 
@@ -661,10 +680,13 @@ export default function AdminProperties() {
             </Button>
             <h1 className="text-3xl font-bold text-gray-900">Property Management</h1>
           </div>
-          <Button onClick={startAddNew} className="bg-red-600 hover:bg-red-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Property
-          </Button>
+          <div className="relative">
+            <Button onClick={startAddNew} className="bg-red-600 hover:bg-red-700 shadow-lg hover:shadow-xl transition-all duration-200 scale-105 hover:scale-110">
+              <Plus className="w-5 h-5 mr-2" />
+              Add New Property
+            </Button>
+            <div className="absolute -bottom-6 right-0 text-xs text-gray-500">Ctrl+N</div>
+          </div>
         </div>
 
         {/* Quick Stats */}
@@ -883,14 +905,12 @@ export default function AdminProperties() {
           </div>
         )}
 
-        {/* Add/Edit Form */}
-        {(isAddingNew || editingProperty) && (
+        {/* Edit Form (inline for existing properties) */}
+        {editingProperty && !showAddModal && (
           <Card className="mb-8">
             <CardContent className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">
-                  {editingProperty ? 'Edit Property' : 'Add New Property'}
-                </h2>
+                <h2 className="text-xl font-semibold">Edit Property</h2>
                 <Button variant="ghost" onClick={resetForm}>
                   <X className="w-4 h-4" />
                 </Button>
@@ -1193,6 +1213,290 @@ export default function AdminProperties() {
           </Card>
         )}
 
+        {/* Add New Property Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-t-xl">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold">Add New Property</h2>
+                    <p className="text-red-100 mt-1">Create a new property listing for your portfolio</p>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={resetForm}
+                    className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Property Title *</label>
+                      <Input
+                        placeholder="e.g., Modern Family Home - Willowbrook"
+                        value={formData.title}
+                        onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Price *</label>
+                      <Input
+                        placeholder="e.g., $850,000"
+                        value={formData.price}
+                        onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Location *</label>
+                      <Input
+                        placeholder="e.g., Willowbrook Subdivision, TX"
+                        value={formData.location}
+                        onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Square Feet *</label>
+                      <Input
+                        placeholder="e.g., 2,650"
+                        value={formData.sqft}
+                        onChange={(e) => setFormData(prev => ({ ...prev, sqft: e.target.value }))}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">Bedrooms *</label>
+                        <Input
+                          type="number"
+                          placeholder="4"
+                          value={formData.beds}
+                          onChange={(e) => setFormData(prev => ({ ...prev, beds: parseInt(e.target.value) || 0 }))}
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">Bathrooms *</label>
+                        <Input
+                          type="number"
+                          placeholder="3"
+                          value={formData.baths}
+                          onChange={(e) => setFormData(prev => ({ ...prev, baths: parseInt(e.target.value) || 0 }))}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Status *</label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value={formData.status}
+                        onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                      >
+                        {statusOptions.map(status => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Completion Date *</label>
+                      <Input
+                        placeholder="e.g., March 2025"
+                        value={formData.completion_date}
+                        onChange={(e) => setFormData(prev => ({ ...prev, completion_date: e.target.value }))}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Property Image Upload */}
+                <div className="mt-6">
+                  <label className="text-sm font-medium text-gray-700 mb-4 block">Property Main Image</label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+                    {formData.main_image ? (
+                      <div className="space-y-4">
+                        <div className="relative w-full h-48 rounded-lg overflow-hidden mx-auto max-w-md">
+                          <Image
+                            src={formData.main_image}
+                            alt="Property preview"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex gap-3 justify-center">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFormData(prev => ({ ...prev, main_image: '' }))}
+                          >
+                            <X className="w-4 h-4 mr-2" />
+                            Remove Image
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById('modal-image-upload')?.click()}
+                            disabled={uploading}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {uploading ? 'Uploading...' : 'Change Image'}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
+                          <ImageIcon className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => document.getElementById('modal-image-upload')?.click()}
+                            disabled={uploading}
+                            className="bg-white"
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {uploading ? 'Uploading...' : 'Upload Main Image'}
+                          </Button>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          Upload a high-quality main image for your property<br />
+                          PNG, JPG, GIF up to 5MB • You can add more images after creating the property
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    id="modal-image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="mt-6">
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Property Description *</label>
+                  <textarea
+                    className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Describe your property's key features, location benefits, and what makes it special..."
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  />
+                </div>
+
+                {/* Features */}
+                <div className="mt-6">
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="text-sm font-medium text-gray-700">Property Features</label>
+                    <Button type="button" variant="outline" size="sm" onClick={addFeature}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Feature
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 min-h-[2.5rem] p-3 border border-input rounded-md bg-gray-50">
+                    {formData.features.length > 0 ? (
+                      formData.features.map((feature, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-red-100"
+                          onClick={() => removeFeature(index)}
+                        >
+                          {feature} <X className="w-3 h-3 ml-1" />
+                        </Badge>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">Click "Add Feature" to add property features like "Granite Counters", "2-Car Garage", etc.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Coordinates (Optional) */}
+                <div className="mt-6">
+                  <label className="text-sm font-medium text-gray-700 mb-3 block">Map Coordinates (Optional)</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Input
+                        type="number"
+                        step="0.000001"
+                        placeholder="Latitude (e.g., 44.2623)"
+                        value={formData.latitude === 0 ? '' : formData.latitude}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            latitude: value === '' ? 0 : parseFloat(value) 
+                          }))
+                        }}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">North = positive, South = negative</p>
+                    </div>
+                    <div>
+                      <Input
+                        type="number"
+                        step="0.000001"
+                        placeholder="Longitude (e.g., -88.4071)"
+                        value={formData.longitude === 0 ? '' : formData.longitude}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            longitude: value === '' ? 0 : parseFloat(value) 
+                          }))
+                        }}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">West = negative, East = positive</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Actions */}
+                <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+                  <p className="text-sm text-gray-500">* Required fields</p>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={resetForm} className="min-w-[100px]">
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleSave} 
+                      className="bg-red-600 hover:bg-red-700 min-w-[140px]"
+                      disabled={!formData.title || !formData.price || !formData.location}
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Create Property
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Properties Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProperties.map((property) => (
@@ -1304,8 +1608,8 @@ export default function AdminProperties() {
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
             <p className="text-gray-600 mb-4">Try adjusting your search or filters.</p>
-            <Button onClick={startAddNew} className="bg-red-600 hover:bg-red-700">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button onClick={startAddNew} className="bg-red-600 hover:bg-red-700 shadow-lg hover:shadow-xl transition-all duration-200">
+              <Plus className="w-5 h-5 mr-2" />
               Add Your First Property
             </Button>
           </div>
