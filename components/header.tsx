@@ -66,9 +66,9 @@ export function Header() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed top-0 right-0 z-[60] h-full w-80 bg-white border-l border-gray-200 p-6 shadow-2xl">
+        <div className="md:hidden fixed inset-0 z-[9999]">
+          <div className="absolute inset-0 bg-black bg-opacity-90" onClick={() => setMobileMenuOpen(false)} />
+          <div className="absolute top-0 right-0 h-full w-80 bg-white p-6 shadow-2xl overflow-y-auto">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2">
                 <img 
