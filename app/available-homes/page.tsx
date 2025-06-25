@@ -5,10 +5,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Heart, MapPin, Bed, Bath, Square, Search, Filter, Phone, Mail } from "lucide-react"
+import { Heart, MapPin, Bed, Bath, Square, Phone, Mail } from "lucide-react"
 import PropertiesMap from "@/components/properties-map"
 
 interface Property {
@@ -93,41 +92,7 @@ export default function AvailableHomes() {
             </p>
           </div>
 
-          {/* Search Filters */}
-          <div className="bg-gray-50 rounded-lg p-4 md:p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="relative sm:col-span-2 lg:col-span-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input placeholder="Search by community..." className="pl-10 h-12" />
-              </div>
-              <Select>
-                <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Home Style" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="traditional">Traditional</SelectItem>
-                  <SelectItem value="modern">Modern</SelectItem>
-                  <SelectItem value="craftsman">Craftsman</SelectItem>
-                  <SelectItem value="colonial">Colonial</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select>
-                <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Price Range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="500k-750k">$500k - $750k</SelectItem>
-                  <SelectItem value="750k-1m">$750k - $1M</SelectItem>
-                  <SelectItem value="1m-1.5m">$1M - $1.5M</SelectItem>
-                  <SelectItem value="1.5m+">$1.5M+</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button className="w-full bg-red-600 hover:bg-red-700 h-12 text-base font-medium">
-                <Filter className="w-4 h-4 mr-2" />
-                Search Homes
-              </Button>
-            </div>
-          </div>
+
         </div>
       </div>
 
