@@ -3,9 +3,8 @@
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowRight, Award, Building, CheckCircle, Clock, Mail, MapPin, Phone, ChevronLeft, ChevronRight, Bed, Bath, Square } from "lucide-react"
+import { ArrowRight, Award, CheckCircle, Clock, Mail, MapPin, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 
 interface Property {
   id: string
@@ -35,8 +34,8 @@ export default function Home() {
       const response = await fetch('/api/properties')
       if (response.ok) {
         const data = await response.json()
-        // Get up to 6 properties for the slider
-        setProperties(data.slice(0, 6))
+        // Get up to 4 properties for the background slider
+        setProperties(data.slice(0, 4))
       }
     } catch (error) {
       console.error('Error fetching properties:', error)
@@ -45,35 +44,72 @@ export default function Home() {
     }
   }
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % Math.max(1, properties.length - 2))
-  }
+  // Auto-advance the slider
+  useEffect(() => {
+    if (properties.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentSlide((prev) => {
+          const maxSlides = Math.min(4, properties.length)
+          return (prev + 1) % maxSlides
+        })
+      }, 5000) // Change image every 5 seconds
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + Math.max(1, properties.length - 2)) % Math.max(1, properties.length - 2))
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Move-In Ready":
-        return "bg-green-500"
-      case "Nearly Complete":
-        return "bg-blue-500"
-      case "Under Construction":
-        return "bg-orange-500"
-      case "Pre-Construction":
-        return "bg-purple-500"
-      default:
-        return "bg-gray-500"
+      return () => clearInterval(timer)
     }
-  }
+  }, [properties.length])
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
-      <section className="relative w-full py-16 md:py-24 lg:py-32 xl:py-48 min-h-[60vh] md:min-h-[70vh] flex items-center">
+      {/* Hero Section with Background Image Slider */}
+      <section className="relative w-full py-16 md:py-24 lg:py-32 xl:py-48 min-h-[60vh] md:min-h-[70vh] flex items-center overflow-hidden">
+        {/* Background Image Slider */}
         <div className="absolute inset-0 z-0">
-          <div className="bg-gradient-to-r from-red-600 to-red-800 w-full h-full opacity-90"></div>
+          {loading ? (
+            <div className="bg-gradient-to-r from-red-600 to-red-800 w-full h-full opacity-90"></div>
+          ) : properties.length > 0 ? (
+            <>
+              {/* Background Images */}
+              {properties.slice(0, 4).map((property, index) => (
+                <div
+                  key={property.id}
+                  className={`absolute inset-0 transition-opacity duration-1000 ${
+                    index === currentSlide ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  {property.image ? (
+                    <Image
+                      src={property.image}
+                      alt={property.title}
+                      fill
+                      className="object-cover"
+                      priority={index === 0}
+                    />
+                  ) : (
+                    <div className="bg-gradient-to-r from-red-600 to-red-800 w-full h-full"></div>
+                  )}
+                  <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+                </div>
+              ))}
+              
+              {/* Navigation Dots */}
+              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20">
+                <div className="flex space-x-2">
+                  {properties.slice(0, 4).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentSlide(index)}
+                      className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                        index === currentSlide ? 'bg-white' : 'bg-white/50'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="bg-gradient-to-r from-red-600 to-red-800 w-full h-full opacity-90"></div>
+          )}
         </div>
+
         <div className="container relative z-10 px-4 md:px-6 w-full">
           <div className="flex flex-col items-start gap-6 text-white md:gap-8 md:max-w-[60%]">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter leading-tight">
@@ -159,146 +195,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Properties Slider */}
-      <section className="py-16 md:py-24 bg-gray-50">
-        <div className="container px-4 md:px-6">
-          <div className="text-center space-y-6 mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">Featured Available Homes</h2>
-            <p className="max-w-[600px] text-gray-600 text-lg mx-auto">
-              Discover our latest quality homes ready for your family.
-            </p>
-          </div>
-          
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="text-gray-500">Loading properties...</div>
-            </div>
-          ) : properties.length > 0 ? (
-            <div className="relative">
-              {/* Slider Container */}
-              <div className="overflow-hidden">
-                <div 
-                  className="flex transition-transform duration-500 ease-in-out"
-                  style={{ transform: `translateX(-${currentSlide * (100 / 3)}%)` }}
-                >
-                  {properties.map((property) => (
-                    <div key={property.id} className="w-full md:w-1/3 flex-shrink-0 px-4">
-                      <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 h-full">
-                        {/* Property Image */}
-                        <div className="relative h-48 overflow-hidden">
-                          {property.image ? (
-                            <Image
-                              src={property.image}
-                              alt={property.title}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="h-full bg-gray-200 flex items-center justify-center">
-                              <Building className="w-12 h-12 text-gray-400" />
-                            </div>
-                          )}
-                          <Badge 
-                            className={`absolute top-4 left-4 text-white ${getStatusColor(property.status)}`}
-                          >
-                            {property.status}
-                          </Badge>
-                        </div>
-                        
-                        {/* Property Details */}
-                        <div className="p-6">
-                          <h3 className="text-xl font-bold mb-2 line-clamp-2">{property.title}</h3>
-                          <p className="text-2xl font-bold text-green-600 mb-3">{property.price}</p>
-                          
-                          <div className="flex items-center text-gray-600 mb-4">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            <span className="text-sm line-clamp-1">{property.location}</span>
-                          </div>
-                          
-                          <div className="flex items-center justify-between text-sm text-gray-700 mb-4">
-                            <div className="flex items-center">
-                              <Bed className="w-4 h-4 mr-1" />
-                              <span>{property.beds} bed</span>
-                            </div>
-                            <div className="flex items-center">
-                              <Bath className="w-4 h-4 mr-1" />
-                              <span>{property.baths} bath</span>
-                            </div>
-                            <div className="flex items-center">
-                              <Square className="w-4 h-4 mr-1" />
-                              <span>{property.sqft}</span>
-                            </div>
-                          </div>
-                          
-                          <p className="text-gray-600 text-sm mb-4 line-clamp-2">{property.description}</p>
-                          
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-red-600 font-medium">
-                              Available: {property.completion_date}
-                            </span>
-                            <Button size="sm" asChild className="bg-red-600 hover:bg-red-700">
-                              <Link href={`/available-homes/${property.id}`}>
-                                View Details
-                              </Link>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Navigation Arrows */}
-              {properties.length > 3 && (
-                <>
-                  <button
-                    onClick={prevSlide}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow duration-200 z-10"
-                  >
-                    <ChevronLeft className="w-6 h-6 text-gray-600" />
-                  </button>
-                  <button
-                    onClick={nextSlide}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow duration-200 z-10"
-                  >
-                    <ChevronRight className="w-6 h-6 text-gray-600" />
-                  </button>
-                </>
-              )}
-              
-              {/* Slide Indicators */}
-              {properties.length > 3 && (
-                <div className="flex justify-center space-x-2 mt-8">
-                  {Array.from({ length: Math.max(1, properties.length - 2) }).map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentSlide(index)}
-                      className={`w-3 h-3 rounded-full transition-colors duration-200 ${
-                        index === currentSlide ? 'bg-red-600' : 'bg-gray-300'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-center">
-              <Building className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">No properties available at the moment.</p>
-            </div>
-          )}
-          
-          <div className="text-center mt-12">
-            <Button size="lg" asChild className="bg-red-600 hover:bg-red-700">
-              <Link href="/available-homes">
-                View All Available Homes
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+
 
       {/* Contact Section */}
       <section className="py-16 md:py-24 bg-red-600 text-white">
