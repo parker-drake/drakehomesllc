@@ -68,4 +68,25 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+}
+
+/* Custom styles for Leaflet popup links */
+.leaflet-popup-content a {
+  color: white !important;
+  text-decoration: none !important;
+}
+
+.leaflet-popup-content a:hover {
+  color: white !important;
+  text-decoration: none !important;
+}
+
+.custom-popup .leaflet-popup-content a {
+  color: white !important;
+  text-decoration: none !important;
+}
+
+.custom-popup .leaflet-popup-content a:hover {
+  color: white !important;
+  text-decoration: none !important;
 } 
