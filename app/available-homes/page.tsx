@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Heart, MapPin, Bed, Bath, Square, Search, Filter, Phone, Mail } from "lucide-react"
+import PropertiesMap from "@/components/properties-map"
 
 interface Property {
   id: string
@@ -128,6 +129,15 @@ export default function AvailableHomes() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Properties Map */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Property Locations</h2>
+          <p className="text-gray-600">Explore our available homes across Wisconsin</p>
+        </div>
+        {!loading && <PropertiesMap properties={properties} />}
       </div>
 
       {/* Properties Grid */}
