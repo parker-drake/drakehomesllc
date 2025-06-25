@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react"
+import emailjs from '@emailjs/browser'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -21,12 +22,28 @@ export default function ContactPage() {
     e.preventDefault()
     setIsSubmitting(true)
     
-    // Simulate form submission (replace with actual email service)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // EmailJS configuration - you'll get these from your EmailJS dashboard
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'your_service_id'
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID_CONTACT || 'your_contact_template_id'
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'your_public_key'
+
+      // Prepare template parameters
+      const templateParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject,
+        message: formData.message,
+        to_email: 'your-email@drakehomesllc.com', // Replace with your email
+      }
+
+      await emailjs.send(serviceId, templateId, templateParams, publicKey)
+      
       setSubmitStatus('success')
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
     } catch (error) {
+      console.error('Email send failed:', error)
       setSubmitStatus('error')
     } finally {
       setIsSubmitting(false)

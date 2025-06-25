@@ -22,6 +22,7 @@ import {
   ArrowLeft
 } from "lucide-react"
 import PropertyMap from "@/components/property-map"
+import emailjs from '@emailjs/browser'
 
 interface Property {
   id: string
@@ -70,6 +71,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     phone: '',
     message: `I'm interested in learning more about ${property?.title || 'this property'}.`
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     fetchProperty()
@@ -137,16 +139,45 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     }
   }
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would integrate with your email service
-    alert('Thank you for your interest! We will contact you soon.')
-    setContactForm({
-      name: '',
-      email: '',
-      phone: '',
-      message: `I'm interested in learning more about ${property?.title}.`
-    })
+    setIsSubmitting(true)
+
+    try {
+      // EmailJS configuration - you'll get these from your EmailJS dashboard
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'your_service_id'
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID_PROPERTY || 'your_property_template_id'
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'your_public_key'
+
+      // Prepare template parameters
+      const templateParams = {
+        from_name: contactForm.name,
+        from_email: contactForm.email,
+        phone: contactForm.phone,
+        message: contactForm.message,
+        property_title: property?.title,
+        property_price: property?.price,
+        property_location: property?.location,
+        property_id: property?.id,
+        property_url: window.location.href,
+        to_email: 'your-email@drakehomesllc.com', // Replace with your email
+      }
+
+      await emailjs.send(serviceId, templateId, templateParams, publicKey)
+      
+      alert('Thank you for your interest! We will contact you soon.')
+      setContactForm({
+        name: '',
+        email: '',
+        phone: '',
+        message: `I'm interested in learning more about ${property?.title}.`
+      })
+    } catch (error) {
+      console.error('Email send failed:', error)
+      alert('Sorry, there was an error sending your message. Please try calling us directly at (920) 555-0123.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleShare = () => {
@@ -426,9 +457,18 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                       onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
                       required
                     />
-                    <Button type="submit" className="w-full bg-red-600 hover:bg-red-700">
-                      <Mail className="w-4 h-4 mr-2" />
-                      Send Inquiry
+                    <Button type="submit" disabled={isSubmitting} className="w-full bg-red-600 hover:bg-red-700">
+                      {isSubmitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="w-4 h-4 mr-2" />
+                          Send Inquiry
+                        </>
+                      )}
                     </Button>
                   </form>
                   
