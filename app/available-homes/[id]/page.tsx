@@ -175,7 +175,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
       })
     } catch (error) {
       console.error('Email send failed:', error)
-      alert('Sorry, there was an error sending your message. Please try again or call us at (920) 555-0123.')
+      alert('Sorry, there was an error sending your message. Please try again or call us at (920) 740-6660.')
     } finally {
       setIsSubmitting(false)
     }
@@ -476,7 +476,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                   <div className="mt-6 pt-6 border-t">
                     <Button variant="outline" className="w-full mb-3">
                       <Phone className="w-4 h-4 mr-2" />
-                      Call (555) 123-4567
+                      Call (920) 740-6660
                     </Button>
                     <Button variant="outline" className="w-full">
                       Schedule a Tour

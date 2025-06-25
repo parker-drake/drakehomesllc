@@ -163,7 +163,7 @@ export default function ContactPage() {
                         type="tel"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        placeholder="(920) 555-0123"
+                        placeholder="(920) 740-6660"
                         className="h-12"
                       />
                     </div>
