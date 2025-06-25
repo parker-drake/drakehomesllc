@@ -473,7 +473,6 @@ export default function AdminDashboard() {
                         </div>
                         <Badge 
                           className={`${getStatusColor(property.status)} text-white text-xs mt-2`}
-                          size="sm"
                         >
                           {property.status}
                         </Badge>
