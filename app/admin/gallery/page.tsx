@@ -326,6 +326,37 @@ function UploadImageModal({ onClose, onSubmit, uploading, error }: {
   uploading: boolean
   error: string
 }) {
+  const [selectedCategory, setSelectedCategory] = useState('')
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    
+    // Validate required fields
+    if (!selectedCategory) {
+      return // Don't submit if category is not selected
+    }
+    
+    const form = e.currentTarget
+    const formData = new FormData(form)
+    
+    // Add the selected category to form data
+    formData.set('category', selectedCategory)
+    
+    // Create a synthetic event to pass to the original handler
+    const syntheticEvent = {
+      ...e,
+      currentTarget: {
+        ...form,
+        reset: () => {
+          form.reset()
+          setSelectedCategory('')
+        }
+      }
+    } as React.FormEvent<HTMLFormElement>
+    
+    onSubmit(syntheticEvent)
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-md w-full p-6">
@@ -342,7 +373,7 @@ function UploadImageModal({ onClose, onSubmit, uploading, error }: {
           </div>
         )}
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Image File *
@@ -372,7 +403,11 @@ function UploadImageModal({ onClose, onSubmit, uploading, error }: {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Category *
             </label>
-            <Select name="category" required disabled={uploading}>
+            <Select 
+              value={selectedCategory} 
+              onValueChange={setSelectedCategory}
+              disabled={uploading}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
@@ -384,6 +419,9 @@ function UploadImageModal({ onClose, onSubmit, uploading, error }: {
                 ))}
               </SelectContent>
             </Select>
+            {!selectedCategory && (
+              <p className="text-red-500 text-xs mt-1">Category is required</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
