@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Mail, Phone, MapPin, Clock, Send } from "lucide-react"
+import { Mail, Phone, MapPin, Send } from "lucide-react"
 import emailjs from '@emailjs/browser'
 
 export default function ContactPage() {
@@ -83,8 +83,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">Phone</h3>
-                      <p className="text-gray-600">(920) 555-0123</p>
-                      <p className="text-sm text-gray-500">Mon-Fri 8AM-6PM</p>
+                      <p className="text-gray-600">(920) 740-6660</p>
                     </div>
                   </div>
 
@@ -105,30 +104,9 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">Location</h3>
-                      <p className="text-gray-600">Appleton, Wisconsin</p>
-                      <p className="text-sm text-gray-500">Serving Fox Valley & surrounding areas</p>
+                      <p className="text-gray-600">Fox Valley and surrounding areas</p>
                     </div>
                   </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="bg-red-100 p-3 rounded-full">
-                      <Clock className="w-5 h-5 text-red-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Business Hours</h3>
-                      <p className="text-gray-600">Monday - Friday: 8AM - 6PM</p>
-                      <p className="text-gray-600">Saturday: 9AM - 4PM</p>
-                      <p className="text-gray-600">Sunday: Closed</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-8 p-4 bg-red-50 rounded-lg">
-                  <h3 className="font-semibold text-red-800 mb-2">Emergency Services</h3>
-                  <p className="text-sm text-red-700">
-                    For urgent construction emergencies, call us at (920) 555-0123. 
-                    We provide 24/7 emergency response services.
-                  </p>
                 </div>
               </CardContent>
             </Card>
