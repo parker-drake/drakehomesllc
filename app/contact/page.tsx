@@ -83,7 +83,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">Phone</h3>
-                      <p className="text-gray-600">(920) 740-6660 OR (920) 224-5620</p>
+                      <p className="text-gray-600">(920) 740-6660 or (920) 224-5620</p>
                     </div>
                   </div>
 
