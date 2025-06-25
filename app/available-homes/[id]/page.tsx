@@ -1,0 +1,449 @@
+"use client"
+
+import React, { useState, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { 
+  Heart, 
+  MapPin, 
+  Bed, 
+  Bath, 
+  Square, 
+  Phone, 
+  Mail, 
+  Share2, 
+  ChevronLeft,
+  Calendar,
+  Check,
+  ArrowLeft
+} from "lucide-react"
+import PropertyMap from "@/components/property-map"
+
+interface Property {
+  id: string
+  title: string
+  price: string
+  location: string
+  beds: number
+  baths: number
+  sqft: string
+  image?: string
+  status: string
+  description: string
+  features: string[]
+  completion_date: string
+  latitude?: number
+  longitude?: number
+  created_at: string
+  updated_at: string
+}
+
+interface PropertyPageProps {
+  params: {
+    id: string
+  }
+}
+
+export default function PropertyPage({ params }: PropertyPageProps) {
+  const [property, setProperty] = useState<Property | null>(null)
+  const [relatedProperties, setRelatedProperties] = useState<Property[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: `I'm interested in learning more about ${property?.title || 'this property'}.`
+  })
+
+  useEffect(() => {
+    fetchProperty()
+    fetchRelatedProperties()
+  }, [params.id])
+
+  useEffect(() => {
+    if (property) {
+      setContactForm(prev => ({
+        ...prev,
+        message: `I'm interested in learning more about ${property.title}.`
+      }))
+    }
+  }, [property])
+
+  const fetchProperty = async () => {
+    try {
+      const response = await fetch(`/api/properties/${params.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        // Ensure features is always an array and never undefined
+        const cleanedData = {
+          ...data,
+          features: Array.isArray(data.features) ? data.features : [],
+          latitude: data.latitude || null,
+          longitude: data.longitude || null
+        }
+        setProperty(cleanedData)
+      } else {
+        console.error('Property not found')
+      }
+    } catch (error) {
+      console.error('Error fetching property:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchRelatedProperties = async () => {
+    try {
+      const response = await fetch('/api/properties')
+      if (response.ok) {
+        const data = await response.json()
+        // Filter out current property and show only 3 related ones
+        const filtered = data.filter((p: Property) => p.id !== params.id).slice(0, 3)
+        setRelatedProperties(filtered)
+      }
+    } catch (error) {
+      console.error('Error fetching related properties:', error)
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Move-In Ready":
+        return "bg-green-500"
+      case "Nearly Complete":
+        return "bg-blue-500"
+      case "Under Construction":
+        return "bg-orange-500"
+      case "Pre-Construction":
+        return "bg-purple-500"
+      default:
+        return "bg-gray-500"
+    }
+  }
+
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Here you would integrate with your email service
+    alert('Thank you for your interest! We will contact you soon.')
+    setContactForm({
+      name: '',
+      email: '',
+      phone: '',
+      message: `I'm interested in learning more about ${property?.title}.`
+    })
+  }
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: property?.title,
+        text: property?.description,
+        url: window.location.href,
+      })
+    } else {
+      // Fallback - copy to clipboard
+      navigator.clipboard.writeText(window.location.href)
+      alert('Link copied to clipboard!')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-lg">Loading property details...</p>
+      </div>
+    )
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Property Not Found</h1>
+          <Link href="/available-homes">
+            <Button>← Back to Available Homes</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumb Navigation */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Link href="/" className="hover:text-red-600">Home</Link>
+            <span>/</span>
+            <Link href="/available-homes" className="hover:text-red-600">Available Homes</Link>
+            <span>/</span>
+            <span className="text-gray-900 font-medium">{property.title}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content - Left Column */}
+          <div className="lg:col-span-2">
+            {/* Back Button */}
+            <Link href="/available-homes">
+              <Button variant="outline" className="mb-6">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Available Homes
+              </Button>
+            </Link>
+
+            {/* Property Images */}
+            <div className="relative mb-8">
+              <div className="relative h-96 w-full rounded-lg overflow-hidden">
+                <Image
+                  src={property.image || "/placeholder.svg"}
+                  alt={property.title}
+                  fill
+                  className="object-cover"
+                />
+                <Badge className={`absolute top-4 left-4 text-white ${getStatusColor(property.status)}`}>
+                  {property.status}
+                </Badge>
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="bg-white/80 hover:bg-white"
+                    onClick={() => setIsFavorite(!isFavorite)}
+                  >
+                    <Heart className={`h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="bg-white/80 hover:bg-white"
+                    onClick={handleShare}
+                  >
+                    <Share2 className="h-4 w-4 text-gray-600" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Property Details */}
+            <div className="bg-white rounded-lg p-6 mb-8">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
+                  <div className="flex items-center text-gray-600 mb-4">
+                    <MapPin className="h-5 w-5 mr-2" />
+                    <span className="text-lg">{property.location}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-bold text-green-600 mb-2">{property.price}</div>
+                  <div className="flex items-center text-gray-600">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    <span>{property.completion_date}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Property Stats */}
+              <div className="grid grid-cols-3 gap-6 mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Bed className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{property.beds}</div>
+                  <div className="text-sm text-gray-600">Bedrooms</div>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Bath className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{property.baths}</div>
+                  <div className="text-sm text-gray-600">Bathrooms</div>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Square className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{property.sqft}</div>
+                  <div className="text-sm text-gray-600">Square Feet</div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-3">About This Home</h2>
+                <p className="text-gray-700 leading-relaxed">{property.description}</p>
+              </div>
+
+              {/* Features */}
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-3">Features & Amenities</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {property.features.map((feature, index) => (
+                    <div key={index} className="flex items-center">
+                      <Check className="h-4 w-4 text-green-600 mr-2" />
+                      <span className="text-gray-700">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+                             </div>
+             </div>
+
+             {/* Location Map */}
+             <div className="bg-white rounded-lg p-6 mb-8">
+               <h2 className="text-xl font-semibold text-gray-900 mb-4">Location & Neighborhood</h2>
+               <PropertyMap
+                 location={property.location}
+                 title={property.title}
+                 price={property.price}
+                 latitude={property.latitude}
+                 longitude={property.longitude}
+               />
+               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                 <h3 className="font-medium text-gray-900 mb-2">About the Area</h3>
+                 <p className="text-gray-600 text-sm">
+                   This beautiful home is located in a desirable neighborhood with excellent schools, 
+                   convenient shopping, and easy access to major highways. The community offers a 
+                   peaceful suburban lifestyle while being close to urban amenities.
+                 </p>
+                 <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
+                   <div>
+                     <span className="font-medium text-gray-700">School District:</span>
+                     <p className="text-gray-600">Highly Rated Local Schools</p>
+                   </div>
+                   <div>
+                     <span className="font-medium text-gray-700">Community:</span>
+                     <p className="text-gray-600">Family-Friendly Neighborhood</p>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+
+           {/* Contact Form - Right Column */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24">
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact About This Property</h2>
+                  <form onSubmit={handleContactSubmit} className="space-y-4">
+                    <Input
+                      placeholder="Your Name"
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
+                    <Input
+                      type="email"
+                      placeholder="Email Address"
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                    <Input
+                      type="tel"
+                      placeholder="Phone Number"
+                      value={contactForm.phone}
+                      onChange={(e) => setContactForm(prev => ({ ...prev, phone: e.target.value }))}
+                    />
+                    <textarea
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[100px]"
+                      placeholder="Your message..."
+                      value={contactForm.message}
+                      onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                      required
+                    />
+                    <Button type="submit" className="w-full bg-red-600 hover:bg-red-700">
+                      <Mail className="w-4 h-4 mr-2" />
+                      Send Inquiry
+                    </Button>
+                  </form>
+                  
+                  <div className="mt-6 pt-6 border-t">
+                    <Button variant="outline" className="w-full mb-3">
+                      <Phone className="w-4 h-4 mr-2" />
+                      Call (555) 123-4567
+                    </Button>
+                    <Button variant="outline" className="w-full">
+                      Schedule a Tour
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Property Quick Facts */}
+              <Card className="mt-6">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">Quick Facts</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Property Type:</span>
+                      <span className="font-medium">Single Family Home</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Year Built:</span>
+                      <span className="font-medium">2024</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Lot Size:</span>
+                      <span className="font-medium">0.25 acres</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Builder:</span>
+                      <span className="font-medium">Drake Homes LLC</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+
+        {/* Related Properties */}
+        {relatedProperties.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold text-gray-900 mb-8">More Available Homes</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {relatedProperties.map((relatedProperty) => (
+                <Card key={relatedProperty.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <Link href={`/available-homes/${relatedProperty.id}`}>
+                    <div className="relative">
+                      <Image
+                        src={relatedProperty.image || "/placeholder.svg"}
+                        alt={relatedProperty.title}
+                        width={400}
+                        height={250}
+                        className="w-full h-48 object-cover"
+                      />
+                      <Badge className={`absolute top-3 left-3 text-white ${getStatusColor(relatedProperty.status)}`}>
+                        {relatedProperty.status}
+                      </Badge>
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold text-gray-900 mb-2">{relatedProperty.title}</h3>
+                      <p className="text-gray-600 text-sm mb-2">{relatedProperty.location}</p>
+                      <div className="flex justify-between items-center">
+                        <div className="text-lg font-bold text-green-600">{relatedProperty.price}</div>
+                        <div className="text-sm text-gray-600">
+                          {relatedProperty.beds}bd • {relatedProperty.baths}ba
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Link>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+} 

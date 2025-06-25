@@ -1,0 +1,1344 @@
+"use client"
+
+import React, { useState, useEffect } from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon, Star, StarOff, ArrowLeft, Search, Filter, SlidersHorizontal, RotateCcw, Check, CheckSquare, Square, Users, Edit2, Trash } from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import { v4 as uuidv4 } from "uuid"
+import Image from "next/image"
+
+interface PropertyImage {
+  id: string
+  property_id: string
+  image_url: string
+  is_main: boolean
+  display_order: number
+  alt_text?: string
+}
+
+interface Property {
+  id: string
+  title: string
+  price: string
+  location: string
+  beds: number
+  baths: number
+  sqft: string
+  main_image?: string
+  status: string
+  description: string
+  features: string[]
+  completion_date: string
+  latitude?: number
+  longitude?: number
+  created_at: string
+  updated_at: string
+  images?: PropertyImage[]
+}
+
+const statusOptions = [
+  "Move-In Ready",
+  "Under Construction", 
+  "Nearly Complete",
+  "Pre-Construction"
+]
+
+export default function AdminProperties() {
+  const [properties, setProperties] = useState<Property[]>([])
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([])
+  const [loading, setLoading] = useState(true)
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null)
+  const [isAddingNew, setIsAddingNew] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({})
+  const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([])
+
+  // Search and Filter States
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000000])
+  const [bedroomFilter, setBedroomFilter] = useState<string>('all')
+  const [bathroomFilter, setBathroomFilter] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<string>('newest')
+  const [showFilters, setShowFilters] = useState(false)
+
+  // Bulk Operations States
+  const [selectedProperties, setSelectedProperties] = useState<Set<string>>(new Set())
+  const [showBulkActions, setShowBulkActions] = useState(false)
+  const [bulkStatus, setBulkStatus] = useState<string>('')
+
+  const [formData, setFormData] = useState({
+    title: '',
+    price: '',
+    location: '',
+    beds: 0,
+    baths: 0,
+    sqft: '',
+    main_image: '',
+    status: 'Pre-Construction',
+    description: '',
+    features: [] as string[],
+    completion_date: '',
+    latitude: 0,
+    longitude: 0
+  })
+
+  useEffect(() => {
+    fetchProperties()
+  }, [])
+
+  useEffect(() => {
+    filterAndSortProperties()
+  }, [properties, searchTerm, statusFilter, priceRange, bedroomFilter, bathroomFilter, sortBy])
+
+  const fetchProperties = async () => {
+    try {
+      const response = await fetch('/api/properties')
+      if (response.ok) {
+        const data = await response.json()
+        // Ensure features is always an array and never undefined
+        const cleanedData = data.map((property: any) => ({
+          ...property,
+          features: Array.isArray(property.features) ? property.features : [],
+          latitude: property.latitude || 0,
+          longitude: property.longitude || 0
+        }))
+        setProperties(cleanedData)
+      }
+    } catch (error) {
+      console.error('Error fetching properties:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filterAndSortProperties = () => {
+    let filtered = properties.filter(property => {
+      // Search term filter
+      const searchMatch = searchTerm === '' || 
+        property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        property.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        property.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        property.features.some(feature => feature.toLowerCase().includes(searchTerm.toLowerCase()))
+
+      // Status filter
+      const statusMatch = statusFilter === 'all' || property.status === statusFilter
+
+      // Price range filter
+      const price = parseFloat(property.price.replace(/[$,]/g, ''))
+      const priceMatch = price >= priceRange[0] && price <= priceRange[1]
+
+      // Bedroom filter
+      const bedroomMatch = bedroomFilter === 'all' || property.beds.toString() === bedroomFilter
+
+      // Bathroom filter
+      const bathroomMatch = bathroomFilter === 'all' || property.baths.toString() === bathroomFilter
+
+      return searchMatch && statusMatch && priceMatch && bedroomMatch && bathroomMatch
+    })
+
+    // Sort properties
+    filtered = filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'price-low':
+          return parseFloat(a.price.replace(/[$,]/g, '')) - parseFloat(b.price.replace(/[$,]/g, ''))
+        case 'price-high':
+          return parseFloat(b.price.replace(/[$,]/g, '')) - parseFloat(a.price.replace(/[$,]/g, ''))
+        case 'title':
+          return a.title.localeCompare(b.title)
+        case 'location':
+          return a.location.localeCompare(b.location)
+        case 'completion':
+          return new Date(a.completion_date).getTime() - new Date(b.completion_date).getTime()
+        case 'oldest':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        case 'newest':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      }
+    })
+
+    setFilteredProperties(filtered)
+  }
+
+  const clearAllFilters = () => {
+    setSearchTerm('')
+    setStatusFilter('all')
+    setPriceRange([0, 2000000])
+    setBedroomFilter('all')
+    setBathroomFilter('all')
+    setSortBy('newest')
+  }
+
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (searchTerm !== '') count++
+    if (statusFilter !== 'all') count++
+    if (priceRange[0] !== 0 || priceRange[1] !== 2000000) count++
+    if (bedroomFilter !== 'all') count++
+    if (bathroomFilter !== 'all') count++
+    return count
+  }
+
+  // Bulk Operations Functions
+  const togglePropertySelection = (propertyId: string) => {
+    const newSelected = new Set(selectedProperties)
+    if (newSelected.has(propertyId)) {
+      newSelected.delete(propertyId)
+    } else {
+      newSelected.add(propertyId)
+    }
+    setSelectedProperties(newSelected)
+    setShowBulkActions(newSelected.size > 0)
+  }
+
+  const selectAllProperties = () => {
+    const allIds = new Set(filteredProperties.map(p => p.id))
+    setSelectedProperties(allIds)
+    setShowBulkActions(allIds.size > 0)
+  }
+
+  const clearSelection = () => {
+    setSelectedProperties(new Set())
+    setShowBulkActions(false)
+  }
+
+  const bulkUpdateStatus = async () => {
+    if (!bulkStatus || selectedProperties.size === 0) return
+
+    const confirmMessage = `Update ${selectedProperties.size} properties to "${bulkStatus}" status?`
+    if (!confirm(confirmMessage)) return
+
+    try {
+      const updatePromises = Array.from(selectedProperties).map(async (propertyId) => {
+        const response = await fetch(`/api/properties/${propertyId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            ...properties.find(p => p.id === propertyId),
+            status: bulkStatus 
+          }),
+        })
+        return response.ok
+      })
+
+      const results = await Promise.all(updatePromises)
+      const successCount = results.filter(Boolean).length
+
+      if (successCount === selectedProperties.size) {
+        alert(`Successfully updated ${successCount} properties`)
+        fetchProperties()
+        clearSelection()
+        setBulkStatus('')
+      } else {
+        alert(`Updated ${successCount} of ${selectedProperties.size} properties`)
+        fetchProperties()
+      }
+    } catch (error) {
+      console.error('Error updating properties:', error)
+      alert('Error updating properties')
+    }
+  }
+
+  const bulkDeleteProperties = async () => {
+    if (selectedProperties.size === 0) return
+
+    const confirmMessage = `Are you sure you want to delete ${selectedProperties.size} properties? This action cannot be undone.`
+    if (!confirm(confirmMessage)) return
+
+    try {
+      const deletePromises = Array.from(selectedProperties).map(async (propertyId) => {
+        const response = await fetch(`/api/properties/${propertyId}`, {
+          method: 'DELETE',
+        })
+        return response.ok
+      })
+
+      const results = await Promise.all(deletePromises)
+      const successCount = results.filter(Boolean).length
+
+      if (successCount === selectedProperties.size) {
+        alert(`Successfully deleted ${successCount} properties`)
+        fetchProperties()
+        clearSelection()
+      } else {
+        alert(`Deleted ${successCount} of ${selectedProperties.size} properties`)
+        fetchProperties()
+      }
+    } catch (error) {
+      console.error('Error deleting properties:', error)
+      alert('Error deleting properties')
+    }
+  }
+
+  const fetchPropertyImages = async (propertyId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('property_images')
+        .select('*')
+        .eq('property_id', propertyId)
+        .order('display_order')
+
+      if (error) throw error
+      setPropertyImages(data || [])
+    } catch (error) {
+      console.error('Error fetching property images:', error)
+      setPropertyImages([])
+    }
+  }
+
+  const handleSave = async () => {
+    try {
+      const url = editingProperty ? `/api/properties/${editingProperty.id}` : '/api/properties'
+      const method = editingProperty ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        fetchProperties()
+        resetForm()
+      } else {
+        alert('Error saving property')
+      }
+    } catch (error) {
+      console.error('Error saving property:', error)
+      alert('Error saving property')
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this property?')) {
+      try {
+        const response = await fetch(`/api/properties/${id}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          fetchProperties()
+        } else {
+          alert('Error deleting property')
+        }
+      } catch (error) {
+        console.error('Error deleting property:', error)
+        alert('Error deleting property')
+      }
+    }
+  }
+
+  const startEdit = (property: Property) => {
+    setEditingProperty(property)
+    setFormData({
+      title: property.title,
+      price: property.price,
+      location: property.location,
+      beds: property.beds,
+      baths: property.baths,
+      sqft: property.sqft,
+      main_image: property.main_image || '',
+      status: property.status,
+      description: property.description,
+      features: Array.isArray(property.features) ? property.features : [],
+      completion_date: property.completion_date,
+      latitude: property.latitude || 0,
+      longitude: property.longitude || 0
+    })
+    setIsAddingNew(false)
+    if (property.id) {
+      fetchPropertyImages(property.id)
+    }
+  }
+
+  const startAddNew = () => {
+    setIsAddingNew(true)
+    setEditingProperty(null)
+    setPropertyImages([])
+    resetForm()
+  }
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      price: '',
+      location: '',
+      beds: 0,
+      baths: 0,
+      sqft: '',
+      main_image: '',
+      status: 'Pre-Construction',
+      description: '',
+      features: [],
+      completion_date: '',
+      latitude: 0,
+      longitude: 0
+    })
+    setEditingProperty(null)
+    setIsAddingNew(false)
+    setPropertyImages([])
+  }
+
+  const addFeature = () => {
+    const feature = prompt('Enter feature:')
+    if (feature) {
+      setFormData(prev => ({
+        ...prev,
+        features: [...prev.features, feature]
+      }))
+    }
+  }
+
+  const removeFeature = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index)
+    }))
+  }
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      setUploading(true)
+      
+      // Check if file is valid
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file')
+        return null
+      }
+
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${uuidv4()}.${fileExt}`
+      
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('property-images')
+        .upload(fileName, file)
+
+      if (error) {
+        console.error('Upload error:', error)
+        console.log('Error details:', error.message)
+        
+        // Better error messaging
+        if (error.message.includes('bucket')) {
+          alert('Storage bucket not found. Please create "property-images" bucket in Supabase Storage.')
+        } else if (error.message.includes('policy')) {
+          alert('Storage policy error. Please check your Supabase Storage policies.')
+        } else {
+          alert(`Upload error: ${error.message}`)
+        }
+        return null
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('property-images')
+        .getPublicUrl(fileName)
+
+      return publicUrl
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Error uploading image. Check console for details.')
+      return null
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const addPropertyImage = async (imageUrl: string, isMain: boolean = false) => {
+    if (!editingProperty?.id) {
+      alert('Please save the property first before adding images')
+      return
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('property_images')
+        .insert({
+          property_id: editingProperty.id,
+          image_url: imageUrl,
+          is_main: isMain,
+          display_order: propertyImages.length,
+          alt_text: formData.title
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      await fetchPropertyImages(editingProperty.id)
+    } catch (error) {
+      console.error('Error adding property image:', error)
+      alert('Error adding image to property')
+    }
+  }
+
+  const setMainImage = async (imageId: string) => {
+    try {
+      const { error } = await supabase
+        .from('property_images')
+        .update({ is_main: true })
+        .eq('id', imageId)
+
+      if (error) throw error
+
+      if (editingProperty?.id) {
+        await fetchPropertyImages(editingProperty.id)
+      }
+    } catch (error) {
+      console.error('Error setting main image:', error)
+      alert('Error setting main image')
+    }
+  }
+
+  const deletePropertyImage = async (imageId: string) => {
+    if (!confirm('Are you sure you want to delete this image?')) return
+
+    try {
+      const { error } = await supabase
+        .from('property_images')
+        .delete()
+        .eq('id', imageId)
+
+      if (error) throw error
+
+      if (editingProperty?.id) {
+        await fetchPropertyImages(editingProperty.id)
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error)
+      alert('Error deleting image')
+    }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    // For new properties, only allow single file
+    if (!editingProperty?.id && files.length > 1) {
+      alert('Please save the property first to upload multiple images')
+      return
+    }
+
+    // Validate all files before uploading
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      if (!file.type.startsWith('image/')) {
+        alert(`File "${file.name}" is not an image file`)
+        return
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`File "${file.name}" must be smaller than 5MB`)
+        return
+      }
+    }
+
+    setUploading(true)
+    
+    if (!editingProperty?.id) {
+      // Single file for new property
+      const imageUrl = await uploadImage(files[0])
+      if (imageUrl) {
+        setFormData(prev => ({ ...prev, main_image: imageUrl }))
+      }
+    } else {
+      // Multiple files for existing property
+      await uploadMultipleImages(Array.from(files))
+    }
+    
+    setUploading(false)
+    // Clear the input
+    e.target.value = ''
+  }
+
+  const uploadMultipleImages = async (files: File[]) => {
+    const totalFiles = files.length
+    let successCount = 0
+    
+    // Reset progress
+    setUploadProgress({})
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      const fileId = `${file.name}-${i}`
+      
+      try {
+        // Update progress
+        setUploadProgress(prev => ({ ...prev, [fileId]: 0 }))
+        
+        const imageUrl = await uploadImage(file)
+        
+        if (imageUrl && editingProperty?.id) {
+          await addPropertyImage(imageUrl, propertyImages.length === 0 && i === 0)
+          successCount++
+          
+          // Update progress to complete
+          setUploadProgress(prev => ({ ...prev, [fileId]: 100 }))
+        } else {
+          setUploadProgress(prev => ({ ...prev, [fileId]: -1 })) // Error state
+        }
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error)
+        setUploadProgress(prev => ({ ...prev, [fileId]: -1 })) // Error state
+      }
+    }
+    
+    // Clear progress after delay
+    setTimeout(() => {
+      setUploadProgress({})
+    }, 2000)
+    
+    if (successCount > 0) {
+      alert(`Successfully uploaded ${successCount} of ${totalFiles} images`)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" asChild>
+              <Link href="/admin/dashboard">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </Button>
+            <h1 className="text-3xl font-bold text-gray-900">Property Management</h1>
+          </div>
+          <Button onClick={startAddNew} className="bg-red-600 hover:bg-red-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Property
+          </Button>
+        </div>
+
+        {/* Quick Stats */}
+        {properties.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg border p-3">
+              <div className="text-2xl font-bold text-gray-900">{properties.length}</div>
+              <div className="text-sm text-gray-600">Total Properties</div>
+            </div>
+            <div className="bg-white rounded-lg border p-3">
+              <div className="text-2xl font-bold text-green-600">
+                {properties.filter(p => p.status === 'Move-In Ready').length}
+              </div>
+              <div className="text-sm text-gray-600">Move-In Ready</div>
+            </div>
+            <div className="bg-white rounded-lg border p-3">
+              <div className="text-2xl font-bold text-orange-600">
+                {properties.filter(p => p.status === 'Under Construction').length}
+              </div>
+              <div className="text-sm text-gray-600">Under Construction</div>
+            </div>
+            <div className="bg-white rounded-lg border p-3">
+              <div className="text-2xl font-bold text-purple-600">
+                {properties.filter(p => p.status === 'Pre-Construction').length}
+              </div>
+              <div className="text-sm text-gray-600">Pre-Construction</div>
+            </div>
+          </div>
+        )}
+
+        {/* Search and Filters */}
+        {properties.length > 0 && (
+          <Card className="mb-6">
+            <CardContent className="p-4">
+              {/* Search Bar and Quick Controls */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Search properties by title, location, or features..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="flex items-center gap-2"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    Filters
+                    {getActiveFilterCount() > 0 && (
+                      <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 text-xs">
+                        {getActiveFilterCount()}
+                      </Badge>
+                    )}
+                  </Button>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-2 border border-input rounded-md text-sm bg-background"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="title">Title A-Z</option>
+                    <option value="location">Location A-Z</option>
+                    <option value="completion">Completion Date</option>
+                  </select>
+                  {getActiveFilterCount() > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={clearAllFilters}
+                      className="flex items-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Advanced Filters Panel */}
+              {showFilters && (
+                <div className="border-t pt-4 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Status Filter */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-input rounded-md text-sm bg-background"
+                      >
+                        <option value="all">All Status</option>
+                        <option value="Move-In Ready">Move-In Ready</option>
+                        <option value="Nearly Complete">Nearly Complete</option>
+                        <option value="Under Construction">Under Construction</option>
+                        <option value="Pre-Construction">Pre-Construction</option>
+                      </select>
+                    </div>
+
+                    {/* Bedrooms Filter */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Bedrooms</label>
+                      <select
+                        value={bedroomFilter}
+                        onChange={(e) => setBedroomFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-input rounded-md text-sm bg-background"
+                      >
+                        <option value="all">Any Bedrooms</option>
+                        <option value="1">1 Bedroom</option>
+                        <option value="2">2 Bedrooms</option>
+                        <option value="3">3 Bedrooms</option>
+                        <option value="4">4 Bedrooms</option>
+                        <option value="5">5+ Bedrooms</option>
+                      </select>
+                    </div>
+
+                    {/* Bathrooms Filter */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Bathrooms</label>
+                      <select
+                        value={bathroomFilter}
+                        onChange={(e) => setBathroomFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-input rounded-md text-sm bg-background"
+                      >
+                        <option value="all">Any Bathrooms</option>
+                        <option value="1">1 Bathroom</option>
+                        <option value="2">2 Bathrooms</option>
+                        <option value="3">3 Bathrooms</option>
+                        <option value="4">4 Bathrooms</option>
+                        <option value="5">5+ Bathrooms</option>
+                      </select>
+                    </div>
+
+                    {/* Price Range */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Price Range: ${priceRange[0].toLocaleString()} - ${priceRange[1].toLocaleString()}
+                      </label>
+                      <div className="space-y-2">
+                        <input
+                          type="range"
+                          min="0"
+                          max="2000000"
+                          step="50000"
+                          value={priceRange[0]}
+                          onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <input
+                          type="range"
+                          min="0"
+                          max="2000000"
+                          step="50000"
+                          value={priceRange[1]}
+                          onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Results Summary */}
+              <div className="flex justify-between items-center text-sm text-gray-600 mt-4 pt-4 border-t">
+                <span>
+                  Showing {filteredProperties.length} of {properties.length} properties
+                </span>
+                {searchTerm && (
+                  <span>
+                    Search results for "{searchTerm}"
+                  </span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Bulk Selection Controls */}
+        {properties.length > 0 && (
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => filteredProperties.length === selectedProperties.size ? clearSelection() : selectAllProperties()}
+                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+              >
+                {filteredProperties.length === selectedProperties.size && selectedProperties.size > 0 ? (
+                  <CheckSquare className="w-4 h-4" />
+                ) : (
+                  <Square className="w-4 h-4" />
+                )}
+                {selectedProperties.size > 0 ? 'Deselect All' : 'Select All'}
+              </button>
+              {selectedProperties.size > 0 && (
+                <span className="text-sm text-gray-600">
+                  {selectedProperties.size} property{selectedProperties.size !== 1 ? 'ies' : ''} selected
+                </span>
+              )}
+            </div>
+            {selectedProperties.size > 0 && (
+              <Button
+                variant="outline"
+                onClick={clearSelection}
+                size="sm"
+              >
+                <X className="w-4 h-4 mr-1" />
+                Clear Selection
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Add/Edit Form */}
+        {(isAddingNew || editingProperty) && (
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">
+                  {editingProperty ? 'Edit Property' : 'Add New Property'}
+                </h2>
+                <Button variant="ghost" onClick={resetForm}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  placeholder="Property Title"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                />
+                <Input
+                  placeholder="Price (e.g., $850,000)"
+                  value={formData.price}
+                  onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                />
+                <Input
+                  placeholder="Location"
+                  value={formData.location}
+                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                />
+                <Input
+                  placeholder="Square Feet"
+                  value={formData.sqft}
+                  onChange={(e) => setFormData(prev => ({ ...prev, sqft: e.target.value }))}
+                />
+                <Input
+                  type="number"
+                  placeholder="Bedrooms"
+                  value={formData.beds}
+                  onChange={(e) => setFormData(prev => ({ ...prev, beds: parseInt(e.target.value) || 0 }))}
+                />
+                <Input
+                  type="number"
+                  placeholder="Bathrooms"
+                  value={formData.baths}
+                  onChange={(e) => setFormData(prev => ({ ...prev, baths: parseInt(e.target.value) || 0 }))}
+                />
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.status}
+                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                >
+                  {statusOptions.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+                <Input
+                  placeholder="Completion Date"
+                  value={formData.completion_date}
+                  onChange={(e) => setFormData(prev => ({ ...prev, completion_date: e.target.value }))}
+                />
+                <div className="space-y-2">
+                  <Input
+                    type="number"
+                    step="0.000001"
+                    placeholder="Latitude (e.g., 44.2623)"
+                    value={formData.latitude === 0 ? '' : formData.latitude}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        latitude: value === '' ? 0 : parseFloat(value) 
+                      }))
+                    }}
+                  />
+                  <p className="text-xs text-gray-500">North = positive, South = negative</p>
+                </div>
+                <div className="space-y-2">
+                  <Input
+                    type="number"
+                    step="0.000001"
+                    placeholder="Longitude (e.g., -88.4071)"
+                    value={formData.longitude === 0 ? '' : formData.longitude}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        longitude: value === '' ? 0 : parseFloat(value) 
+                      }))
+                    }}
+                  />
+                  <p className="text-xs text-gray-500">West = negative, East = positive</p>
+                </div>
+              </div>
+              
+              {/* Image Management Section */}
+              <div className="mt-6">
+                <label className="text-sm font-medium mb-4 block">Property Images</label>
+                
+                {editingProperty ? (
+                  // Existing property - show gallery management
+                  <div className="space-y-4">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                      <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => document.getElementById('image-upload')?.click()}
+                          disabled={uploading}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          {uploading ? 'Uploading...' : 'Upload Images'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => document.getElementById('single-image-upload')?.click()}
+                          disabled={uploading}
+                        >
+                          <ImageIcon className="w-4 h-4 mr-2" />
+                          Single Image
+                        </Button>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-3">
+                        Upload multiple images at once • PNG, JPG, GIF up to 5MB each
+                      </p>
+                      
+                      {/* Upload Progress */}
+                      {Object.keys(uploadProgress).length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          <p className="text-sm font-medium text-gray-700">Upload Progress:</p>
+                          {Object.entries(uploadProgress).map(([fileId, progress]) => {
+                            const fileName = fileId.split('-')[0]
+                            return (
+                              <div key={fileId} className="flex items-center gap-2 text-sm">
+                                <span className="truncate max-w-[200px]">{fileName}</span>
+                                {progress === -1 ? (
+                                  <span className="text-red-500">Failed</span>
+                                ) : progress === 100 ? (
+                                  <span className="text-green-500">Complete</span>
+                                ) : (
+                                  <span className="text-blue-500">Uploading...</span>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Images Gallery */}
+                    {propertyImages.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {propertyImages.map((image, index) => (
+                          <div key={image.id} className="relative group">
+                            <div className="relative aspect-square rounded-lg overflow-hidden">
+                              <Image
+                                src={image.image_url}
+                                alt={image.alt_text || `Property image ${index + 1}`}
+                                fill
+                                className="object-cover"
+                              />
+                              {image.is_main && (
+                                <div className="absolute top-2 left-2 bg-yellow-500 text-white p-1 rounded">
+                                  <Star className="w-4 h-4" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-white text-black hover:bg-gray-100"
+                                  onClick={() => setMainImage(image.id)}
+                                  disabled={image.is_main}
+                                >
+                                  {image.is_main ? <Star className="w-4 h-4" /> : <StarOff className="w-4 h-4" />}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-white text-red-600 hover:bg-red-50"
+                                  onClick={() => deletePropertyImage(image.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // New property - single main image upload
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    {formData.main_image ? (
+                      <div className="space-y-4">
+                        <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                          <Image
+                            src={formData.main_image}
+                            alt="Property preview"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFormData(prev => ({ ...prev, main_image: '' }))}
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Remove Image
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById('image-upload')?.click()}
+                            disabled={uploading}
+                          >
+                            <Upload className="w-4 h-4 mr-1" />
+                            {uploading ? 'Uploading...' : 'Change Image'}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <ImageIcon className="w-12 h-12 mx-auto text-gray-400" />
+                        <div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => document.getElementById('image-upload')?.click()}
+                            disabled={uploading}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {uploading ? 'Uploading...' : 'Upload Main Image'}
+                          </Button>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          Start with a main image, add more after saving
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <input
+                  id="single-image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </div>
+              
+              <textarea
+                className="w-full mt-4 min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Property Description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              />
+              
+              <div className="mt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium">Features</label>
+                  <Button type="button" variant="outline" size="sm" onClick={addFeature}>
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add Feature
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {formData.features.map((feature, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="cursor-pointer"
+                      onClick={() => removeFeature(index)}
+                    >
+                      {feature} ×
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex gap-2 mt-6">
+                <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Property
+                </Button>
+                <Button variant="outline" onClick={resetForm}>
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Properties Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredProperties.map((property) => (
+            <Card key={property.id} className={`hover:shadow-lg transition-shadow relative ${selectedProperties.has(property.id) ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
+              <CardContent className="p-4">
+                {/* Selection Checkbox */}
+                <div className="absolute top-2 left-2 z-10">
+                  <button
+                    onClick={() => togglePropertySelection(property.id)}
+                    className="p-1 rounded bg-white/80 backdrop-blur-sm hover:bg-white/90 transition-colors"
+                  >
+                    {selectedProperties.has(property.id) ? (
+                      <CheckSquare className="w-4 h-4 text-blue-600" />
+                    ) : (
+                      <Square className="w-4 h-4 text-gray-600" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Property Image */}
+                {property.main_image && (
+                  <div className="relative w-full h-32 mb-3 rounded-md overflow-hidden">
+                    <Image
+                      src={property.main_image}
+                      alt={property.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                
+                {/* Property Info */}
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 leading-tight">{property.title}</h3>
+                  
+                  <p className="text-lg font-bold text-green-600">{property.price}</p>
+                  
+                  <p className="text-xs text-gray-600 line-clamp-1">{property.location}</p>
+                  
+                  {/* Beds/Baths/Sqft */}
+                  <div className="flex justify-between text-xs text-gray-600">
+                    <span>{property.beds}br</span>
+                    <span>{property.baths}ba</span>
+                    <span>{property.sqft}</span>
+                  </div>
+                  
+                  {/* Status Badge */}
+                  <Badge 
+                    className={`text-xs ${
+                      property.status === 'Move-In Ready' ? 'bg-green-500' :
+                      property.status === 'Nearly Complete' ? 'bg-blue-500' :
+                      property.status === 'Under Construction' ? 'bg-orange-500' :
+                      'bg-purple-500'
+                    } text-white`}
+                    size="sm"
+                  >
+                    {property.status}
+                  </Badge>
+                  
+                  {/* Features (max 2) */}
+                  {property.features.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {property.features.slice(0, 2).map((feature, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs px-1 py-0">
+                          {feature}
+                        </Badge>
+                      ))}
+                      {property.features.length > 2 && (
+                        <Badge variant="secondary" className="text-xs px-1 py-0">
+                          +{property.features.length - 2}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Completion Date */}
+                  <p className="text-xs text-red-600">Due: {property.completion_date}</p>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-1 mt-3 pt-3 border-t border-gray-100">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 h-7 text-xs"
+                    onClick={() => startEdit(property)}
+                  >
+                    <Edit className="w-3 h-3 mr-1" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleDelete(property.id)}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        {/* Empty State */}
+        {filteredProperties.length === 0 && (
+          <div className="text-center py-12">
+            <div className="bg-gray-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+              <Plus className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
+            <p className="text-gray-600 mb-4">Try adjusting your search or filters.</p>
+            <Button onClick={startAddNew} className="bg-red-600 hover:bg-red-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Your First Property
+            </Button>
+          </div>
+        )}
+
+        {/* Bulk Actions Toolbar */}
+        {showBulkActions && (
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+            <Card className="shadow-lg border-2 border-blue-200 bg-white">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-blue-600" />
+                    <span className="font-medium text-gray-900">
+                      {selectedProperties.size} property{selectedProperties.size !== 1 ? 'ies' : ''} selected
+                    </span>
+                  </div>
+                  
+                  <div className="h-6 w-px bg-gray-300"></div>
+                  
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={bulkStatus}
+                      onChange={(e) => setBulkStatus(e.target.value)}
+                      className="px-3 py-1.5 border border-input rounded text-sm bg-background"
+                    >
+                      <option value="">Update Status...</option>
+                      <option value="Move-In Ready">Move-In Ready</option>
+                      <option value="Nearly Complete">Nearly Complete</option>
+                      <option value="Under Construction">Under Construction</option>
+                      <option value="Pre-Construction">Pre-Construction</option>
+                    </select>
+                    
+                    <Button
+                      onClick={bulkUpdateStatus}
+                      disabled={!bulkStatus}
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Edit2 className="w-4 h-4 mr-1" />
+                      Update
+                    </Button>
+                  </div>
+                  
+                  <div className="h-6 w-px bg-gray-300"></div>
+                  
+                  <Button
+                    onClick={bulkDeleteProperties}
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                  
+                  <Button
+                    onClick={clearSelection}
+                    variant="ghost"
+                    size="sm"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+} 
