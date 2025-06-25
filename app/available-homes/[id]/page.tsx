@@ -17,12 +17,20 @@ import {
   Mail, 
   Share2, 
   ChevronLeft,
+  ChevronRight,
   Calendar,
   Check,
   ArrowLeft
 } from "lucide-react"
 import PropertyMap from "@/components/property-map"
 import emailjs from '@emailjs/browser'
+
+interface PropertyImage {
+  id: string
+  image_url: string
+  is_main: boolean
+  display_order: number
+}
 
 interface Property {
   id: string
@@ -33,6 +41,8 @@ interface Property {
   baths: number
   sqft: string
   image?: string
+  main_image?: string
+  property_images?: PropertyImage[]
   status: string
   description: string
   features: string[]
@@ -72,6 +82,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     message: `I'm interested in learning more about ${property?.title || 'this property'}.`
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   useEffect(() => {
     fetchProperty()
@@ -195,6 +206,47 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     }
   }
 
+  // Get all images for the property
+  const getPropertyImages = () => {
+    if (!property) return []
+    
+    const images: string[] = []
+    
+    // Add main_image if it exists
+    if (property.main_image) {
+      images.push(property.main_image)
+    }
+    
+    // Add property_images if they exist
+    if (property.property_images && property.property_images.length > 0) {
+      // Sort by display_order and add to images array
+      const sortedImages = [...property.property_images].sort((a, b) => a.display_order - b.display_order)
+      sortedImages.forEach(img => {
+        // Avoid duplicates if main_image is also in property_images
+        if (!images.includes(img.image_url)) {
+          images.push(img.image_url)
+        }
+      })
+    }
+    
+    // Fallback to single image if no other images found
+    if (images.length === 0 && property.image) {
+      images.push(property.image)
+    }
+    
+    return images
+  }
+
+  const propertyImages = getPropertyImages()
+
+  const handlePreviousImage = () => {
+    setCurrentImageIndex((prev) => (prev === 0 ? propertyImages.length - 1 : prev - 1))
+  }
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prev) => (prev === propertyImages.length - 1 ? 0 : prev + 1))
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -243,36 +295,94 @@ export default function PropertyPage({ params }: PropertyPageProps) {
               </Button>
             </Link>
 
-            {/* Property Images */}
-            <div className="relative mb-8">
-              <div className="relative h-96 w-full rounded-lg overflow-hidden">
-                <Image
-                  src={property.image || "/placeholder.svg"}
-                  alt={property.title}
-                  fill
-                  className="object-cover"
-                />
-                <Badge className={`absolute top-4 left-4 text-white ${getStatusColor(property.status)}`}>
-                  {property.status}
-                </Badge>
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="bg-white/80 hover:bg-white"
-                    onClick={() => setIsFavorite(!isFavorite)}
-                  >
-                    <Heart className={`h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="bg-white/80 hover:bg-white"
-                    onClick={handleShare}
-                  >
-                    <Share2 className="h-4 w-4 text-gray-600" />
-                  </Button>
+            {/* Property Images Gallery */}
+            <div className="mb-8">
+              <div className="relative">
+                {/* Main Image Display */}
+                <div className="relative h-96 lg:h-[500px] w-full rounded-lg overflow-hidden">
+                  <Image
+                    src={propertyImages[currentImageIndex] || "/placeholder.svg"}
+                    alt={`${property.title} - Image ${currentImageIndex + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                  
+                  {/* Navigation Arrows */}
+                  {propertyImages.length > 1 && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white"
+                        onClick={handlePreviousImage}
+                      >
+                        <ChevronLeft className="h-6 w-6 text-gray-800" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white"
+                        onClick={handleNextImage}
+                      >
+                        <ChevronRight className="h-6 w-6 text-gray-800" />
+                      </Button>
+                    </>
+                  )}
+                  
+                  {/* Status Badge */}
+                  <Badge className={`absolute top-4 left-4 text-white ${getStatusColor(property.status)}`}>
+                    {property.status}
+                  </Badge>
+                  
+                  {/* Action Buttons */}
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="bg-white/80 hover:bg-white"
+                      onClick={() => setIsFavorite(!isFavorite)}
+                    >
+                      <Heart className={`h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="bg-white/80 hover:bg-white"
+                      onClick={handleShare}
+                    >
+                      <Share2 className="h-4 w-4 text-gray-600" />
+                    </Button>
+                  </div>
+                  
+                  {/* Image Counter */}
+                  {propertyImages.length > 1 && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+                      {currentImageIndex + 1} / {propertyImages.length}
+                    </div>
+                  )}
                 </div>
+                
+                {/* Thumbnail Gallery */}
+                {propertyImages.length > 1 && (
+                  <div className="mt-4 grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+                    {propertyImages.map((image, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`relative aspect-square rounded overflow-hidden cursor-pointer ${
+                          index === currentImageIndex ? 'ring-2 ring-red-600' : 'hover:opacity-80'
+                        }`}
+                      >
+                        <Image
+                          src={image}
+                          alt={`Thumbnail ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
