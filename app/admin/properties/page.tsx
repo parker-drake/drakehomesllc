@@ -1500,37 +1500,38 @@ export default function AdminProperties() {
         {/* Properties Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProperties.map((property) => (
-            <Card key={property.id} className={`hover:shadow-lg transition-all duration-200 relative border-2 ${selectedProperties.has(property.id) ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200' : 'hover:border-gray-300'}`}>
-              <CardContent className="p-5">
-                {/* Selection Checkbox */}
-                <div className="absolute top-2 left-2 z-10">
-                  <button
-                    onClick={() => togglePropertySelection(property.id)}
-                    className="p-1 rounded bg-white/80 backdrop-blur-sm hover:bg-white/90 transition-colors"
-                  >
-                    {selectedProperties.has(property.id) ? (
-                      <CheckSquare className="w-4 h-4 text-blue-600" />
-                    ) : (
-                      <Square className="w-4 h-4 text-gray-600" />
-                    )}
-                  </button>
-                </div>
+            <Card key={property.id} className={`hover:shadow-lg transition-all duration-200 relative border-2 overflow-hidden ${selectedProperties.has(property.id) ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200' : 'hover:border-gray-300'}`}>
+              {/* Selection Checkbox */}
+              <div className="absolute top-3 left-3 z-10">
+                <button
+                  onClick={() => togglePropertySelection(property.id)}
+                  className="p-1 rounded bg-white/90 backdrop-blur-sm hover:bg-white transition-colors shadow-sm"
+                >
+                  {selectedProperties.has(property.id) ? (
+                    <CheckSquare className="w-4 h-4 text-blue-600" />
+                  ) : (
+                    <Square className="w-4 h-4 text-gray-600" />
+                  )}
+                </button>
+              </div>
 
-                {/* Property Image */}
-                {property.main_image ? (
-                  <div className="relative w-full h-36 mb-4 rounded-lg overflow-hidden">
-                    <Image
-                      src={property.main_image}
-                      alt={property.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-36 mb-4 rounded-lg bg-gray-100 flex items-center justify-center">
-                    <ImageIcon className="w-8 h-8 text-gray-400" />
-                  </div>
-                )}
+              {/* Property Image - Outside the main content */}
+              {property.main_image ? (
+                <div className="relative w-full h-48">
+                  <Image
+                    src={property.main_image}
+                    alt={property.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                  <ImageIcon className="w-10 h-10 text-gray-400" />
+                </div>
+              )}
+
+              <CardContent className="p-5">
                 
                 {/* Property Info */}
                 <div className="space-y-3">
