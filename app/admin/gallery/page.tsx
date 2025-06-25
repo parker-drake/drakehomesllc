@@ -406,9 +406,8 @@ function UploadImageModal({ onClose, onSubmit, uploading, error }: {
             <Select 
               value={selectedCategory} 
               onValueChange={setSelectedCategory}
-              disabled={uploading}
             >
-              <SelectTrigger>
+              <SelectTrigger disabled={uploading}>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
