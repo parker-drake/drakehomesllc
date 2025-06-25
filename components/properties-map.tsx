@@ -187,7 +187,7 @@ export default function PropertiesMap({ properties }: PropertiesMapProps) {
                 <p className="text-lg font-bold text-green-600 mb-2">{property.price}</p>
                 <Link 
                   href={`/available-homes/${property.id}`}
-                  className="inline-block bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 rounded transition-colors"
+                  className="inline-block bg-red-600 hover:bg-red-700 text-white hover:text-white text-xs px-3 py-1 rounded transition-colors font-medium"
                 >
                   View Details
                 </Link>
