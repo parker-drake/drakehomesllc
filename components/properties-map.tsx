@@ -149,7 +149,7 @@ export default function PropertiesMap({ properties }: PropertiesMapProps) {
     <div className="w-full h-96 rounded-lg overflow-hidden shadow-lg">
       <MapContainer
         center={centerCoords}
-        zoom={7}
+        zoom={9}
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
