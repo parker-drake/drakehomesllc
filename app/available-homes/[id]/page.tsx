@@ -40,6 +40,17 @@ interface Property {
   longitude?: number
   created_at: string
   updated_at: string
+  // Property Information fields (optional)
+  lot_size?: string
+  year_built?: number
+  property_type?: string
+  garage_spaces?: number
+  heating_cooling?: string
+  flooring_type?: string
+  school_district?: string
+  hoa_fee?: string
+  utilities_included?: string
+  exterior_materials?: string
 }
 
 interface PropertyPageProps {
@@ -283,7 +294,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                 <p className="text-gray-700 leading-relaxed">{property.description}</p>
               </div>
 
-              {/* Features */}
+                            {/* Features */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-3">Features & Amenities</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -294,7 +305,78 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                     </div>
                   ))}
                 </div>
-                             </div>
+              </div>
+
+              {/* Property Information */}
+              {(property.lot_size || property.year_built || property.property_type || property.garage_spaces || 
+                property.heating_cooling || property.flooring_type || property.school_district || property.hoa_fee || 
+                property.utilities_included || property.exterior_materials) && (
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-3">Property Information</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {property.lot_size && (
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium">Lot Size:</span>
+                        <span className="text-gray-900">{property.lot_size}</span>
+                      </div>
+                    )}
+                    {property.year_built && (
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium">Year Built:</span>
+                        <span className="text-gray-900">{property.year_built}</span>
+                      </div>
+                    )}
+                    {property.property_type && (
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium">Property Type:</span>
+                        <span className="text-gray-900">{property.property_type}</span>
+                      </div>
+                    )}
+                    {property.garage_spaces && (
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium">Garage Spaces:</span>
+                        <span className="text-gray-900">{property.garage_spaces}</span>
+                      </div>
+                    )}
+                    {property.heating_cooling && (
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium">Heating & Cooling:</span>
+                        <span className="text-gray-900">{property.heating_cooling}</span>
+                      </div>
+                    )}
+                    {property.flooring_type && (
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium">Flooring:</span>
+                        <span className="text-gray-900">{property.flooring_type}</span>
+                      </div>
+                    )}
+                    {property.school_district && (
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium">School District:</span>
+                        <span className="text-gray-900">{property.school_district}</span>
+                      </div>
+                    )}
+                    {property.hoa_fee && (
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium">HOA Fee:</span>
+                        <span className="text-gray-900">{property.hoa_fee}</span>
+                      </div>
+                    )}
+                    {property.utilities_included && (
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium">Utilities Included:</span>
+                        <span className="text-gray-900">{property.utilities_included}</span>
+                      </div>
+                    )}
+                    {property.exterior_materials && (
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium">Exterior Materials:</span>
+                        <span className="text-gray-900">{property.exterior_materials}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
              </div>
 
              {/* Location Map */}
@@ -307,24 +389,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                  latitude={property.latitude}
                  longitude={property.longitude}
                />
-               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                 <h3 className="font-medium text-gray-900 mb-2">About the Area</h3>
-                 <p className="text-gray-600 text-sm">
-                   This beautiful home is located in a desirable neighborhood with excellent schools, 
-                   convenient shopping, and easy access to major highways. The community offers a 
-                   peaceful suburban lifestyle while being close to urban amenities.
-                 </p>
-                 <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
-                   <div>
-                     <span className="font-medium text-gray-700">School District:</span>
-                     <p className="text-gray-600">Highly Rated Local Schools</p>
-                   </div>
-                   <div>
-                     <span className="font-medium text-gray-700">Community:</span>
-                     <p className="text-gray-600">Family-Friendly Neighborhood</p>
-                   </div>
-                 </div>
-               </div>
+
              </div>
            </div>
 
@@ -379,30 +444,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                 </CardContent>
               </Card>
 
-              {/* Property Quick Facts */}
-              <Card className="mt-6">
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">Quick Facts</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Property Type:</span>
-                      <span className="font-medium">Single Family Home</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Year Built:</span>
-                      <span className="font-medium">2024</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Lot Size:</span>
-                      <span className="font-medium">0.25 acres</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Builder:</span>
-                      <span className="font-medium">Drake Homes LLC</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+
             </div>
           </div>
         </div>

@@ -85,7 +85,18 @@ export async function PUT(
       features,
       completion_date,
       latitude,
-      longitude
+      longitude,
+      // Property Information fields
+      lot_size,
+      year_built,
+      property_type,
+      garage_spaces,
+      heating_cooling,
+      flooring_type,
+      school_district,
+      hoa_fee,
+      utilities_included,
+      exterior_materials
     } = body
 
     // Validate required fields
@@ -111,7 +122,18 @@ export async function PUT(
         features: features || [],
         completion_date,
         latitude: latitude !== undefined && latitude !== null && latitude !== '' ? parseFloat(latitude.toString()) : null,
-        longitude: longitude !== undefined && longitude !== null && longitude !== '' ? parseFloat(longitude.toString()) : null
+        longitude: longitude !== undefined && longitude !== null && longitude !== '' ? parseFloat(longitude.toString()) : null,
+        // Property Information fields
+        lot_size: lot_size || null,
+        year_built: year_built ? parseInt(year_built) : null,
+        property_type: property_type || null,
+        garage_spaces: garage_spaces ? parseInt(garage_spaces) : null,
+        heating_cooling: heating_cooling || null,
+        flooring_type: flooring_type || null,
+        school_district: school_district || null,
+        hoa_fee: hoa_fee || null,
+        utilities_included: utilities_included || null,
+        exterior_materials: exterior_materials || null
       })
       .eq('id', params.id)
       .select(`
