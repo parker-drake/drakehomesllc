@@ -22,7 +22,6 @@ import {
   ArrowLeft
 } from "lucide-react"
 import PropertyMap from "@/components/property-map"
-import emailjs from '@emailjs/browser' // EmailJS for contact forms
 
 interface Property {
   id: string
@@ -143,41 +142,42 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     e.preventDefault()
     setIsSubmitting(true)
 
-    try {
-      // EmailJS configuration - you'll get these from your EmailJS dashboard
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'your_service_id'
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID_PROPERTY || 'your_property_template_id'
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'your_public_key'
+    // Create a mailto link with all the information
+    const subject = `Property Inquiry - ${property?.title}`
+    const body = `
+CUSTOMER DETAILS:
+Name: ${contactForm.name}
+Email: ${contactForm.email}
+Phone: ${contactForm.phone}
 
-      // Prepare template parameters
-      const templateParams = {
-        from_name: contactForm.name,
-        from_email: contactForm.email,
-        phone: contactForm.phone,
-        message: contactForm.message,
-        property_title: property?.title,
-        property_price: property?.price,
-        property_location: property?.location,
-        property_id: property?.id,
-        property_url: window.location.href,
-        to_email: 'parker@drakehomesllc.com',
-      }
+PROPERTY DETAILS:
+Property: ${property?.title}
+Price: ${property?.price}
+Location: ${property?.location}
+Property URL: ${window.location.href}
 
-      await emailjs.send(serviceId, templateId, templateParams, publicKey)
-      
-      alert('Thank you for your interest! We will contact you soon.')
-      setContactForm({
-        name: '',
-        email: '',
-        phone: '',
-        message: `I'm interested in learning more about ${property?.title}.`
-      })
-    } catch (error) {
-      console.error('Email send failed:', error)
-      alert('Sorry, there was an error sending your message. Please try calling us directly at (920) 555-0123.')
-    } finally {
-      setIsSubmitting(false)
-    }
+MESSAGE:
+${contactForm.message}
+
+---
+This inquiry was sent from your Drake Homes LLC website.
+    `.trim()
+
+    const mailtoLink = `mailto:parker@drakehomesllc.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    
+    // Open user's email client
+    window.location.href = mailtoLink
+    
+    alert('Your email client will open with the inquiry details. Please send the email to contact Drake Homes.')
+    
+    setContactForm({
+      name: '',
+      email: '',
+      phone: '',
+      message: `I'm interested in learning more about ${property?.title}.`
+    })
+    
+    setIsSubmitting(false)
   }
 
   const handleShare = () => {
