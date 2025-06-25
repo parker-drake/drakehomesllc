@@ -1,9 +1,72 @@
-import React from "react"
+"use client"
+
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowRight, Award, Building, CheckCircle, Clock, Mail, MapPin, Phone } from "lucide-react"
+import Image from "next/image"
+import { ArrowRight, Award, Building, CheckCircle, Clock, Mail, MapPin, Phone, ChevronLeft, ChevronRight, Bed, Bath, Square } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+
+interface Property {
+  id: string
+  title: string
+  price: string
+  location: string
+  beds: number
+  baths: number
+  sqft: string
+  image?: string
+  status: string
+  description: string
+  completion_date: string
+}
 
 export default function Home() {
+  const [properties, setProperties] = useState<Property[]>([])
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchFeaturedProperties()
+  }, [])
+
+  const fetchFeaturedProperties = async () => {
+    try {
+      const response = await fetch('/api/properties')
+      if (response.ok) {
+        const data = await response.json()
+        // Get up to 6 properties for the slider
+        setProperties(data.slice(0, 6))
+      }
+    } catch (error) {
+      console.error('Error fetching properties:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % Math.max(1, properties.length - 2))
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + Math.max(1, properties.length - 2)) % Math.max(1, properties.length - 2))
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Move-In Ready":
+        return "bg-green-500"
+      case "Nearly Complete":
+        return "bg-blue-500"
+      case "Under Construction":
+        return "bg-orange-500"
+      case "Pre-Construction":
+        return "bg-purple-500"
+      default:
+        return "bg-gray-500"
+    }
+  }
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -96,60 +159,137 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Available Homes Preview */}
+      {/* Featured Properties Slider */}
       <section className="py-16 md:py-24 bg-gray-50">
         <div className="container px-4 md:px-6">
           <div className="text-center space-y-6 mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">Available Homes</h2>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">Featured Available Homes</h2>
             <p className="max-w-[600px] text-gray-600 text-lg mx-auto">
-              Browse our current inventory of quality homes ready for your family.
+              Discover our latest quality homes ready for your family.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="h-48 bg-gray-200 flex items-center justify-center">
-                <Building className="w-12 h-12 text-gray-400" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2">Custom Family Homes</h3>
-                <p className="text-gray-600 mb-4">Spacious homes designed for modern families with quality finishes throughout.</p>
-                <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                  <span>3-5 Bedrooms</span>
-                  <span>2-4 Bathrooms</span>
-                  <span>1,800-3,500 sq ft</span>
+          
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="text-gray-500">Loading properties...</div>
+            </div>
+          ) : properties.length > 0 ? (
+            <div className="relative">
+              {/* Slider Container */}
+              <div className="overflow-hidden">
+                <div 
+                  className="flex transition-transform duration-500 ease-in-out"
+                  style={{ transform: `translateX(-${currentSlide * (100 / 3)}%)` }}
+                >
+                  {properties.map((property) => (
+                    <div key={property.id} className="w-full md:w-1/3 flex-shrink-0 px-4">
+                      <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 h-full">
+                        {/* Property Image */}
+                        <div className="relative h-48 overflow-hidden">
+                          {property.image ? (
+                            <Image
+                              src={property.image}
+                              alt={property.title}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="h-full bg-gray-200 flex items-center justify-center">
+                              <Building className="w-12 h-12 text-gray-400" />
+                            </div>
+                          )}
+                          <Badge 
+                            className={`absolute top-4 left-4 text-white ${getStatusColor(property.status)}`}
+                          >
+                            {property.status}
+                          </Badge>
+                        </div>
+                        
+                        {/* Property Details */}
+                        <div className="p-6">
+                          <h3 className="text-xl font-bold mb-2 line-clamp-2">{property.title}</h3>
+                          <p className="text-2xl font-bold text-green-600 mb-3">{property.price}</p>
+                          
+                          <div className="flex items-center text-gray-600 mb-4">
+                            <MapPin className="w-4 h-4 mr-1" />
+                            <span className="text-sm line-clamp-1">{property.location}</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between text-sm text-gray-700 mb-4">
+                            <div className="flex items-center">
+                              <Bed className="w-4 h-4 mr-1" />
+                              <span>{property.beds} bed</span>
+                            </div>
+                            <div className="flex items-center">
+                              <Bath className="w-4 h-4 mr-1" />
+                              <span>{property.baths} bath</span>
+                            </div>
+                            <div className="flex items-center">
+                              <Square className="w-4 h-4 mr-1" />
+                              <span>{property.sqft}</span>
+                            </div>
+                          </div>
+                          
+                          <p className="text-gray-600 text-sm mb-4 line-clamp-2">{property.description}</p>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-red-600 font-medium">
+                              Available: {property.completion_date}
+                            </span>
+                            <Button size="sm" asChild className="bg-red-600 hover:bg-red-700">
+                              <Link href={`/available-homes/${property.id}`}>
+                                View Details
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="h-48 bg-gray-200 flex items-center justify-center">
-                <Building className="w-12 h-12 text-gray-400" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2">Move-In Ready</h3>
-                <p className="text-gray-600 mb-4">Completed homes ready for immediate occupancy with no waiting time.</p>
-                <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                  <span>Immediate</span>
-                  <span>Fully Finished</span>
-                  <span>Warranties Included</span>
+              
+              {/* Navigation Arrows */}
+              {properties.length > 3 && (
+                <>
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow duration-200 z-10"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow duration-200 z-10"
+                  >
+                    <ChevronRight className="w-6 h-6 text-gray-600" />
+                  </button>
+                </>
+              )}
+              
+              {/* Slide Indicators */}
+              {properties.length > 3 && (
+                <div className="flex justify-center space-x-2 mt-8">
+                  {Array.from({ length: Math.max(1, properties.length - 2) }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentSlide(index)}
+                      className={`w-3 h-3 rounded-full transition-colors duration-200 ${
+                        index === currentSlide ? 'bg-red-600' : 'bg-gray-300'
+                      }`}
+                    />
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="h-48 bg-gray-200 flex items-center justify-center">
-                <Building className="w-12 h-12 text-gray-400" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2">Pre-Construction</h3>
-                <p className="text-gray-600 mb-4">Reserve your lot and customize your dream home before construction begins.</p>
-                <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                  <span>Customizable</span>
-                  <span>Early Pricing</span>
-                  <span>8-12 Months</span>
-                </div>
-              </div>
+          ) : (
+            <div className="text-center">
+              <Building className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 mb-4">No properties available at the moment.</p>
             </div>
-          </div>
-          <div className="text-center">
+          )}
+          
+          <div className="text-center mt-12">
             <Button size="lg" asChild className="bg-red-600 hover:bg-red-700">
               <Link href="/available-homes">
                 View All Available Homes
