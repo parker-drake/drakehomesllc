@@ -32,15 +32,11 @@ export default function Home() {
 
   const fetchFeaturedProperties = async () => {
     try {
-      console.log('Fetching properties...')
       const response = await fetch('/api/properties')
-      console.log('Response status:', response.status)
       if (response.ok) {
         const data = await response.json()
-        console.log('Properties data:', data)
         // Get up to 6 properties for the slider
         setProperties(data.slice(0, 6))
-        console.log('Properties set:', data.slice(0, 6))
       }
     } catch (error) {
       console.error('Error fetching properties:', error)
@@ -173,13 +169,6 @@ export default function Home() {
             </p>
           </div>
           
-          {/* Debug info */}
-          <div className="mb-4 p-4 bg-yellow-100 rounded">
-            <p>Loading: {loading.toString()}</p>
-            <p>Properties count: {properties.length}</p>
-            <p>Properties: {JSON.stringify(properties.map(p => p.title))}</p>
-          </div>
-
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="text-gray-500">Loading properties...</div>
