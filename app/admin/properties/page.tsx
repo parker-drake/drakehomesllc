@@ -1210,7 +1210,6 @@ export default function AdminProperties() {
                       property.status === 'Under Construction' ? 'bg-orange-500' :
                       'bg-purple-500'
                     } text-white`}
-                    size="sm"
                   >
                     {property.status}
                   </Badge>
