@@ -99,7 +99,7 @@ export default function PropertyMap({ location, title, price, latitude, longitud
     <div className="w-full h-64 rounded-lg overflow-hidden shadow-lg">
       <MapContainer
         center={coordinates}
-        zoom={13}
+        zoom={16}
         style={{ height: '100%', width: '100%' }}
         ref={mapRef}
       >
