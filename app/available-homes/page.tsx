@@ -156,7 +156,7 @@ export default function AvailableHomes() {
               </div>
 
               <CardContent className="p-5">
-                <div className="flex items-center text-gray-700 mb-4">
+                <div className="flex items-center text-gray-700 mb-4 mt-1">
                   <MapPin className="h-4 w-4 mr-2 text-gray-500" />
                   <span className="text-base font-medium">{property.location}</span>
                 </div>
