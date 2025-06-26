@@ -60,11 +60,19 @@ export default function AdminPlansPage() {
     main_image: '',
     is_featured: false,
     features: [] as string[],
-    images: [] as { url: string; type: string; title: string; description: string }[]
+    images: [] as { url: string; type: string; title: string; description: string }[],
+    documents: [] as { url: string; type: string; file_type: string; title: string; description: string }[]
   })
 
   const [newFeature, setNewFeature] = useState('')
   const [newImage, setNewImage] = useState({ url: '', type: 'photo', title: '', description: '' })
+  const [newDocument, setNewDocument] = useState({ 
+    url: '', 
+    type: 'floor_plan', 
+    file_type: 'pdf',
+    title: '', 
+    description: '' 
+  })
 
   useEffect(() => {
     fetchPlans()
@@ -98,10 +106,12 @@ export default function AdminPlansPage() {
       main_image: '',
       is_featured: false,
       features: [],
-      images: []
+      images: [],
+      documents: []
     })
     setNewFeature('')
     setNewImage({ url: '', type: 'photo', title: '', description: '' })
+    setNewDocument({ url: '', type: 'floor_plan', file_type: 'pdf', title: '', description: '' })
     setEditingPlan(null)
     setShowAddForm(false)
   }
@@ -125,6 +135,13 @@ export default function AdminPlansPage() {
         type: img.image_type,
         title: '',
         description: ''
+      })) || [],
+      documents: (plan as any).plan_documents?.map((doc: any) => ({
+        url: doc.document_url,
+        type: doc.document_type,
+        file_type: doc.file_type,
+        title: doc.title || '',
+        description: doc.description || ''
       })) || []
     })
     setEditingPlan(plan)
@@ -213,6 +230,23 @@ export default function AdminPlansPage() {
     setFormData(prev => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index)
+    }))
+  }
+
+  const addDocument = () => {
+    if (newDocument.url.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        documents: [...prev.documents, newDocument]
+      }))
+      setNewDocument({ url: '', type: 'floor_plan', file_type: 'pdf', title: '', description: '' })
+    }
+  }
+
+  const removeDocument = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      documents: prev.documents.filter((_, i) => i !== index)
     }))
   }
 
@@ -386,6 +420,54 @@ export default function AdminPlansPage() {
                   </div>
                 </div>
                 
+                {/* Floor Plan Documents */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Floor Plan Documents</label>
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-2">
+                    <Input
+                      value={newDocument.url}
+                      onChange={(e) => setNewDocument(prev => ({ ...prev, url: e.target.value }))}
+                      placeholder="Document URL"
+                    />
+                    <select
+                      value={newDocument.type}
+                      onChange={(e) => setNewDocument(prev => ({ ...prev, type: e.target.value }))}
+                      className="border border-gray-300 rounded-md px-3 py-2"
+                    >
+                      <option value="floor_plan">Floor Plan</option>
+                      <option value="elevation">Elevation</option>
+                      <option value="site_plan">Site Plan</option>
+                      <option value="specification">Specification</option>
+                    </select>
+                    <select
+                      value={newDocument.file_type}
+                      onChange={(e) => setNewDocument(prev => ({ ...prev, file_type: e.target.value }))}
+                      className="border border-gray-300 rounded-md px-3 py-2"
+                    >
+                      <option value="pdf">PDF</option>
+                      <option value="jpg">JPG</option>
+                      <option value="png">PNG</option>
+                      <option value="dwg">DWG</option>
+                    </select>
+                    <Input
+                      value={newDocument.title}
+                      onChange={(e) => setNewDocument(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Title (optional)"
+                    />
+                    <Button type="button" onClick={addDocument} size="sm">Add Document</Button>
+                  </div>
+                  <div className="space-y-2">
+                    {formData.documents.map((document, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                        <span className="text-sm flex-1">{document.title || document.url}</span>
+                        <Badge variant="outline">{document.type}</Badge>
+                        <Badge variant="outline" className="text-xs">{document.file_type.toUpperCase()}</Badge>
+                        <X className="w-4 h-4 cursor-pointer text-red-600" onClick={() => removeDocument(index)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Additional Images */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Additional Images</label>

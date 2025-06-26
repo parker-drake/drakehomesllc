@@ -46,7 +46,8 @@ export async function POST(request: Request) {
       main_image,
       is_featured,
       features,
-      images
+      images,
+      documents
     } = body
     
     // Insert the plan
@@ -107,6 +108,27 @@ export async function POST(request: Request) {
       
       if (imagesError) {
         console.error('Error adding images:', imagesError)
+      }
+    }
+
+    // Insert documents if provided
+    if (documents && documents.length > 0) {
+      const documentInserts = documents.map((document: any, index: number) => ({
+        plan_id: plan.id,
+        document_url: document.url,
+        document_type: document.type || 'floor_plan',
+        file_type: document.file_type || 'pdf',
+        title: document.title || '',
+        description: document.description || '',
+        sort_order: index
+      }))
+      
+      const { error: documentsError } = await supabase
+        .from('plan_documents')
+        .insert(documentInserts)
+      
+      if (documentsError) {
+        console.error('Error adding documents:', documentsError)
       }
     }
     

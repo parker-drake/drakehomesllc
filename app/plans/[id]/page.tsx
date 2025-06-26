@@ -20,7 +20,10 @@ import {
   MapPin,
   Check,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Download,
+  FileText,
+  ZoomIn
 } from "lucide-react"
 
 interface Plan {
@@ -43,6 +46,13 @@ interface Plan {
     title?: string
     description?: string
   }[]
+  plan_documents?: {
+    document_url: string
+    document_type: string
+    file_type: string
+    title?: string
+    description?: string
+  }[]
 }
 
 interface PlanDetailPageProps {
@@ -54,10 +64,21 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
   const [loading, setLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [selectedImageType, setSelectedImageType] = useState<string>('all')
+  const [selectedDocument, setSelectedDocument] = useState<string | null>(null)
 
   useEffect(() => {
     fetchPlan()
   }, [params.id])
+
+  useEffect(() => {
+    // Auto-select first floor plan document when available
+    if (plan?.plan_documents && plan.plan_documents.length > 0 && !selectedDocument) {
+      const floorPlan = plan.plan_documents.find(doc => doc.document_type === 'floor_plan')
+      if (floorPlan) {
+        setSelectedDocument(floorPlan.document_url)
+      }
+    }
+  }, [plan, selectedDocument])
 
   const fetchPlan = async () => {
     try {
@@ -252,7 +273,123 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
         </div>
       </section>
 
-      {/* Image Gallery */}
+             {/* Floor Plans & Documents */}
+      {plan.plan_documents && plan.plan_documents.length > 0 && (
+        <section className="py-12 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Floor Plans & Documents</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Document List */}
+              <div className="lg:col-span-1">
+                <div className="space-y-3">
+                  {plan.plan_documents.map((doc, index) => (
+                    <Card 
+                      key={index} 
+                      className={`cursor-pointer transition-all ${
+                        selectedDocument === doc.document_url ? 'ring-2 ring-red-600 bg-red-50' : 'hover:shadow-md'
+                      }`}
+                      onClick={() => setSelectedDocument(doc.document_url)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-red-100 p-2 rounded">
+                            <FileText className="w-5 h-5 text-red-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-medium text-gray-900">{doc.title}</h3>
+                            <p className="text-sm text-gray-600">{doc.description}</p>
+                            <Badge variant="outline" className="mt-1 text-xs">
+                              {doc.file_type.toUpperCase()}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedDocument(doc.document_url)
+                              }}
+                            >
+                              <ZoomIn className="w-3 h-3 mr-1" />
+                              View
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              asChild
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <a href={doc.document_url} target="_blank" rel="noopener noreferrer">
+                                <Download className="w-3 h-3 mr-1" />
+                                Download
+                              </a>
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Document Viewer */}
+              <div className="lg:col-span-2">
+                {selectedDocument ? (
+                  <Card>
+                    <CardContent className="p-0">
+                      <div className="relative h-96 md:h-[600px] bg-gray-100 rounded-lg overflow-hidden">
+                        {selectedDocument.toLowerCase().endsWith('.pdf') ? (
+                          <iframe
+                            src={`${selectedDocument}#toolbar=1&navpanes=1&scrollbar=1`}
+                            className="w-full h-full border-0"
+                            title="Floor Plan PDF"
+                          />
+                        ) : (
+                          <Image
+                            src={selectedDocument}
+                            alt="Floor plan"
+                            fill
+                            className="object-contain"
+                          />
+                        )}
+                      </div>
+                      <div className="p-4 bg-gray-50 border-t">
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-gray-600">
+                            Click and drag to navigate • Use browser zoom for details
+                          </p>
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={selectedDocument} target="_blank" rel="noopener noreferrer">
+                              <Download className="w-3 h-3 mr-1" />
+                              Download
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Select a Document to View
+                      </h3>
+                      <p className="text-gray-600">
+                        Click on any floor plan or document from the list to view it here.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+       {/* Image Gallery */}
       {filteredImages.length > 0 && (
         <section className="py-12">
           <div className="container mx-auto px-4">

@@ -13,7 +13,8 @@ export async function GET(
       .select(`
         *,
         plan_images (*),
-        plan_features (*)
+        plan_features (*),
+        plan_documents (*)
       `)
       .eq('id', params.id)
       .eq('is_active', true)
@@ -21,6 +22,11 @@ export async function GET(
     
     if (error || !plan) {
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
+    }
+
+    // Sort documents by sort_order
+    if (plan.plan_documents) {
+      plan.plan_documents.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
     }
     
     return NextResponse.json(plan)
@@ -51,7 +57,8 @@ export async function PUT(
       main_image,
       is_featured,
       features,
-      images
+      images,
+      documents
     } = body
     
     // Update the plan
@@ -80,9 +87,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Failed to update plan' }, { status: 500 })
     }
     
-    // Delete existing features and images
+    // Delete existing features, images, and documents
     await supabase.from('plan_features').delete().eq('plan_id', params.id)
     await supabase.from('plan_images').delete().eq('plan_id', params.id)
+    await supabase.from('plan_documents').delete().eq('plan_id', params.id)
     
     // Insert new features if provided
     if (features && features.length > 0) {
@@ -117,6 +125,27 @@ export async function PUT(
       
       if (imagesError) {
         console.error('Error updating images:', imagesError)
+      }
+    }
+
+    // Insert new documents if provided
+    if (documents && documents.length > 0) {
+      const documentInserts = documents.map((document: any, index: number) => ({
+        plan_id: params.id,
+        document_url: document.url,
+        document_type: document.type || 'floor_plan',
+        file_type: document.file_type || 'pdf',
+        title: document.title || '',
+        description: document.description || '',
+        sort_order: index
+      }))
+      
+      const { error: documentsError } = await supabase
+        .from('plan_documents')
+        .insert(documentInserts)
+      
+      if (documentsError) {
+        console.error('Error updating documents:', documentsError)
       }
     }
     
