@@ -25,7 +25,7 @@ export default function ContactPage() {
     "mainEntity": {
       "@type": "LocalBusiness",
       "name": "Drake Homes LLC",
-      "telephone": ["920-740-6660", "920-224-5620"],
+      "telephone": "920-740-6660",
       "email": "info@drakehomesllc.com",
       "address": {
         "@type": "PostalAddress",

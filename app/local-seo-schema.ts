@@ -8,13 +8,6 @@ export const enhancedLocalBusinessSchema = {
   "logo": "https://drakehomesllc.com/DrakeHomes_Logo.jpg",
   "image": "https://drakehomesllc.com/DrakeHomes_Logo.jpg",
   "telephone": "920-740-6660",
-  "additionalProperty": [
-    {
-      "@type": "PropertyValue",
-      "name": "Secondary Phone",
-      "value": "920-224-5620"
-    }
-  ],
   "email": "info@drakehomesllc.com",
   "address": {
     "@type": "PostalAddress",
