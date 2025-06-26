@@ -214,63 +214,177 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
         </div>
       </div>
 
-      {/* Plan Header - More Compact */}
-      <section className="py-6 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row gap-6 items-start">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{plan.title}</h1>
+      {/* Plan Gallery - Hero Section */}
+      {filteredImages.length > 0 && (
+        <section className="py-6 bg-white">
+          <div className="container mx-auto px-4">
+            {/* Image Type Filter */}
+            {imageTypes.length > 1 && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {imageTypes.map(type => (
+                  <Button
+                    key={type}
+                    variant={selectedImageType === type ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setSelectedImageType(type)
+                      setCurrentImageIndex(0)
+                    }}
+                    className={selectedImageType === type ? "bg-red-600 hover:bg-red-700" : ""}
+                  >
+                    {getImageTypeLabel(type)}
+                  </Button>
+                ))}
+              </div>
+            )}
+            
+            {/* Main Image Display */}
+            <div className="relative mb-4">
+              <div className="relative h-96 lg:h-[500px] bg-gray-200 rounded-lg overflow-hidden">
+                {filteredImages[currentImageIndex] ? (
+                  <Image
+                    src={filteredImages[currentImageIndex].image_url}
+                    alt={filteredImages[currentImageIndex].title || plan.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                    <Home className="w-16 h-16 text-gray-500" />
+                  </div>
+                )}
+                
+                {/* Navigation Arrows */}
+                {filteredImages.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 transition-all"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 transition-all"
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                  </>
+                )}
+                
+                {/* Image Counter */}
+                {filteredImages.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded-full text-sm">
+                    {currentImageIndex + 1} / {filteredImages.length}
+                  </div>
+                )}
+
+                {/* Featured Badge */}
                 {plan.is_featured && (
-                  <Badge className="bg-red-600 hover:bg-red-700">
-                    <Star className="w-3 h-3 mr-1 fill-current" />
-                    Featured
-                  </Badge>
+                  <div className="absolute top-4 left-4">
+                    <Badge className="bg-red-600 hover:bg-red-700 text-white">
+                      <Star className="w-3 h-3 mr-1 fill-current" />
+                      Featured
+                    </Badge>
+                  </div>
                 )}
               </div>
-              <Badge variant="outline" className="mb-3">{plan.style} Style</Badge>
-              <p className="text-lg text-gray-600 leading-relaxed">
-                {plan.description}
-              </p>
+              
+              {/* Thumbnail Gallery */}
+              {filteredImages.length > 1 && (
+                <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 mt-4">
+                  {filteredImages.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`relative h-20 bg-gray-200 rounded overflow-hidden ${
+                        index === currentImageIndex ? 'ring-2 ring-red-600' : 'hover:opacity-80'
+                      }`}
+                    >
+                      <Image
+                        src={image.image_url}
+                        alt={`Thumbnail ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                      <Badge 
+                        variant="secondary" 
+                        className="absolute top-1 right-1 text-xs"
+                      >
+                        {getImageTypeLabel(image.image_type)}
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Plan Details Section */}
+      <section className="py-6 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col lg:flex-row gap-8 items-start">
+            {/* Main Plan Info */}
+            <div className="flex-1">
+              <div className="bg-white rounded-lg p-6">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{plan.title}</h1>
+                    <Badge variant="outline" className="mb-4">{plan.style} Style</Badge>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-red-600 mb-1">
+                      ${plan.price?.toLocaleString()}
+                    </div>
+                    <span className="text-gray-500 text-sm">starting</span>
+                  </div>
+                </div>
+
+                {/* Plan Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="text-center">
+                    <Square className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                    <div className="text-xl font-bold text-gray-900">{plan.square_footage?.toLocaleString()}</div>
+                    <div className="text-sm text-gray-600">sq ft</div>
+                  </div>
+                  <div className="text-center">
+                    <Bed className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                    <div className="text-xl font-bold text-gray-900">{plan.bedrooms}</div>
+                    <div className="text-sm text-gray-600">bedroom{plan.bedrooms !== 1 ? 's' : ''}</div>
+                  </div>
+                  <div className="text-center">
+                    <Bath className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                    <div className="text-xl font-bold text-gray-900">{plan.bathrooms}</div>
+                    <div className="text-sm text-gray-600">bathroom{plan.bathrooms !== 1 ? 's' : ''}</div>
+                  </div>
+                  {plan.garage_spaces > 0 && (
+                    <div className="text-center">
+                      <Car className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                      <div className="text-xl font-bold text-gray-900">{plan.garage_spaces}</div>
+                      <div className="text-sm text-gray-600">car garage</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Description */}
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-3">About This Plan</h2>
+                  <p className="text-lg text-gray-700 leading-relaxed">
+                    {plan.description}
+                  </p>
+                </div>
+              </div>
             </div>
             
-            {/* Integrated Pricing Card */}
-            <div className="lg:w-72">
+            {/* Action Card */}
+            <div className="lg:w-80">
               <Card className="sticky top-4">
-                <CardContent className="p-5">
-                  <div className="text-center mb-5">
-                    <span className="text-2xl font-bold text-red-600">
-                      ${plan.price?.toLocaleString()}
-                    </span>
-                    <span className="text-gray-500 ml-2 text-sm">starting</span>
-                  </div>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Interested in this plan?</h3>
                   
-                  <div className="grid grid-cols-2 gap-3 mb-5 text-sm">
-                    <div className="text-center p-2 bg-gray-50 rounded">
-                      <Square className="w-4 h-4 text-red-600 mx-auto mb-1" />
-                      <p className="font-medium text-sm">{plan.square_footage?.toLocaleString()}</p>
-                      <p className="text-xs text-gray-500">sq ft</p>
-                    </div>
-                    <div className="text-center p-2 bg-gray-50 rounded">
-                      <Bed className="w-4 h-4 text-red-600 mx-auto mb-1" />
-                      <p className="font-medium text-sm">{plan.bedrooms}</p>
-                      <p className="text-xs text-gray-500">bedroom{plan.bedrooms !== 1 ? 's' : ''}</p>
-                    </div>
-                    <div className="text-center p-2 bg-gray-50 rounded">
-                      <Bath className="w-4 h-4 text-red-600 mx-auto mb-1" />
-                      <p className="font-medium text-sm">{plan.bathrooms}</p>
-                      <p className="text-xs text-gray-500">bathroom{plan.bathrooms !== 1 ? 's' : ''}</p>
-                    </div>
-                    {plan.garage_spaces > 0 && (
-                      <div className="text-center p-2 bg-gray-50 rounded">
-                        <Car className="w-4 h-4 text-red-600 mx-auto mb-1" />
-                        <p className="font-medium text-sm">{plan.garage_spaces}</p>
-                        <p className="text-xs text-gray-500">car garage</p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2">
+                  <div className="space-y-3 mb-6">
                     <Button asChild className="w-full bg-red-600 hover:bg-red-700">
                       <Link href="/contact">
                         <Phone className="w-4 h-4 mr-2" />
@@ -284,6 +398,11 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
                       </Link>
                     </Button>
                   </div>
+
+                  <div className="text-center text-sm text-gray-600 border-t pt-4">
+                    <MapPin className="w-4 h-4 inline mr-1" />
+                    Serving Wisconsin's Fox Valley
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -291,7 +410,7 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
         </div>
       </section>
 
-      {/* Floor Plans & Documents - Better Integration */}
+      {/* Floor Plans & Documents */}
       {plan.plan_documents && plan.plan_documents.length > 0 ? (
         <section className="py-8 bg-white border-t">
           <div className="container mx-auto px-4">
@@ -336,7 +455,7 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
                 ))}
               </div>
               
-              {/* Document Info - More Compact */}
+              {/* Document Info */}
               {selectedDocument && (
                 <div className="bg-gray-50 p-3 rounded-lg border mb-4">
                   {(() => {
@@ -360,7 +479,7 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
               )}
             </div>
             
-            {/* Document Viewer - Better Proportions */}
+            {/* Document Viewer */}
             <div className="w-full">
               {selectedDocument ? (
                 <Card className="overflow-hidden">
@@ -432,124 +551,14 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
         </section>
       ) : null}
 
-      {/* Image Gallery - Reduced Spacing */}
-      {filteredImages.length > 0 && (
-        <section className="py-8 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Plan Gallery</h2>
-            
-            {/* Image Type Filter */}
-            {imageTypes.length > 1 && (
-              <div className="flex flex-wrap gap-2 mb-6">
-                {imageTypes.map(type => (
-                  <Button
-                    key={type}
-                    variant={selectedImageType === type ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => {
-                      setSelectedImageType(type)
-                      setCurrentImageIndex(0)
-                    }}
-                    className={selectedImageType === type ? "bg-red-600 hover:bg-red-700" : ""}
-                  >
-                    {getImageTypeLabel(type)}
-                  </Button>
-                ))}
-              </div>
-            )}
-            
-            {/* Main Image Display */}
-            <div className="relative mb-6">
-              <div className="relative h-96 md:h-[450px] bg-gray-200 rounded-lg overflow-hidden">
-                {filteredImages[currentImageIndex] ? (
-                  <Image
-                    src={filteredImages[currentImageIndex].image_url}
-                    alt={filteredImages[currentImageIndex].title || plan.title}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-                    <Home className="w-16 h-16 text-gray-500" />
-                  </div>
-                )}
-                
-                {/* Navigation Arrows */}
-                {filteredImages.length > 1 && (
-                  <>
-                    <button
-                      onClick={prevImage}
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                    </button>
-                    <button
-                      onClick={nextImage}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all"
-                    >
-                      <ChevronRight className="w-6 h-6" />
-                    </button>
-                  </>
-                )}
-                
-                {/* Image Counter */}
-                {filteredImages.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-                    {currentImageIndex + 1} / {filteredImages.length}
-                  </div>
-                )}
-              </div>
-              
-              {/* Image Title/Description */}
-              {filteredImages[currentImageIndex]?.title && (
-                <div className="mt-2 text-center">
-                  <p className="font-medium text-gray-900">{filteredImages[currentImageIndex].title}</p>
-                  {filteredImages[currentImageIndex].description && (
-                    <p className="text-sm text-gray-600">{filteredImages[currentImageIndex].description}</p>
-                  )}
-                </div>
-              )}
-            </div>
-            
-            {/* Thumbnail Gallery */}
-            {filteredImages.length > 1 && (
-              <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-                {filteredImages.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`relative h-20 bg-gray-200 rounded overflow-hidden ${
-                      index === currentImageIndex ? 'ring-2 ring-red-600' : ''
-                    }`}
-                  >
-                    <Image
-                      src={image.image_url}
-                      alt={`Thumbnail ${index + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                    <Badge 
-                      variant="secondary" 
-                      className="absolute top-1 right-1 text-xs"
-                    >
-                      {getImageTypeLabel(image.image_type)}
-                    </Badge>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Plan Features - More Compact */}
+      {/* Plan Features */}
       {plan.plan_features && plan.plan_features.length > 0 && (
-        <section className="py-8 bg-white">
+        <section className="py-8 bg-gray-50">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Plan Features</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {plan.plan_features.map((feature, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div key={index} className="flex items-center gap-3 p-3 bg-white rounded-lg">
                   <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
                   <span className="text-gray-900 text-sm">{feature.feature_name}</span>
                 </div>
@@ -559,10 +568,10 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
         </section>
       )}
 
-      {/* Plan Specifications - More Compact */}
-      <section className="py-8 bg-gray-50">
+      {/* Plan Specifications */}
+      <section className="py-8 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Specifications</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Detailed Specifications</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4 text-center">
@@ -607,7 +616,7 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
       <section className="py-12 bg-red-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
-            Interested in {plan.title}?
+            Ready to Build {plan.title}?
           </h2>
           <p className="text-xl text-red-100 mb-8 max-w-2xl mx-auto">
             Contact us today to discuss customization options, pricing, and timeline for your dream home.
