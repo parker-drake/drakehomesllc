@@ -475,7 +475,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
               </div>
 
               {/* Property Information */}
-              {(property.lot_size || property.year_built || property.property_type || property.garage_spaces || 
+              {(property.lot_size || property.year_built || property.garage_spaces || 
                 property.heating_cooling || property.flooring_type || property.school_district || property.hoa_fee || 
                 property.utilities_included || property.exterior_materials) && (
                 <div>
@@ -491,12 +491,6 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                       <div className="flex justify-between py-2 border-b border-gray-100">
                         <span className="text-gray-600 font-medium">Year Built:</span>
                         <span className="text-gray-900">{property.year_built}</span>
-                      </div>
-                    )}
-                    {property.property_type && (
-                      <div className="flex justify-between py-2 border-b border-gray-100">
-                        <span className="text-gray-600 font-medium">Property Type:</span>
-                        <span className="text-gray-900">{property.property_type}</span>
                       </div>
                     )}
                     {property.garage_spaces && (
