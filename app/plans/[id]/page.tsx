@@ -214,12 +214,12 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
         </div>
       </div>
 
-      {/* Plan Header */}
-      <section className="py-8 bg-gray-50">
+      {/* Plan Header - More Compact */}
+      <section className="py-6 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-3">
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{plan.title}</h1>
                 {plan.is_featured && (
                   <Badge className="bg-red-600 hover:bg-red-700">
@@ -228,48 +228,49 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
                   </Badge>
                 )}
               </div>
-              <Badge variant="outline" className="mb-4">{plan.style} Style</Badge>
-              <p className="text-lg text-gray-600 leading-relaxed max-w-2xl">
+              <Badge variant="outline" className="mb-3">{plan.style} Style</Badge>
+              <p className="text-lg text-gray-600 leading-relaxed">
                 {plan.description}
               </p>
             </div>
             
-            <div className="lg:w-80">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="text-center mb-6">
-                    <span className="text-3xl font-bold text-red-600">
+            {/* Integrated Pricing Card */}
+            <div className="lg:w-72">
+              <Card className="sticky top-4">
+                <CardContent className="p-5">
+                  <div className="text-center mb-5">
+                    <span className="text-2xl font-bold text-red-600">
                       ${plan.price?.toLocaleString()}
                     </span>
-                    <span className="text-gray-500 ml-2">starting</span>
+                    <span className="text-gray-500 ml-2 text-sm">starting</span>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
-                    <div className="text-center">
-                      <Square className="w-5 h-5 text-red-600 mx-auto mb-1" />
-                      <p className="font-medium">{plan.square_footage?.toLocaleString()}</p>
-                      <p className="text-gray-500">sq ft</p>
+                  <div className="grid grid-cols-2 gap-3 mb-5 text-sm">
+                    <div className="text-center p-2 bg-gray-50 rounded">
+                      <Square className="w-4 h-4 text-red-600 mx-auto mb-1" />
+                      <p className="font-medium text-sm">{plan.square_footage?.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500">sq ft</p>
                     </div>
-                    <div className="text-center">
-                      <Bed className="w-5 h-5 text-red-600 mx-auto mb-1" />
-                      <p className="font-medium">{plan.bedrooms}</p>
-                      <p className="text-gray-500">bedroom{plan.bedrooms !== 1 ? 's' : ''}</p>
+                    <div className="text-center p-2 bg-gray-50 rounded">
+                      <Bed className="w-4 h-4 text-red-600 mx-auto mb-1" />
+                      <p className="font-medium text-sm">{plan.bedrooms}</p>
+                      <p className="text-xs text-gray-500">bedroom{plan.bedrooms !== 1 ? 's' : ''}</p>
                     </div>
-                    <div className="text-center">
-                      <Bath className="w-5 h-5 text-red-600 mx-auto mb-1" />
-                      <p className="font-medium">{plan.bathrooms}</p>
-                      <p className="text-gray-500">bathroom{plan.bathrooms !== 1 ? 's' : ''}</p>
+                    <div className="text-center p-2 bg-gray-50 rounded">
+                      <Bath className="w-4 h-4 text-red-600 mx-auto mb-1" />
+                      <p className="font-medium text-sm">{plan.bathrooms}</p>
+                      <p className="text-xs text-gray-500">bathroom{plan.bathrooms !== 1 ? 's' : ''}</p>
                     </div>
                     {plan.garage_spaces > 0 && (
-                      <div className="text-center">
-                        <Car className="w-5 h-5 text-red-600 mx-auto mb-1" />
-                        <p className="font-medium">{plan.garage_spaces}</p>
-                        <p className="text-gray-500">car garage</p>
+                      <div className="text-center p-2 bg-gray-50 rounded">
+                        <Car className="w-4 h-4 text-red-600 mx-auto mb-1" />
+                        <p className="font-medium text-sm">{plan.garage_spaces}</p>
+                        <p className="text-xs text-gray-500">car garage</p>
                       </div>
                     )}
                   </div>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <Button asChild className="w-full bg-red-600 hover:bg-red-700">
                       <Link href="/contact">
                         <Phone className="w-4 h-4 mr-2" />
@@ -290,11 +291,11 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
         </div>
       </section>
 
-      {/* Floor Plans & Documents */}
+      {/* Floor Plans & Documents - Better Integration */}
       {plan.plan_documents && plan.plan_documents.length > 0 ? (
-        <section className="py-12 bg-gray-50">
+        <section className="py-8 bg-white border-t">
           <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Floor Plans & Documents</h2>
               <Button 
                 variant="outline" 
@@ -307,7 +308,7 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
             </div>
             
             {/* Document Tabs */}
-            <div className="mb-6">
+            <div className="mb-4">
               <div className="flex flex-wrap gap-2 mb-4">
                 {plan.plan_documents.map((doc, index) => (
                   <Button
@@ -335,25 +336,23 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
                 ))}
               </div>
               
-              {/* Document Info */}
+              {/* Document Info - More Compact */}
               {selectedDocument && (
-                <div className="bg-white p-4 rounded-lg border mb-6">
+                <div className="bg-gray-50 p-3 rounded-lg border mb-4">
                   {(() => {
                     const selectedDoc = plan.plan_documents.find(doc => doc.document_url === selectedDocument);
                     return selectedDoc ? (
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold text-gray-900">{selectedDoc.title}</h3>
-                          <p className="text-sm text-gray-600">{selectedDoc.description}</p>
+                          <h3 className="font-medium text-gray-900 text-sm">{selectedDoc.title}</h3>
+                          <p className="text-xs text-gray-600">{selectedDoc.description}</p>
                         </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={selectedDoc.document_url} target="_blank" rel="noopener noreferrer">
-                              <Download className="w-4 h-4 mr-2" />
-                              Download
-                            </a>
-                          </Button>
-                        </div>
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={selectedDoc.document_url} target="_blank" rel="noopener noreferrer">
+                            <Download className="w-3 h-3 mr-1" />
+                            Download
+                          </a>
+                        </Button>
                       </div>
                     ) : null;
                   })()}
@@ -361,12 +360,12 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
               )}
             </div>
             
-            {/* Document Viewer */}
+            {/* Document Viewer - Better Proportions */}
             <div className="w-full">
               {selectedDocument ? (
                 <Card className="overflow-hidden">
                   <CardContent className="p-0">
-                    <div className="relative h-[70vh] bg-gray-100">
+                    <div className="relative h-[60vh] bg-gray-100">
                       {selectedDocument.toLowerCase().endsWith('.pdf') ? (
                         <iframe
                           src={`${selectedDocument}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
@@ -382,45 +381,43 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
                         />
                       )}
                     </div>
-                    <div className="p-4 bg-gray-50 border-t">
+                    <div className="p-3 bg-gray-50 border-t">
                       <div className="flex justify-between items-center text-sm text-gray-600">
-                        <p>Use browser controls to zoom and navigate • Full-screen available</p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={selectedDocument} target="_blank" rel="noopener noreferrer">
-                              <ZoomIn className="w-4 h-4 mr-2" />
-                              Open Full Screen
-                            </a>
-                          </Button>
-                        </div>
+                        <p>Use browser controls to zoom and navigate</p>
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={selectedDocument} target="_blank" rel="noopener noreferrer">
+                            <ZoomIn className="w-3 h-3 mr-1" />
+                            Full Screen
+                          </a>
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               ) : (
                 <Card>
-                  <CardContent className="p-16 text-center">
-                    <FileText className="w-20 h-20 text-gray-400 mx-auto mb-6" />
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  <CardContent className="p-12 text-center">
+                    <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       Select a Document to View
                     </h3>
                     <p className="text-gray-600 mb-6">
-                      Choose from the available floor plans and documents above to view them here.
+                      Choose from the available floor plans and documents above.
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-w-xl mx-auto">
                       {plan.plan_documents.map((doc, index) => (
                         <Button
                           key={index}
                           variant="outline"
                           onClick={() => setSelectedDocument(doc.document_url)}
-                          className="h-auto p-4 text-left hover:bg-gray-50"
+                          className="h-auto p-3 text-left hover:bg-gray-50"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="bg-red-100 p-2 rounded">
-                              <FileText className="w-5 h-5 text-red-600" />
+                          <div className="flex items-center gap-2">
+                            <div className="bg-red-100 p-1.5 rounded">
+                              <FileText className="w-4 h-4 text-red-600" />
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">{doc.title}</p>
+                              <p className="font-medium text-gray-900 text-sm">{doc.title}</p>
                               <p className="text-xs text-gray-500">{doc.file_type.toUpperCase()}</p>
                             </div>
                           </div>
@@ -435,9 +432,9 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
         </section>
       ) : null}
 
-      {/* Image Gallery */}
+      {/* Image Gallery - Reduced Spacing */}
       {filteredImages.length > 0 && (
-        <section className="py-12">
+        <section className="py-8 bg-gray-50">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Plan Gallery</h2>
             
@@ -463,7 +460,7 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
             
             {/* Main Image Display */}
             <div className="relative mb-6">
-              <div className="relative h-96 md:h-[500px] bg-gray-200 rounded-lg overflow-hidden">
+              <div className="relative h-96 md:h-[450px] bg-gray-200 rounded-lg overflow-hidden">
                 {filteredImages[currentImageIndex] ? (
                   <Image
                     src={filteredImages[currentImageIndex].image_url}
@@ -545,16 +542,16 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
         </section>
       )}
 
-      {/* Plan Features */}
+      {/* Plan Features - More Compact */}
       {plan.plan_features && plan.plan_features.length > 0 && (
-        <section className="py-12 bg-gray-50">
+        <section className="py-8 bg-white">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Plan Features</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {plan.plan_features.map((feature, index) => (
-                <div key={index} className="flex items-center gap-3 p-4 bg-white rounded-lg">
-                  <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="text-gray-900">{feature.feature_name}</span>
+                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-900 text-sm">{feature.feature_name}</span>
                 </div>
               ))}
             </div>
@@ -562,44 +559,44 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
         </section>
       )}
 
-      {/* Plan Specifications */}
-      <section className="py-12">
+      {/* Plan Specifications - More Compact */}
+      <section className="py-8 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Specifications</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
-              <CardContent className="p-6 text-center">
-                <Square className="w-8 h-8 text-red-600 mx-auto mb-3" />
-                <h3 className="font-semibold text-gray-900 mb-1">Square Footage</h3>
-                <p className="text-2xl font-bold text-red-600">{plan.square_footage?.toLocaleString()}</p>
-                <p className="text-sm text-gray-500">sq ft</p>
+              <CardContent className="p-4 text-center">
+                <Square className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                <h3 className="font-semibold text-gray-900 mb-1 text-sm">Square Footage</h3>
+                <p className="text-xl font-bold text-red-600">{plan.square_footage?.toLocaleString()}</p>
+                <p className="text-xs text-gray-500">sq ft</p>
               </CardContent>
             </Card>
             
             <Card>
-              <CardContent className="p-6 text-center">
-                <Home className="w-8 h-8 text-red-600 mx-auto mb-3" />
-                <h3 className="font-semibold text-gray-900 mb-1">Stories</h3>
-                <p className="text-2xl font-bold text-red-600">{plan.floors}</p>
-                <p className="text-sm text-gray-500">floor{plan.floors !== 1 ? 's' : ''}</p>
+              <CardContent className="p-4 text-center">
+                <Home className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                <h3 className="font-semibold text-gray-900 mb-1 text-sm">Stories</h3>
+                <p className="text-xl font-bold text-red-600">{plan.floors}</p>
+                <p className="text-xs text-gray-500">floor{plan.floors !== 1 ? 's' : ''}</p>
               </CardContent>
             </Card>
             
             <Card>
-              <CardContent className="p-6 text-center">
-                <Bed className="w-8 h-8 text-red-600 mx-auto mb-3" />
-                <h3 className="font-semibold text-gray-900 mb-1">Bedrooms</h3>
-                <p className="text-2xl font-bold text-red-600">{plan.bedrooms}</p>
-                <p className="text-sm text-gray-500">bedroom{plan.bedrooms !== 1 ? 's' : ''}</p>
+              <CardContent className="p-4 text-center">
+                <Bed className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                <h3 className="font-semibold text-gray-900 mb-1 text-sm">Bedrooms</h3>
+                <p className="text-xl font-bold text-red-600">{plan.bedrooms}</p>
+                <p className="text-xs text-gray-500">bedroom{plan.bedrooms !== 1 ? 's' : ''}</p>
               </CardContent>
             </Card>
             
             <Card>
-              <CardContent className="p-6 text-center">
-                <Bath className="w-8 h-8 text-red-600 mx-auto mb-3" />
-                <h3 className="font-semibold text-gray-900 mb-1">Bathrooms</h3>
-                <p className="text-2xl font-bold text-red-600">{plan.bathrooms}</p>
-                <p className="text-sm text-gray-500">bathroom{plan.bathrooms !== 1 ? 's' : ''}</p>
+              <CardContent className="p-4 text-center">
+                <Bath className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                <h3 className="font-semibold text-gray-900 mb-1 text-sm">Bathrooms</h3>
+                <p className="text-xl font-bold text-red-600">{plan.bathrooms}</p>
+                <p className="text-xs text-gray-500">bathroom{plan.bathrooms !== 1 ? 's' : ''}</p>
               </CardContent>
             </Card>
           </div>
@@ -607,7 +604,7 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
       </section>
 
       {/* Contact CTA */}
-      <section className="py-16 bg-red-600 text-white">
+      <section className="py-12 bg-red-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
             Interested in {plan.title}?
