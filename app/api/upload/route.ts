@@ -1,8 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+// Simple in-memory rate limiting (in production, use Redis or similar)
+const uploadAttempts = new Map<string, { count: number; resetTime: number }>()
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const attempts = uploadAttempts.get(ip)
+  
+  if (!attempts || now > attempts.resetTime) {
+    // Reset or initialize
+    uploadAttempts.set(ip, { count: 1, resetTime: now + 60000 }) // 1 minute window
+    return false
+  }
+  
+  if (attempts.count >= 10) { // Max 10 uploads per minute
+    return true
+  }
+  
+  attempts.count++
+  return false
+}
+
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for')
+  const realIP = request.headers.get('x-real-ip')
+  
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
+  }
+  
+  if (realIP) {
+    return realIP
+  }
+  
+  return 'unknown'
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientIP = getClientIP(request)
+    if (isRateLimited(clientIP)) {
+      return NextResponse.json(
+        { error: 'Too many upload attempts. Please try again later.' },
+        { status: 429 }
+      )
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File
     const fileType = formData.get('type') as string // 'image' or 'document'
@@ -11,30 +56,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    // Validate file type
-    const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-    const allowedDocumentTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'application/dwg', 'application/x-dwg']
+    // Strict file type validation
+    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
+    const allowedDocumentTypes = ['application/pdf']
     
-    if (fileType === 'image' && !allowedImageTypes.includes(file.type)) {
-      return NextResponse.json({ error: 'Invalid image file type. Only JPEG, PNG, and WebP are allowed.' }, { status: 400 })
-    }
+    // Validate file extension as well (prevent MIME type spoofing)
+    const fileExtension = file.name.split('.').pop()?.toLowerCase()
+    const allowedImageExtensions = ['jpg', 'jpeg', 'png', 'webp']
+    const allowedDocumentExtensions = ['pdf']
     
-    if (fileType === 'document' && !allowedDocumentTypes.includes(file.type)) {
-      return NextResponse.json({ error: 'Invalid document file type. Only PDF, JPEG, PNG, and DWG are allowed.' }, { status: 400 })
+    if (fileType === 'image') {
+      if (!allowedImageTypes.includes(file.type) || !allowedImageExtensions.includes(fileExtension || '')) {
+        return NextResponse.json({ error: 'Invalid image file. Only JPEG, PNG, and WebP are allowed.' }, { status: 400 })
+      }
+    } else if (fileType === 'document') {
+      if (!allowedDocumentTypes.includes(file.type) || !allowedDocumentExtensions.includes(fileExtension || '')) {
+        return NextResponse.json({ error: 'Invalid document file. Only PDF files are allowed.' }, { status: 400 })
+      }
+    } else {
+      return NextResponse.json({ error: 'Invalid file type specified.' }, { status: 400 })
     }
 
-    // Validate file size (10MB max for documents, 5MB max for images)
-    const maxSize = fileType === 'document' ? 10 * 1024 * 1024 : 5 * 1024 * 1024
+    // Validate file size (5MB max for documents, 2MB max for images)
+    const maxSize = fileType === 'document' ? 5 * 1024 * 1024 : 2 * 1024 * 1024
     if (file.size > maxSize) {
-      const maxSizeMB = fileType === 'document' ? '10MB' : '5MB'
+      const maxSizeMB = fileType === 'document' ? '5MB' : '2MB'
       return NextResponse.json({ error: `File size too large. Maximum size is ${maxSizeMB}.` }, { status: 400 })
     }
 
-    // Generate unique filename
+    // Validate filename (prevent directory traversal)
+    if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
+      return NextResponse.json({ error: 'Invalid filename.' }, { status: 400 })
+    }
+
+    // Generate secure filename
     const timestamp = Date.now()
     const randomString = Math.random().toString(36).substring(2, 15)
-    const fileExtension = file.name.split('.').pop()
-    const fileName = `${timestamp}_${randomString}.${fileExtension}`
+    const sanitizedExtension = fileExtension?.replace(/[^a-zA-Z0-9]/g, '')
+    const fileName = `${timestamp}_${randomString}.${sanitizedExtension}`
     
     // Determine storage bucket path
     const bucketPath = fileType === 'image' ? `plan-images/${fileName}` : `plan-documents/${fileName}`

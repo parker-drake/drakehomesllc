@@ -69,9 +69,40 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Protect API routes that modify data (require authentication)
+  const protectedApiRoutes = [
+    '/api/properties',
+    '/api/plans',
+    '/api/gallery',
+    '/api/upload'
+  ]
+
+  const isProtectedApiRoute = protectedApiRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route)
+  )
+
+  const isWriteOperation = ['POST', 'PUT', 'DELETE'].includes(request.method)
+
+  if (isProtectedApiRoute && isWriteOperation) {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+  }
+
   return response
 }
 
 export const config = {
-  matcher: ['/admin/:path*']
+  matcher: [
+    '/admin/:path*',
+    '/api/properties/:path*',
+    '/api/plans/:path*', 
+    '/api/gallery/:path*',
+    '/api/upload/:path*'
+  ]
 } 
