@@ -345,18 +345,6 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                     </>
                   )}
                   
-                  {/* Construction Status Badge */}
-                  <Badge className={`absolute top-4 left-4 text-white ${getStatusColor(property.status)}`}>
-                    {property.status}
-                  </Badge>
-                  
-                  {/* Availability Status Badge */}
-                  {property.availability_status && (
-                    <Badge className={`absolute top-4 left-1/2 -translate-x-1/2 text-white ${getAvailabilityStatusColor(property.availability_status)}`}>
-                      {property.availability_status}
-                    </Badge>
-                  )}
-                  
                   {/* Action Buttons */}
                   <div className="absolute top-4 right-4 flex gap-2">
                     <Button
