@@ -22,7 +22,8 @@ import {
   Users,
   LogOut,
   UserCheck,
-  Image as ImageIcon
+  Image as ImageIcon,
+  FileText
 } from "lucide-react"
 
 interface Property {
@@ -418,6 +419,12 @@ export default function AdminDashboard() {
                     <Link href="/admin/properties">
                       <Plus className="w-4 h-4 mr-2" />
                       Add New Property
+                    </Link>
+                  </Button>
+                  <Button variant="outline" asChild className="w-full justify-start">
+                    <Link href="/admin/plans">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Manage Plans
                     </Link>
                   </Button>
                   <Button variant="outline" asChild className="w-full justify-start">
