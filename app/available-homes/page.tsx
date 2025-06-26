@@ -20,6 +20,7 @@ interface Property {
   sqft: string
   image?: string
   status: string
+  availability_status?: string
   description: string
   features: string[]
   completion_date: string
@@ -75,6 +76,21 @@ export default function AvailableHomes() {
         return "bg-purple-500"
       default:
         return "bg-gray-500"
+    }
+  }
+
+  const getAvailabilityStatusColor = (availabilityStatus: string) => {
+    switch (availabilityStatus) {
+      case "Available":
+        return "bg-green-600"
+      case "Under Contract":
+        return "bg-yellow-600"
+      case "Coming Soon":
+        return "bg-blue-600"
+      case "Sold":
+        return "bg-red-600"
+      default:
+        return "bg-green-600"
     }
   }
 
@@ -134,13 +150,24 @@ export default function AvailableHomes() {
                     className="w-full h-56 object-cover cursor-pointer group-hover:scale-105 transition-transform duration-500"
                   />
                 </Link>
+                
+                {/* Construction Status Badge - Top Left */}
                 <Badge className={`absolute top-4 left-4 text-white ${getStatusColor(property.status)}`}>
                   {property.status}
                 </Badge>
+                
+                {/* Availability Status Badge - Top Right */}
+                {property.availability_status && (
+                  <Badge className={`absolute top-4 right-4 text-white ${getAvailabilityStatusColor(property.availability_status)} z-10`}>
+                    {property.availability_status}
+                  </Badge>
+                )}
+                
+                {/* Heart Button - Moved to account for availability status */}
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-4 right-4 bg-white/90 hover:bg-white z-10"
+                  className={`absolute ${property.availability_status ? 'top-16 right-4' : 'top-4 right-4'} bg-white/90 hover:bg-white z-10`}
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
