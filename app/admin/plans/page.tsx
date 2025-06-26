@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { 
@@ -253,10 +253,8 @@ export default function AdminPlansPage() {
         {/* Add/Edit Form */}
         {showAddForm && (
           <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>{editingPlan ? 'Edit Plan' : 'Add New Plan'}</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold mb-6">{editingPlan ? 'Edit Plan' : 'Add New Plan'}</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
