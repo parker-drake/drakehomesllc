@@ -77,11 +77,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid file type specified.' }, { status: 400 })
     }
 
-    // Validate file size (5MB max for documents, 2MB max for images)
-    const maxSize = fileType === 'document' ? 5 * 1024 * 1024 : 2 * 1024 * 1024
+    // Validate file size (5MB max for both documents and images)
+    const maxSize = 5 * 1024 * 1024 // 5MB for both types
     if (file.size > maxSize) {
-      const maxSizeMB = fileType === 'document' ? '5MB' : '2MB'
-      return NextResponse.json({ error: `File size too large. Maximum size is ${maxSizeMB}.` }, { status: 400 })
+      return NextResponse.json({ error: `File size too large. Maximum size is 5MB.` }, { status: 400 })
     }
 
     // Validate filename (prevent directory traversal)
