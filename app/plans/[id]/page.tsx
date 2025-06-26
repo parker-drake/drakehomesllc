@@ -290,7 +290,7 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
         </div>
       </section>
 
-             {/* Floor Plans & Documents */}
+      {/* Floor Plans & Documents */}
       {plan.plan_documents && plan.plan_documents.length > 0 ? (
         <section className="py-12 bg-gray-50">
           <div className="container mx-auto px-4">
@@ -414,9 +414,9 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
             </div>
           </div>
         </section>
-      )}
+      ) : null}
 
-       {/* Image Gallery */}
+      {/* Image Gallery */}
       {filteredImages.length > 0 && (
         <section className="py-12">
           <div className="container mx-auto px-4">
