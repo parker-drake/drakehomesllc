@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Mail, Phone, MapPin, Send } from "lucide-react"
 import emailjs from '@emailjs/browser'
+import Script from "next/script"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -17,6 +18,31 @@ export default function ContactPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+
+  const contactSchema = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "mainEntity": {
+      "@type": "LocalBusiness",
+      "name": "Drake Homes LLC",
+      "telephone": ["920-740-6660", "920-224-5620"],
+      "email": "info@drakehomesllc.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "Wisconsin",
+        "addressLocality": "Fox Valley",
+        "addressCountry": "US"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "920-740-6660",
+        "contactType": "customer service",
+        "areaServed": "Wisconsin",
+        "availableLanguage": "English"
+      },
+      "openingHours": "Mo-Fr 08:00-17:00"
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,6 +86,11 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 md:py-12">
+      <Script
+        id="contact-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactSchema) }}
+      />
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-8 md:mb-12">

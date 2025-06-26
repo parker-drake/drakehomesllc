@@ -6,6 +6,8 @@ import Image from "next/image"
 import { ArrowRight, Award, CheckCircle, Clock, Mail, MapPin, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Script from "next/script"
+import { faqSchema } from "./faq-schema"
+import { enhancedLocalBusinessSchema } from "./local-seo-schema"
 
 interface Property {
   id: string
@@ -110,6 +112,16 @@ export default function Home() {
         id="structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <Script
+        id="enhanced-local-business-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(enhancedLocalBusinessSchema) }}
+      />
+      <Script
+        id="faq-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       {/* Hero Section with Background Image Slider */}
       <section className="relative w-full py-16 md:py-24 lg:py-32 xl:py-48 min-h-[60vh] md:min-h-[70vh] flex items-center overflow-hidden">

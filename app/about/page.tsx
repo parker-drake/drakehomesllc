@@ -13,10 +13,71 @@ import {
   Mail,
   ArrowRight
 } from "lucide-react"
+import { Metadata } from "next"
+import Script from "next/script"
+import { getBreadcrumbSchema } from "../breadcrumb-schema"
+
+export const metadata: Metadata = {
+  title: "About Us - 20+ Years of Quality Home Construction",
+  description: "Learn about Drake Homes LLC's commitment to quality construction in Wisconsin's Fox Valley. Over 20 years of experience building custom homes with no shortcuts, only excellence.",
+  keywords: ["about Drake Homes", "Wisconsin home builder", "Fox Valley construction company", "quality home construction", "custom home builder Wisconsin", "construction experience"],
+  openGraph: {
+    title: "About Drake Homes LLC - Quality Home Construction in Wisconsin",
+    description: "Learn about our 20+ years of construction experience and commitment to building quality homes in Wisconsin's Fox Valley area.",
+    url: "https://drakehomesllc.com/about",
+    type: "website",
+  },
+  twitter: {
+    title: "About Drake Homes LLC - Quality Construction",
+    description: "Learn about our 20+ years of construction experience in Wisconsin's Fox Valley area.",
+  },
+  alternates: {
+    canonical: "/about",
+  },
+}
 
 export default function AboutPage() {
+  const breadcrumbSchema = getBreadcrumbSchema('/about')
+  
+  const aboutSchema = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "mainEntity": {
+      "@type": "LocalBusiness",
+      "name": "Drake Homes LLC",
+      "description": "Quality home construction company with over 20 years of experience in Wisconsin's Fox Valley area",
+      "foundingDate": "2020",
+      "slogan": "Where Quality and Value Meet",
+      "knowsAbout": [
+        "Custom Home Construction",
+        "Residential Construction",
+        "Quality Home Building",
+        "Home Design"
+      ],
+      "areaServed": {
+        "@type": "GeoCircle",
+        "geoMidpoint": {
+          "@type": "GeoCoordinates",
+          "latitude": 44.2619,
+          "longitude": -88.4154
+        },
+        "geoRadius": 50000
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white">
+      <Script
+        id="about-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutSchema) }}
+      />
+      <Script
+        id="about-breadcrumb-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-red-600 to-red-800 text-white py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
