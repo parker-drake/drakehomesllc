@@ -30,6 +30,7 @@ interface Property {
   sqft: string
   main_image?: string
   status: string
+  availability_status?: string
   description: string
   features: string[]
   completion_date: string
@@ -56,6 +57,13 @@ const statusOptions = [
   "Under Construction", 
   "Nearly Complete",
   "Pre-Construction"
+]
+
+const availabilityStatusOptions = [
+  "Available",
+  "Under Contract",
+  "Coming Soon",
+  "Sold"
 ]
 
 export default function AdminProperties() {
@@ -92,6 +100,7 @@ export default function AdminProperties() {
     sqft: '',
     main_image: '',
     status: 'Pre-Construction',
+    availability_status: 'Available',
     description: '',
     features: [] as string[],
     completion_date: '',
@@ -406,6 +415,7 @@ export default function AdminProperties() {
       sqft: property.sqft,
       main_image: property.main_image || '',
       status: property.status,
+      availability_status: property.availability_status || 'Available',
       description: property.description,
       features: Array.isArray(property.features) ? property.features : [],
       completion_date: property.completion_date,
@@ -447,6 +457,7 @@ export default function AdminProperties() {
       sqft: '',
       main_image: '',
       status: 'Pre-Construction',
+      availability_status: 'Available',
       description: '',
       features: [],
       completion_date: '',
@@ -480,6 +491,7 @@ export default function AdminProperties() {
       sqft: '',
       main_image: '',
       status: 'Pre-Construction',
+      availability_status: 'Available',
       description: '',
       features: [],
       completion_date: '',
@@ -1013,6 +1025,15 @@ export default function AdminProperties() {
                     <option key={status} value={status}>{status}</option>
                   ))}
                 </select>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.availability_status}
+                  onChange={(e) => setFormData(prev => ({ ...prev, availability_status: e.target.value }))}
+                >
+                  {availabilityStatusOptions.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
                 <Input
                   placeholder="Completion Date"
                   value={formData.completion_date}
@@ -1481,6 +1502,19 @@ export default function AdminProperties() {
                         onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                       >
                         {statusOptions.map(status => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Availability Status *</label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value={formData.availability_status}
+                        onChange={(e) => setFormData(prev => ({ ...prev, availability_status: e.target.value }))}
+                      >
+                        {availabilityStatusOptions.map(status => (
                           <option key={status} value={status}>{status}</option>
                         ))}
                       </select>
