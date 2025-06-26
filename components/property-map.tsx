@@ -112,7 +112,7 @@ export default function PropertyMap({ location, title, price, latitude, longitud
             <div className="text-center">
               <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
               <p className="text-sm text-gray-600 mb-1">{location}</p>
-              <p className="text-lg font-bold text-green-600">{price}</p>
+              <p className="text-lg font-bold text-red-600">{price}</p>
             </div>
           </Popup>
         </Marker>

@@ -420,10 +420,12 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-green-600 mb-2">{property.price}</div>
-                  <div className="flex items-center text-gray-600">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    <span>{property.completion_date}</span>
+                  <div>
+                    <div className="text-3xl font-bold text-red-600 mb-2">{property.price}</div>
+                    <div className="flex items-center text-gray-600">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span>{property.completion_date}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -647,7 +649,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                       <h3 className="font-semibold text-gray-900 mb-2">{relatedProperty.title}</h3>
                       <p className="text-gray-600 text-sm mb-2">{relatedProperty.location}</p>
                       <div className="flex justify-between items-center">
-                        <div className="text-lg font-bold text-green-600">{relatedProperty.price}</div>
+                        <div className="text-lg font-bold text-red-600">{relatedProperty.price}</div>
                         <div className="text-sm text-gray-600">
                           {relatedProperty.beds}bd • {relatedProperty.baths}ba
                         </div>

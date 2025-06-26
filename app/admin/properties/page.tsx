@@ -1922,7 +1922,7 @@ export default function AdminProperties() {
                   </button>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1 line-clamp-2">{property.title}</h3>
-                    <p className="text-lg font-bold text-green-600">{property.price}</p>
+                    <p className="text-lg font-bold text-red-600">{property.price}</p>
                   </div>
                 </div>
                 

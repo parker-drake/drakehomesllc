@@ -213,7 +213,7 @@ export default function AvailableHomes() {
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="text-2xl font-bold text-green-600">{property.price}</div>
+                  <div className="text-2xl font-bold text-red-600">{property.price}</div>
                   <Link href={`/available-homes/${property.id}`}>
                     <Button size="sm" className="bg-red-600 hover:bg-red-700">
                       View Details
