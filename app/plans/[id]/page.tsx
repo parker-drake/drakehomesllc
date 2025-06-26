@@ -85,6 +85,9 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
       const response = await fetch(`/api/plans/${params.id}`)
       if (response.ok) {
         const data = await response.json()
+        console.log('Plan data received:', data)
+        console.log('Plan documents:', data.plan_documents)
+        console.log('Plan documents length:', data.plan_documents?.length)
         setPlan(data)
       } else {
         console.error('Plan not found')
@@ -274,6 +277,7 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
       </section>
 
              {/* Floor Plans & Documents */}
+      {console.log('Checking documents for render:', plan?.plan_documents) || null}
       {plan.plan_documents && plan.plan_documents.length > 0 && (
         <section className="py-12 bg-gray-50">
           <div className="container mx-auto px-4">
