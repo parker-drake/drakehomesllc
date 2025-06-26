@@ -41,22 +41,22 @@ export function Header() {
             <Building className="w-8 h-8 hidden" />
           </Link>
           <nav className="hidden md:flex gap-6">
-            <Link href="/" className="text-sm font-medium hover:underline underline-offset-4">
+            <Link href="/" className="text-base font-medium hover:underline underline-offset-4">
               Home
             </Link>
-            <Link href="/available-homes" className="text-sm font-medium hover:underline underline-offset-4">
+            <Link href="/available-homes" className="text-base font-medium hover:underline underline-offset-4">
               Available Homes
             </Link>
-            <Link href="/plans" className="text-sm font-medium hover:underline underline-offset-4">
+            <Link href="/plans" className="text-base font-medium hover:underline underline-offset-4">
               Plans
             </Link>
-            <Link href="/gallery" className="text-sm font-medium hover:underline underline-offset-4">
+            <Link href="/gallery" className="text-base font-medium hover:underline underline-offset-4">
               Gallery
             </Link>
-            <Link href="/about" className="text-sm font-medium hover:underline underline-offset-4">
+            <Link href="/about" className="text-base font-medium hover:underline underline-offset-4">
               About
             </Link>
-            <Link href="/contact" className="text-sm font-medium hover:underline underline-offset-4">
+            <Link href="/contact" className="text-base font-medium hover:underline underline-offset-4">
               Contact
             </Link>
           </nav>
