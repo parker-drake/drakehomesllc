@@ -44,6 +44,7 @@ interface Property {
   main_image?: string
   property_images?: PropertyImage[]
   status: string
+  availability_status?: string
   description: string
   features: string[]
   completion_date: string
@@ -147,6 +148,21 @@ export default function PropertyPage({ params }: PropertyPageProps) {
         return "bg-purple-500"
       default:
         return "bg-gray-500"
+    }
+  }
+
+  const getAvailabilityStatusColor = (availabilityStatus: string) => {
+    switch (availabilityStatus) {
+      case "Available":
+        return "bg-green-600"
+      case "Under Contract":
+        return "bg-yellow-600"
+      case "Coming Soon":
+        return "bg-blue-600"
+      case "Sold":
+        return "bg-red-600"
+      default:
+        return "bg-green-600"
     }
   }
 
@@ -329,10 +345,17 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                     </>
                   )}
                   
-                  {/* Status Badge */}
+                  {/* Construction Status Badge */}
                   <Badge className={`absolute top-4 left-4 text-white ${getStatusColor(property.status)}`}>
                     {property.status}
                   </Badge>
+                  
+                  {/* Availability Status Badge */}
+                  {property.availability_status && (
+                    <Badge className={`absolute top-4 left-1/2 -translate-x-1/2 text-white ${getAvailabilityStatusColor(property.availability_status)}`}>
+                      {property.availability_status}
+                    </Badge>
+                  )}
                   
                   {/* Action Buttons */}
                   <div className="absolute top-4 right-4 flex gap-2">
@@ -394,6 +417,18 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                   <div className="flex items-center text-gray-600 mb-4">
                     <MapPin className="h-5 w-5 mr-2" />
                     <span className="text-lg">{property.location}</span>
+                  </div>
+                  
+                  {/* Status Badges */}
+                  <div className="flex gap-3 mb-4">
+                    <Badge className={`text-white ${getStatusColor(property.status)}`}>
+                      {property.status}
+                    </Badge>
+                    {property.availability_status && (
+                      <Badge className={`text-white ${getAvailabilityStatusColor(property.availability_status)}`}>
+                        {property.availability_status}
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
