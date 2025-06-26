@@ -294,7 +294,7 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
       {plan.plan_documents && plan.plan_documents.length > 0 ? (
         <section className="py-12 bg-gray-50">
           <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900">Floor Plans & Documents</h2>
               <Button 
                 variant="outline" 
@@ -306,111 +306,130 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
               </Button>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Document List */}
-              <div className="lg:col-span-1">
-                <div className="space-y-3">
-                  {plan.plan_documents.map((doc, index) => (
-                    <Card 
-                      key={index} 
-                      className={`cursor-pointer transition-all ${
-                        selectedDocument === doc.document_url ? 'ring-2 ring-red-600 bg-red-50' : 'hover:shadow-md'
+            {/* Document Tabs */}
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-2 mb-4">
+                {plan.plan_documents.map((doc, index) => (
+                  <Button
+                    key={index}
+                    variant={selectedDocument === doc.document_url ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedDocument(doc.document_url)}
+                    className={`${
+                      selectedDocument === doc.document_url 
+                        ? "bg-red-600 hover:bg-red-700 text-white" 
+                        : "hover:bg-gray-100"
+                    } transition-all`}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    {doc.title}
+                    <Badge 
+                      variant="secondary" 
+                      className={`ml-2 text-xs ${
+                        selectedDocument === doc.document_url ? "bg-red-500 text-white" : ""
                       }`}
-                      onClick={() => setSelectedDocument(doc.document_url)}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-red-100 p-2 rounded">
-                            <FileText className="w-5 h-5 text-red-600" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-medium text-gray-900">{doc.title}</h3>
-                            <p className="text-sm text-gray-600">{doc.description}</p>
-                            <Badge variant="outline" className="mt-1 text-xs">
-                              {doc.file_type.toUpperCase()}
-                            </Badge>
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedDocument(doc.document_url)
-                              }}
-                            >
-                              <ZoomIn className="w-3 h-3 mr-1" />
-                              View
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              asChild
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <a href={doc.document_url} target="_blank" rel="noopener noreferrer">
-                                <Download className="w-3 h-3 mr-1" />
-                                Download
-                              </a>
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                      {doc.file_type.toUpperCase()}
+                    </Badge>
+                  </Button>
+                ))}
               </div>
               
-              {/* Document Viewer */}
-              <div className="lg:col-span-2">
-                {selectedDocument ? (
-                  <Card>
-                    <CardContent className="p-0">
-                      <div className="relative h-96 md:h-[600px] bg-gray-100 rounded-lg overflow-hidden">
-                        {selectedDocument.toLowerCase().endsWith('.pdf') ? (
-                          <iframe
-                            src={`${selectedDocument}#toolbar=1&navpanes=1&scrollbar=1`}
-                            className="w-full h-full border-0"
-                            title="Floor Plan PDF"
-                          />
-                        ) : (
-                          <Image
-                            src={selectedDocument}
-                            alt="Floor plan"
-                            fill
-                            className="object-contain"
-                          />
-                        )}
-                      </div>
-                      <div className="p-4 bg-gray-50 border-t">
-                        <div className="flex justify-between items-center">
-                          <p className="text-sm text-gray-600">
-                            Click and drag to navigate • Use browser zoom for details
-                          </p>
+              {/* Document Info */}
+              {selectedDocument && (
+                <div className="bg-white p-4 rounded-lg border mb-6">
+                  {(() => {
+                    const selectedDoc = plan.plan_documents.find(doc => doc.document_url === selectedDocument);
+                    return selectedDoc ? (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{selectedDoc.title}</h3>
+                          <p className="text-sm text-gray-600">{selectedDoc.description}</p>
+                        </div>
+                        <div className="flex gap-2">
                           <Button variant="outline" size="sm" asChild>
-                            <a href={selectedDocument} target="_blank" rel="noopener noreferrer">
-                              <Download className="w-3 h-3 mr-1" />
+                            <a href={selectedDoc.document_url} target="_blank" rel="noopener noreferrer">
+                              <Download className="w-4 h-4 mr-2" />
                               Download
                             </a>
                           </Button>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card>
-                    <CardContent className="p-12 text-center">
-                      <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Select a Document to View
-                      </h3>
-                      <p className="text-gray-600">
-                        Click on any floor plan or document from the list to view it here.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+                    ) : null;
+                  })()}
+                </div>
+              )}
+            </div>
+            
+            {/* Document Viewer */}
+            <div className="w-full">
+              {selectedDocument ? (
+                <Card className="overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="relative h-[70vh] bg-gray-100">
+                      {selectedDocument.toLowerCase().endsWith('.pdf') ? (
+                        <iframe
+                          src={`${selectedDocument}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
+                          className="w-full h-full border-0"
+                          title="Floor Plan PDF"
+                        />
+                      ) : (
+                        <Image
+                          src={selectedDocument}
+                          alt="Floor plan"
+                          fill
+                          className="object-contain"
+                        />
+                      )}
+                    </div>
+                    <div className="p-4 bg-gray-50 border-t">
+                      <div className="flex justify-between items-center text-sm text-gray-600">
+                        <p>Use browser controls to zoom and navigate • Full-screen available</p>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={selectedDocument} target="_blank" rel="noopener noreferrer">
+                              <ZoomIn className="w-4 h-4 mr-2" />
+                              Open Full Screen
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="p-16 text-center">
+                    <FileText className="w-20 h-20 text-gray-400 mx-auto mb-6" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                      Select a Document to View
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Choose from the available floor plans and documents above to view them here.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                      {plan.plan_documents.map((doc, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          onClick={() => setSelectedDocument(doc.document_url)}
+                          className="h-auto p-4 text-left hover:bg-gray-50"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="bg-red-100 p-2 rounded">
+                              <FileText className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{doc.title}</p>
+                              <p className="text-xs text-gray-500">{doc.file_type.toUpperCase()}</p>
+                            </div>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </section>
