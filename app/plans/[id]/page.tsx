@@ -80,23 +80,28 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
     }
   }, [plan, selectedDocument])
 
-  useEffect(() => {
-    // Debug logging for plan documents
-    if (plan) {
-      console.log('Plan changed - documents:', plan.plan_documents)
-      console.log('Plan documents length:', plan.plan_documents?.length)
-      console.log('Will show PDF section?', plan.plan_documents && plan.plan_documents.length > 0)
-    }
-  }, [plan])
+  // Optional: Add a refresh mechanism if documents disappear
+  const refreshPlan = () => {
+    setLoading(true)
+    fetchPlan()
+  }
 
   const fetchPlan = async () => {
     try {
-      const response = await fetch(`/api/plans/${params.id}`)
+      const response = await fetch(`/api/plans/${params.id}`, {
+        // Add cache headers to prevent stale data
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      })
       if (response.ok) {
         const data = await response.json()
-        console.log('Plan data received:', data)
-        console.log('Plan documents:', data.plan_documents)
-        console.log('Plan documents length:', data.plan_documents?.length)
+        // Validate that plan_documents is properly formatted
+        if (data.plan_documents && !Array.isArray(data.plan_documents)) {
+          console.warn('Plan documents is not an array, converting:', data.plan_documents)
+          data.plan_documents = []
+        }
         setPlan(data)
       } else {
         console.error('Plan not found')
@@ -286,10 +291,20 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
       </section>
 
              {/* Floor Plans & Documents */}
-      {plan.plan_documents && plan.plan_documents.length > 0 && (
+      {plan.plan_documents && plan.plan_documents.length > 0 ? (
         <section className="py-12 bg-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Floor Plans & Documents</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Floor Plans & Documents</h2>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={refreshPlan}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                Refresh
+              </Button>
+            </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Document List */}
