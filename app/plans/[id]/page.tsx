@@ -80,6 +80,15 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
     }
   }, [plan, selectedDocument])
 
+  useEffect(() => {
+    // Debug logging for plan documents
+    if (plan) {
+      console.log('Plan changed - documents:', plan.plan_documents)
+      console.log('Plan documents length:', plan.plan_documents?.length)
+      console.log('Will show PDF section?', plan.plan_documents && plan.plan_documents.length > 0)
+    }
+  }, [plan])
+
   const fetchPlan = async () => {
     try {
       const response = await fetch(`/api/plans/${params.id}`)
@@ -277,7 +286,6 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
       </section>
 
              {/* Floor Plans & Documents */}
-      {console.log('Checking documents for render:', plan?.plan_documents) || null}
       {plan.plan_documents && plan.plan_documents.length > 0 && (
         <section className="py-12 bg-gray-50">
           <div className="container mx-auto px-4">
