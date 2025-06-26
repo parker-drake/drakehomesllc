@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { FileUpload, UploadedFile } from "@/components/ui/file-upload"
 import { 
   Plus, 
   Edit, 
@@ -65,14 +66,7 @@ export default function AdminPlansPage() {
   })
 
   const [newFeature, setNewFeature] = useState('')
-  const [newImage, setNewImage] = useState({ url: '', type: 'photo', title: '', description: '' })
-  const [newDocument, setNewDocument] = useState({ 
-    url: '', 
-    type: 'floor_plan', 
-    file_type: 'pdf',
-    title: '', 
-    description: '' 
-  })
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchPlans()
@@ -110,8 +104,7 @@ export default function AdminPlansPage() {
       documents: []
     })
     setNewFeature('')
-    setNewImage({ url: '', type: 'photo', title: '', description: '' })
-    setNewDocument({ url: '', type: 'floor_plan', file_type: 'pdf', title: '', description: '' })
+    setUploadError(null)
     setEditingPlan(null)
     setShowAddForm(false)
   }
@@ -216,14 +209,20 @@ export default function AdminPlansPage() {
     }))
   }
 
-  const addImage = () => {
-    if (newImage.url.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, newImage]
-      }))
-      setNewImage({ url: '', type: 'photo', title: '', description: '' })
-    }
+  const handleImageUpload = (url: string, fileName: string, type: string = 'photo') => {
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, { url, type, title: fileName, description: '' }]
+    }))
+    setUploadError(null)
+  }
+
+  const handleDocumentUpload = (url: string, fileName: string, type: string = 'floor_plan', fileType: string = 'pdf') => {
+    setFormData(prev => ({
+      ...prev,
+      documents: [...prev.documents, { url, type, file_type: fileType, title: fileName, description: '' }]
+    }))
+    setUploadError(null)
   }
 
   const removeImage = (index: number) => {
@@ -233,21 +232,15 @@ export default function AdminPlansPage() {
     }))
   }
 
-  const addDocument = () => {
-    if (newDocument.url.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        documents: [...prev.documents, newDocument]
-      }))
-      setNewDocument({ url: '', type: 'floor_plan', file_type: 'pdf', title: '', description: '' })
-    }
-  }
-
   const removeDocument = (index: number) => {
     setFormData(prev => ({
       ...prev,
       documents: prev.documents.filter((_, i) => i !== index)
     }))
+  }
+
+  const handleUploadError = (error: string) => {
+    setUploadError(error)
   }
 
   if (loading) {
@@ -390,12 +383,22 @@ export default function AdminPlansPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Main Image URL</label>
-                  <Input
-                    value={formData.main_image}
-                    onChange={(e) => setFormData(prev => ({ ...prev, main_image: e.target.value }))}
-                    placeholder="https://example.com/image.jpg"
-                  />
+                  <label className="block text-sm font-medium mb-2">Main Image</label>
+                  {formData.main_image ? (
+                    <UploadedFile
+                      fileName="Main Image"
+                      url={formData.main_image}
+                      type="image"
+                      onRemove={() => setFormData(prev => ({ ...prev, main_image: '' }))}
+                    />
+                  ) : (
+                    <FileUpload
+                      type="image"
+                      onUploadComplete={(url, fileName) => setFormData(prev => ({ ...prev, main_image: url }))}
+                      onUploadError={handleUploadError}
+                      maxSizeMB={5}
+                    />
+                  )}
                 </div>
                 
                 {/* Features */}
@@ -423,82 +426,87 @@ export default function AdminPlansPage() {
                 {/* Floor Plan Documents */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Floor Plan Documents</label>
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-2">
-                    <Input
-                      value={newDocument.url}
-                      onChange={(e) => setNewDocument(prev => ({ ...prev, url: e.target.value }))}
-                      placeholder="Document URL"
+                  <div className="space-y-4">
+                    <FileUpload
+                      type="document"
+                      onUploadComplete={(url, fileName) => {
+                        // Determine document type based on filename
+                        const lowerName = fileName.toLowerCase()
+                        let docType = 'floor_plan'
+                        if (lowerName.includes('elevation')) docType = 'elevation'
+                        else if (lowerName.includes('site')) docType = 'site_plan'
+                        else if (lowerName.includes('spec')) docType = 'specification'
+                        
+                        // Determine file type based on extension
+                        const extension = fileName.split('.').pop()?.toLowerCase() || 'pdf'
+                        let fileType = extension
+                        if (extension === 'jpg' || extension === 'jpeg') fileType = 'jpg'
+                        
+                        handleDocumentUpload(url, fileName, docType, fileType)
+                      }}
+                      onUploadError={handleUploadError}
+                      maxSizeMB={10}
+                      className="mb-4"
                     />
-                    <select
-                      value={newDocument.type}
-                      onChange={(e) => setNewDocument(prev => ({ ...prev, type: e.target.value }))}
-                      className="border border-gray-300 rounded-md px-3 py-2"
-                    >
-                      <option value="floor_plan">Floor Plan</option>
-                      <option value="elevation">Elevation</option>
-                      <option value="site_plan">Site Plan</option>
-                      <option value="specification">Specification</option>
-                    </select>
-                    <select
-                      value={newDocument.file_type}
-                      onChange={(e) => setNewDocument(prev => ({ ...prev, file_type: e.target.value }))}
-                      className="border border-gray-300 rounded-md px-3 py-2"
-                    >
-                      <option value="pdf">PDF</option>
-                      <option value="jpg">JPG</option>
-                      <option value="png">PNG</option>
-                      <option value="dwg">DWG</option>
-                    </select>
-                    <Input
-                      value={newDocument.title}
-                      onChange={(e) => setNewDocument(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="Title (optional)"
-                    />
-                    <Button type="button" onClick={addDocument} size="sm">Add Document</Button>
-                  </div>
-                  <div className="space-y-2">
-                    {formData.documents.map((document, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                        <span className="text-sm flex-1">{document.title || document.url}</span>
-                        <Badge variant="outline">{document.type}</Badge>
-                        <Badge variant="outline" className="text-xs">{document.file_type.toUpperCase()}</Badge>
-                        <X className="w-4 h-4 cursor-pointer text-red-600" onClick={() => removeDocument(index)} />
+                    
+                    {formData.documents.length > 0 && (
+                      <div className="space-y-2">
+                        {formData.documents.map((document, index) => (
+                          <UploadedFile
+                            key={index}
+                            fileName={document.title || 'Document'}
+                            url={document.url}
+                            type="document"
+                            onRemove={() => removeDocument(index)}
+                          />
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
 
                 {/* Additional Images */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Additional Images</label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-                    <Input
-                      value={newImage.url}
-                      onChange={(e) => setNewImage(prev => ({ ...prev, url: e.target.value }))}
-                      placeholder="Image URL"
+                  <div className="space-y-4">
+                    <FileUpload
+                      type="image"
+                      onUploadComplete={(url, fileName) => {
+                        // Determine image type based on filename
+                        const lowerName = fileName.toLowerCase()
+                        let imageType = 'photo'
+                        if (lowerName.includes('floor') || lowerName.includes('plan')) imageType = 'floor_plan'
+                        else if (lowerName.includes('elevation')) imageType = 'elevation'
+                        else if (lowerName.includes('interior')) imageType = 'interior'
+                        
+                        handleImageUpload(url, fileName, imageType)
+                      }}
+                      onUploadError={handleUploadError}
+                      maxSizeMB={5}
+                      className="mb-4"
                     />
-                    <select
-                      value={newImage.type}
-                      onChange={(e) => setNewImage(prev => ({ ...prev, type: e.target.value }))}
-                      className="border border-gray-300 rounded-md px-3 py-2"
-                    >
-                      <option value="photo">Photo</option>
-                      <option value="floor_plan">Floor Plan</option>
-                      <option value="elevation">Elevation</option>
-                      <option value="interior">Interior</option>
-                    </select>
-                    <Button type="button" onClick={addImage} size="sm">Add Image</Button>
-                  </div>
-                  <div className="space-y-2">
-                    {formData.images.map((image, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                        <span className="text-sm flex-1">{image.url}</span>
-                        <Badge variant="outline">{image.type}</Badge>
-                        <X className="w-4 h-4 cursor-pointer text-red-600" onClick={() => removeImage(index)} />
+                    
+                    {formData.images.length > 0 && (
+                      <div className="space-y-2">
+                        {formData.images.map((image, index) => (
+                          <UploadedFile
+                            key={index}
+                            fileName={image.title || 'Image'}
+                            url={image.url}
+                            type="image"
+                            onRemove={() => removeImage(index)}
+                          />
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
+                
+                {uploadError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-600">{uploadError}</p>
+                  </div>
+                )}
                 
                 <div className="flex items-center gap-2">
                   <input
