@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    // App directory is now stable, no need for experimental flag
+    optimizeCss: true,
+    scrollRestoration: true,
   },
   images: {
     remotePatterns: [
@@ -12,6 +13,17 @@ const nextConfig = {
         pathname: '/storage/v1/object/public/**',
       },
     ],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+  poweredByHeader: false,
+  compress: true,
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
 }
 

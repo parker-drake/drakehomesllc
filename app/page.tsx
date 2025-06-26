@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight, Award, CheckCircle, Clock, Mail, MapPin, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Script from "next/script"
 
 interface Property {
   id: string
@@ -57,8 +58,59 @@ export default function Home() {
       return () => clearInterval(timer)
     }
   }, [properties.length])
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Drake Homes LLC",
+    "description": "Quality construction services with a focus on excellence, reliability, and customer satisfaction. Over 20 years of home construction experience in Wisconsin's Fox Valley area.",
+    "url": "https://drakehomesllc.com",
+    "telephone": "920-740-6660",
+    "address": {
+      "@type": "PostalAddress",
+      "addressRegion": "Wisconsin",
+      "addressLocality": "Fox Valley",
+      "addressCountry": "US"
+    },
+    "areaServed": {
+      "@type": "GeoCircle",
+      "geoMidpoint": {
+        "@type": "GeoCoordinates",
+        "latitude": 44.2619,
+        "longitude": -88.4154
+      },
+      "geoRadius": 50000
+    },
+    "serviceType": ["Home Construction", "Custom Home Building", "Residential Construction"],
+    "priceRange": "$$",
+    "openingHours": "Mo-Fr 08:00-17:00",
+    "founder": {
+      "@type": "Person",
+      "name": "Drake Homes LLC Team"
+    },
+    "slogan": "Where Quality and Value Meet",
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Construction Services",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Custom Home Construction",
+            "description": "Quality custom home building services"
+          }
+        }
+      ]
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
+      <Script
+        id="structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       {/* Hero Section with Background Image Slider */}
       <section className="relative w-full py-16 md:py-24 lg:py-32 xl:py-48 min-h-[60vh] md:min-h-[70vh] flex items-center overflow-hidden">
         {/* Background Image Slider */}
