@@ -93,7 +93,9 @@ export async function POST(request: NextRequest) {
       school_district,
       hoa_fee,
       utilities_included,
-      exterior_materials
+      exterior_materials,
+      // Plan template images
+      template_images
     } = body
 
     // Validate required fields (latitude, longitude, and main_image are optional)
@@ -142,6 +144,26 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to create property', details: error.message },
         { status: 500 }
       )
+    }
+
+    // If template_images are provided (from plan template), insert them into property_images table
+    if (template_images && template_images.length > 0 && property) {
+      const imageInserts = template_images.map((img: any, index: number) => ({
+        property_id: property.id,
+        image_url: img.image_url,
+        is_main: img.is_main || false,
+        display_order: img.display_order || index,
+        alt_text: img.alt_text || img.title || `${title} - Image ${index + 1}`
+      }))
+
+      const { error: imagesError } = await supabaseAdmin
+        .from('property_images')
+        .insert(imageInserts)
+
+      if (imagesError) {
+        console.error('Error inserting property images:', imagesError)
+        // Don't fail the whole request, just log the error
+      }
     }
 
     return NextResponse.json(property, { status: 201 })

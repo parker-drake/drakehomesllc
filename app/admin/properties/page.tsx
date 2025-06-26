@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon, Star, StarOff, ArrowLeft, Search, Filter, SlidersHorizontal, RotateCcw, Check, CheckSquare, Square, Users, Edit2, Trash, MapPin, Bed, Bath } from "lucide-react"
+import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon, Star, StarOff, ArrowLeft, Search, Filter, SlidersHorizontal, RotateCcw, Check, CheckSquare, Square, Users, Edit2, Trash, MapPin, Bed, Bath, Home } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { v4 as uuidv4 } from "uuid"
 import Image from "next/image"
@@ -76,6 +76,11 @@ export default function AdminProperties() {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({})
   const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([])
+  
+  // Plan Template States
+  const [showPlanSelector, setShowPlanSelector] = useState(false)
+  const [availablePlans, setAvailablePlans] = useState<any[]>([])
+  const [loadingPlans, setLoadingPlans] = useState(false)
 
   // Search and Filter States
   const [searchTerm, setSearchTerm] = useState('')
@@ -121,6 +126,7 @@ export default function AdminProperties() {
 
   useEffect(() => {
     fetchProperties()
+    fetchPlans()
   }, [])
 
   useEffect(() => {
@@ -161,6 +167,21 @@ export default function AdminProperties() {
       console.error('Error fetching properties:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchPlans = async () => {
+    try {
+      setLoadingPlans(true)
+      const response = await fetch('/api/plans')
+      if (response.ok) {
+        const data = await response.json()
+        setAvailablePlans(data)
+      }
+    } catch (error) {
+      console.error('Error fetching plans:', error)
+    } finally {
+      setLoadingPlans(false)
     }
   }
 
@@ -354,12 +375,20 @@ export default function AdminProperties() {
       
       console.log('Saving property:', formData)
       
+      // Prepare data to send, including template images if this is a new property
+      const dataToSend = {
+        ...formData,
+        ...(isAddingNew && propertyImages.length > 0 && {
+          template_images: propertyImages
+        })
+      }
+      
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       })
 
       if (response.ok) {
@@ -447,6 +476,59 @@ export default function AdminProperties() {
     resetFormDataOnly()
   }
 
+  const startAddNewFromPlan = () => {
+    setShowPlanSelector(true)
+  }
+
+  const selectPlanAsTemplate = (plan: any) => {
+    // Map plan data to property form
+    setFormData({
+      title: `${plan.title} - `, // Leave space for location to be added
+      price: plan.price ? plan.price.toString() : '',
+      location: '', // Leave empty for user to fill
+      beds: plan.bedrooms || 0,
+      baths: plan.bathrooms || 0,
+      sqft: plan.square_footage ? plan.square_footage.toString() : '',
+      main_image: plan.main_image || '',
+      status: 'Pre-Construction',
+      availability_status: 'Available',
+      description: plan.description || '',
+      features: plan.plan_features?.map((f: any) => f.feature_name) || [],
+      completion_date: '',
+      latitude: 0,
+      longitude: 0,
+      // Property Information fields
+      lot_size: '',
+      year_built: 0,
+      property_type: 'Single Family Home',
+      garage_spaces: plan.garage_spaces || 0,
+      heating_cooling: '',
+      flooring_type: '',
+      school_district: '',
+      hoa_fee: '',
+      utilities_included: '',
+      exterior_materials: ''
+    })
+
+    // Set property images from plan images
+    if (plan.plan_images && plan.plan_images.length > 0) {
+      const mappedImages = plan.plan_images.map((img: any, index: number) => ({
+        id: uuidv4(),
+        property_id: '', // Will be set when property is saved
+        image_url: img.image_url,
+        is_main: index === 0, // First image becomes main
+        display_order: index,
+        alt_text: img.title || `${plan.title} - Image ${index + 1}`
+      }))
+      setPropertyImages(mappedImages)
+    }
+
+    setIsAddingNew(true)
+    setEditingProperty(null)
+    setShowPlanSelector(false)
+    setShowAddModal(true)
+  }
+
   const resetForm = () => {
     setFormData({
       title: '',
@@ -478,6 +560,7 @@ export default function AdminProperties() {
     setEditingProperty(null)
     setIsAddingNew(false)
     setShowAddModal(false)
+    setShowPlanSelector(false)
     setPropertyImages([])
   }
 
@@ -747,12 +830,18 @@ export default function AdminProperties() {
             </Button>
             <h1 className="text-3xl font-bold text-gray-900">Property Management</h1>
           </div>
-          <div className="relative">
-            <Button onClick={startAddNew} className="bg-red-600 hover:bg-red-700 shadow-lg hover:shadow-xl transition-all duration-200 scale-105 hover:scale-110">
-              <Plus className="w-5 h-5 mr-2" />
-              Add New Property
+          <div className="flex gap-3">
+            <div className="relative">
+              <Button onClick={startAddNew} className="bg-red-600 hover:bg-red-700 shadow-lg hover:shadow-xl transition-all duration-200">
+                <Plus className="w-5 h-5 mr-2" />
+                Add New Property
+              </Button>
+              <div className="absolute -bottom-6 right-0 text-xs text-gray-500">Ctrl+N</div>
+            </div>
+            <Button onClick={startAddNewFromPlan} variant="outline" className="border-red-200 text-red-700 hover:bg-red-50">
+              <Home className="w-5 h-5 mr-2" />
+              Use Plan as Template
             </Button>
-            <div className="absolute -bottom-6 right-0 text-xs text-gray-500">Ctrl+N</div>
           </div>
         </div>
 
@@ -1996,6 +2085,112 @@ export default function AdminProperties() {
           </div>
         )}
       </div>
+
+      {/* Plan Selector Modal */}
+      {showPlanSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full m-4 max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">Select a Plan as Template</h2>
+              <Button variant="ghost" onClick={() => setShowPlanSelector(false)}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+              {loadingPlans ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading plans...</p>
+                </div>
+              ) : availablePlans.length === 0 ? (
+                <div className="text-center py-12">
+                  <Home className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Plans Available</h3>
+                  <p className="text-gray-600 mb-4">Create some house plans first to use as templates.</p>
+                  <Button asChild variant="outline">
+                    <Link href="/admin/plans">Go to Plans Management</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {availablePlans.map((plan) => (
+                    <Card key={plan.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => selectPlanAsTemplate(plan)}>
+                      <div className="relative h-48 bg-gray-200">
+                        {plan.is_featured && (
+                          <Badge className="absolute top-2 left-2 z-10 bg-red-600">
+                            <Star className="w-3 h-3 mr-1 fill-current" />
+                            Featured
+                          </Badge>
+                        )}
+                        
+                        {plan.main_image ? (
+                          <Image
+                            src={plan.main_image}
+                            alt={plan.title}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                            <Home className="w-12 h-12 text-gray-500" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <CardContent className="p-4">
+                        <div className="mb-3">
+                          <h3 className="text-lg font-bold text-gray-900 mb-1">{plan.title}</h3>
+                          <Badge variant="outline" className="text-xs">{plan.style}</Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
+                          <div className="flex items-center gap-1">
+                            <Square className="w-3 h-3 text-red-600" />
+                            <span>{plan.square_footage?.toLocaleString()} sq ft</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Bed className="w-3 h-3 text-red-600" />
+                            <span>{plan.bedrooms} bed</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Bath className="w-3 h-3 text-red-600" />
+                            <span>{plan.bathrooms} bath</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Star className="w-3 h-3 text-red-600" />
+                            <span>${plan.price?.toLocaleString()}</span>
+                          </div>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                          {plan.description || 'No description available'}
+                        </p>
+                        
+                        <div className="pt-3 border-t">
+                          <Button className="w-full bg-red-600 hover:bg-red-700">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Use This Plan
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-between items-center p-6 border-t bg-gray-50">
+              <p className="text-sm text-gray-600">
+                Select a plan to automatically populate property details
+              </p>
+              <Button variant="outline" onClick={() => setShowPlanSelector(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 
