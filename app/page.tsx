@@ -184,7 +184,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <Button size="lg" className="bg-red-600 hover:bg-red-700 text-base px-8 py-3 min-h-[48px]" asChild>
-                <Link href="/contact">Get a Free Quote</Link>
+                <Link href="/contact">Contact Us</Link>
               </Button>
               <Button
                 size="lg"
@@ -267,7 +267,7 @@ export default function Home() {
           <div className="text-center space-y-6 mb-12">
             <h2 className="text-3xl md:text-4xl font-bold">Ready to Build Your Dream Home?</h2>
             <p className="max-w-[600px] text-red-100 text-lg mx-auto">
-              Contact us today for a free consultation and let's discuss your vision.
+              Contact us today for a consultation and let's discuss your vision.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
@@ -290,7 +290,7 @@ export default function Home() {
           <div className="text-center">
             <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100" asChild>
               <Link href="/contact">
-                Get Your Free Quote Today
+                Contact Us Today
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
