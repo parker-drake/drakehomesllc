@@ -66,7 +66,7 @@ export default function Home() {
     "name": "Drake Homes LLC",
     "description": "Quality construction services with a focus on excellence, reliability, and customer satisfaction. Over 20 years of home construction experience in Wisconsin's Fox Valley area.",
     "url": "https://drakehomesllc.com",
-    "telephone": "920-740-6660",
+
     "address": {
       "@type": "PostalAddress",
       "addressRegion": "Wisconsin",

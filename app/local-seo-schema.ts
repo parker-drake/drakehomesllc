@@ -7,7 +7,6 @@ export const enhancedLocalBusinessSchema = {
   "url": "https://drakehomesllc.com",
   "logo": "https://drakehomesllc.com/DrakeHomes_Logo.jpg",
   "image": "https://drakehomesllc.com/DrakeHomes_Logo.jpg",
-  "telephone": "920-740-6660",
   "email": "info@drakehomesllc.com",
   "address": {
     "@type": "PostalAddress",
@@ -100,14 +99,6 @@ export const enhancedLocalBusinessSchema = {
     "https://www.linkedin.com/company/drake-homes-llc"
   ],
   "contactPoint": [
-    {
-      "@type": "ContactPoint",
-      "telephone": "920-740-6660",
-      "contactType": "customer service",
-      "areaServed": "Wisconsin",
-      "availableLanguage": "English",
-      "contactOption": "TollFree"
-    },
     {
       "@type": "ContactPoint",
       "email": "info@drakehomesllc.com",

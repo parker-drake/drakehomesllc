@@ -35,7 +35,7 @@ export default function ContactPage() {
       },
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": "920-740-6660",
+        "email": "info@drakehomesllc.com",
         "contactType": "customer service",
         "areaServed": "Wisconsin",
         "availableLanguage": "English"
