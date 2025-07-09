@@ -1,0 +1,496 @@
+"use client"
+
+import React, { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { 
+  ArrowLeft,
+  ArrowRight,
+  Home,
+  CheckCircle,
+  Circle,
+  Mail,
+  Phone,
+  User,
+  MessageSquare,
+  Loader2
+} from "lucide-react"
+
+interface Plan {
+  id: string
+  title: string
+  description: string
+  square_footage: number
+  bedrooms: number
+  bathrooms: number
+  style: string
+  main_image: string
+}
+
+interface CustomizationOption {
+  id: string
+  name: string
+  description: string
+  image_url?: string
+  is_default: boolean
+  sort_order: number
+}
+
+interface CustomizationCategory {
+  id: string
+  name: string
+  description: string
+  step_order: number
+  icon: string
+  customization_options: CustomizationOption[]
+}
+
+interface CustomerInfo {
+  name: string
+  email: string
+  phone: string
+  message: string
+}
+
+export default function PlanConfiguratorPage() {
+  const params = useParams()
+  const router = useRouter()
+  const planId = params.id as string
+
+  const [plan, setPlan] = useState<Plan | null>(null)
+  const [categories, setCategories] = useState<CustomizationCategory[]>([])
+  const [currentStep, setCurrentStep] = useState(0)
+  const [selectedOptions, setSelectedOptions] = useState<{[categoryId: string]: string}>({})
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
+    name: '',
+    email: '',
+    phone: '',
+    message: ''
+  })
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    fetchData()
+  }, [planId])
+
+  const fetchData = async () => {
+    try {
+      // Fetch plan details
+      const planResponse = await fetch(`/api/plans/${planId}`)
+      if (planResponse.ok) {
+        const planData = await planResponse.json()
+        setPlan(planData)
+      }
+
+      // Fetch customization options
+      const optionsResponse = await fetch(`/api/customization-options?plan_id=${planId}`)
+      if (optionsResponse.ok) {
+        const optionsData = await optionsResponse.json()
+        setCategories(optionsData)
+        
+        // Set default selections
+        const defaults: {[categoryId: string]: string} = {}
+        optionsData.forEach((category: CustomizationCategory) => {
+          const defaultOption = category.customization_options.find(option => option.is_default)
+          if (defaultOption) {
+            defaults[category.id] = defaultOption.id
+          }
+        })
+        setSelectedOptions(defaults)
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleOptionSelect = (categoryId: string, optionId: string) => {
+    setSelectedOptions(prev => ({
+      ...prev,
+      [categoryId]: optionId
+    }))
+  }
+
+  const handleNext = () => {
+    if (currentStep < categories.length) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!customerInfo.name || !customerInfo.email) {
+      alert('Please fill in your name and email address.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const response = await fetch('/api/configurations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan_id: planId,
+          customer_email: customerInfo.email,
+          customer_name: customerInfo.name,
+          customer_phone: customerInfo.phone,
+          customer_message: customerInfo.message,
+          selected_options: Object.values(selectedOptions)
+        })
+      })
+
+      if (response.ok) {
+        setSubmitted(true)
+      } else {
+        alert('Error submitting configuration. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error submitting configuration:', error)
+      alert('Error submitting configuration. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const isStepComplete = (stepIndex: number) => {
+    if (stepIndex >= categories.length) return true
+    return selectedOptions[categories[stepIndex].id] !== undefined
+  }
+
+  const getSelectedOption = (categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId)
+    const optionId = selectedOptions[categoryId]
+    return category?.customization_options.find(opt => opt.id === optionId)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-red-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading configurator...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!plan) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Home className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Plan Not Found</h1>
+          <p className="text-gray-600 mb-6">The plan you're trying to configure doesn't exist.</p>
+          <Button onClick={() => router.push('/plans')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Plans
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Configuration Submitted!</h1>
+          <p className="text-gray-600 mb-6">
+            Thank you for your interest in customizing {plan.title}. 
+            We'll review your selections and get back to you soon.
+          </p>
+          <div className="space-y-3">
+            <Button onClick={() => router.push('/plans')} className="w-full">
+              Browse More Plans
+            </Button>
+            <Button variant="outline" onClick={() => router.push('/contact')} className="w-full">
+              Contact Us
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const currentCategory = categories[currentStep]
+  const isLastStep = currentStep === categories.length
+  const isFirstStep = currentStep === 0
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Button variant="outline" onClick={() => router.push(`/plans/${planId}`)}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Plan
+            </Button>
+            <div className="text-center">
+              <h1 className="text-xl font-semibold text-gray-900">Customize {plan.title}</h1>
+              <p className="text-sm text-gray-600">{plan.style} Style</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-600">
+                Step {Math.min(currentStep + 1, categories.length + 1)} of {categories.length + 1}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="bg-white border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {categories.map((category, index) => (
+              <div key={category.id} className="flex items-center">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                  index < currentStep ? 'bg-green-600 text-white' :
+                  index === currentStep ? 'bg-red-600 text-white' :
+                  'bg-gray-200 text-gray-600'
+                }`}>
+                  {index < currentStep ? (
+                    <CheckCircle className="w-5 h-5" />
+                  ) : (
+                    <span className="text-sm font-medium">{index + 1}</span>
+                  )}
+                </div>
+                <span className={`ml-2 text-sm font-medium ${
+                  index <= currentStep ? 'text-gray-900' : 'text-gray-500'
+                }`}>
+                  {category.name}
+                </span>
+                {index < categories.length - 1 && (
+                  <div className={`w-12 h-0.5 mx-4 ${
+                    index < currentStep ? 'bg-green-600' : 'bg-gray-200'
+                  }`} />
+                )}
+              </div>
+            ))}
+            <div className="flex items-center">
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                currentStep === categories.length ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600'
+              }`}>
+                <span className="text-sm font-medium">{categories.length + 1}</span>
+              </div>
+              <span className={`ml-2 text-sm font-medium ${
+                currentStep === categories.length ? 'text-gray-900' : 'text-gray-500'
+              }`}>
+                Summary
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        {!isLastStep ? (
+          // Option Selection Steps
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{currentCategory.name}</h2>
+              <p className="text-gray-600">{currentCategory.description}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {currentCategory.customization_options.map((option) => (
+                <Card 
+                  key={option.id} 
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                    selectedOptions[currentCategory.id] === option.id 
+                      ? 'ring-2 ring-red-600 shadow-lg' 
+                      : 'hover:shadow-md'
+                  }`}
+                  onClick={() => handleOptionSelect(currentCategory.id, option.id)}
+                >
+                  <CardContent className="p-6">
+                    {option.image_url && (
+                      <div className="relative h-48 mb-4 bg-gray-100 rounded-lg overflow-hidden">
+                        <Image
+                          src={option.image_url}
+                          alt={option.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">{option.name}</h3>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        selectedOptions[currentCategory.id] === option.id
+                          ? 'border-red-600 bg-red-600'
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedOptions[currentCategory.id] === option.id && (
+                          <CheckCircle className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                    </div>
+                    
+                    <p className="text-gray-600 text-sm mb-3">{option.description}</p>
+                    
+                    {option.is_default && (
+                      <Badge variant="secondary" className="text-xs">
+                        Standard
+                      </Badge>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ) : (
+          // Summary and Contact Form
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Configuration Summary</h2>
+              <p className="text-gray-600">Review your selections and provide your contact information</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Configuration Summary */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Selected Options</h3>
+                  <div className="space-y-4">
+                    {categories.map((category) => {
+                      const selectedOption = getSelectedOption(category.id)
+                      return (
+                        <div key={category.id} className="border-b border-gray-200 pb-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium text-gray-900">{category.name}</p>
+                              <p className="text-sm text-gray-600">{selectedOption?.name || 'No selection'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Contact Form */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Information</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Name *
+                      </label>
+                      <Input
+                        type="text"
+                        value={customerInfo.name}
+                        onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
+                        placeholder="Your full name"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email *
+                      </label>
+                      <Input
+                        type="email"
+                        value={customerInfo.email}
+                        onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
+                        placeholder="your@email.com"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone
+                      </label>
+                      <Input
+                        type="tel"
+                        value={customerInfo.phone}
+                        onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                        placeholder="(555) 123-4567"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Message
+                      </label>
+                      <textarea
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                        rows={4}
+                        value={customerInfo.message}
+                        onChange={(e) => setCustomerInfo({...customerInfo, message: e.target.value})}
+                        placeholder="Any additional questions or comments..."
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="max-w-4xl mx-auto mt-8 flex justify-between">
+          <Button 
+            variant="outline" 
+            onClick={handlePrevious}
+            disabled={isFirstStep}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Previous
+          </Button>
+          
+          {!isLastStep ? (
+            <Button 
+              onClick={handleNext}
+              disabled={!isStepComplete(currentStep)}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Next
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleSubmit}
+              disabled={submitting || !customerInfo.name || !customerInfo.email}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  Submit Configuration
+                  <CheckCircle className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+} 

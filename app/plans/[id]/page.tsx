@@ -386,6 +386,12 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
                   
                   <div className="space-y-3 mb-6">
                     <Button asChild className="w-full bg-red-600 hover:bg-red-700">
+                      <Link href={`/plans/${plan.id}/configure`}>
+                        <Home className="w-4 h-4 mr-2" />
+                        Customize This Plan
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild className="w-full">
                       <Link href="/contact">
                         <Phone className="w-4 h-4 mr-2" />
                         Request Quote
