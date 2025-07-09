@@ -325,6 +325,19 @@ export default function PlanConfiguratorPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Development Notice */}
+      <div className="bg-yellow-50 border-b border-yellow-200">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-yellow-800 font-medium">
+                ⚠️ This feature is under development
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-4">

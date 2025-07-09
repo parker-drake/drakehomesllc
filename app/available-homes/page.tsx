@@ -96,19 +96,6 @@ export default function AvailableHomes() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Development Notice */}
-      <div className="bg-yellow-50 border-b border-yellow-200">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-yellow-800 font-medium">
-                ⚠️ This feature is under development
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Hero Section with Search */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
