@@ -69,20 +69,37 @@ export default function CustomizationManagementPage() {
   const fetchData = async () => {
     try {
       // Fetch categories and options
+      console.log('Fetching customization options...')
       const categoriesResponse = await fetch('/api/customization-options')
+      console.log('Categories response status:', categoriesResponse.status)
+      
       if (categoriesResponse.ok) {
         const categoriesData = await categoriesResponse.json()
+        console.log('Categories data:', categoriesData)
         setCategories(categoriesData)
+      } else {
+        const errorData = await categoriesResponse.json()
+        console.error('Categories fetch error:', errorData)
+        alert(`Error loading categories: ${errorData.error || 'Unknown error'}`)
       }
 
       // Fetch plans
+      console.log('Fetching plans...')
       const plansResponse = await fetch('/api/plans')
+      console.log('Plans response status:', plansResponse.status)
+      
       if (plansResponse.ok) {
         const plansData = await plansResponse.json()
+        console.log('Plans data:', plansData)
         setPlans(plansData)
+      } else {
+        const errorData = await plansResponse.json()
+        console.error('Plans fetch error:', errorData)
+        alert(`Error loading plans: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('Network error fetching data:', error)
+      alert(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setLoading(false)
     }
@@ -92,6 +109,15 @@ export default function CustomizationManagementPage() {
     if (!newOption || !newOption.name.trim()) return
 
     try {
+      console.log('Submitting option:', {
+        category_id: categoryId,
+        name: newOption.name,
+        description: newOption.description,
+        image_url: newOption.image_url || null,
+        is_default: newOption.is_default,
+        sort_order: newOption.sort_order
+      })
+
       const response = await fetch('/api/customization-options', {
         method: 'POST',
         headers: {
@@ -107,15 +133,20 @@ export default function CustomizationManagementPage() {
         })
       })
 
+      const result = await response.json()
+      console.log('API Response:', result)
+
       if (response.ok) {
         setNewOption(null)
         fetchData() // Refresh data
+        alert('Option added successfully!')
       } else {
-        alert('Error adding option')
+        console.error('API Error:', result)
+        alert(`Error adding option: ${result.error || 'Unknown error'}`)
       }
     } catch (error) {
-      console.error('Error adding option:', error)
-      alert('Error adding option')
+      console.error('Network Error:', error)
+      alert(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
