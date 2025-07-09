@@ -100,13 +100,13 @@ export default function PlanConfiguratorPage() {
           if (category.name === 'Exterior') {
             // Handle exterior category with separate material/primary/accent defaults
             const defaultMaterial = category.customization_options.find(option => {
-              const materialKeywords = ['vinyl', 'siding', 'fiber', 'cement', 'brick', 'exterior']
-              return option.is_default && materialKeywords.some(keyword => option.name.toLowerCase().includes(keyword))
+              const materialNames = ['vinyl siding', 'fiber cement siding', 'brick exterior', 'siding material', 'exterior material']
+              return option.is_default && materialNames.some(material => option.name.toLowerCase().includes(material))
             })
             
             const colorOptions = category.customization_options.filter(option => {
-              const materialKeywords = ['vinyl', 'siding', 'fiber', 'cement', 'brick', 'exterior']
-              return !materialKeywords.some(keyword => option.name.toLowerCase().includes(keyword))
+              const materialNames = ['vinyl siding', 'fiber cement siding', 'brick exterior', 'siding material', 'exterior material']
+              return !materialNames.some(material => option.name.toLowerCase().includes(material))
             })
             
             // Set default primary and accent colors (first two color options if available)
@@ -423,8 +423,8 @@ export default function PlanConfiguratorPage() {
                     {currentCategory.customization_options
                       .filter(option => {
                         // Show material options (vinyl, fiber cement, brick, etc.)
-                        const materialKeywords = ['vinyl', 'siding', 'fiber', 'cement', 'brick', 'exterior']
-                        return materialKeywords.some(keyword => option.name.toLowerCase().includes(keyword))
+                        const materialNames = ['vinyl siding', 'fiber cement siding', 'brick exterior', 'siding material', 'exterior material']
+                        return materialNames.some(material => option.name.toLowerCase().includes(material))
                       })
                       .map((option) => {
                         const exteriorSelections = selectedOptions[currentCategory.id] as {material?: string, primary?: string, accent?: string} || {}
@@ -477,8 +477,8 @@ export default function PlanConfiguratorPage() {
                     {currentCategory.customization_options
                       .filter(option => {
                         // Show color options (exclude materials)
-                        const materialKeywords = ['vinyl', 'siding', 'fiber', 'cement', 'brick', 'exterior']
-                        return !materialKeywords.some(keyword => option.name.toLowerCase().includes(keyword))
+                        const materialNames = ['vinyl siding', 'fiber cement siding', 'brick exterior', 'siding material', 'exterior material']
+                        return !materialNames.some(material => option.name.toLowerCase().includes(material))
                       })
                       .map((option) => {
                         const exteriorSelections = selectedOptions[currentCategory.id] as {material?: string, primary?: string, accent?: string} || {}
@@ -535,8 +535,8 @@ export default function PlanConfiguratorPage() {
                     {currentCategory.customization_options
                       .filter(option => {
                         // Show color options (exclude materials)
-                        const materialKeywords = ['vinyl', 'siding', 'fiber', 'cement', 'brick', 'exterior']
-                        return !materialKeywords.some(keyword => option.name.toLowerCase().includes(keyword))
+                        const materialNames = ['vinyl siding', 'fiber cement siding', 'brick exterior', 'siding material', 'exterior material']
+                        return !materialNames.some(material => option.name.toLowerCase().includes(material))
                       })
                       .map((option) => {
                         const exteriorSelections = selectedOptions[currentCategory.id] as {material?: string, primary?: string, accent?: string} || {}
