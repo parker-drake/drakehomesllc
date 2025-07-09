@@ -19,14 +19,14 @@ BEGIN
         -- Remove duplicate colors - keep only one of each color name
         DELETE FROM customization_options 
         WHERE id IN (
-            SELECT id FROM (
-                SELECT id, 
-                       ROW_NUMBER() OVER (PARTITION BY name ORDER BY created_at ASC) as rn
-                FROM customization_options 
-                WHERE category_id = exterior_category_id
-                AND name NOT IN ('Vinyl Siding', 'Fiber Cement Siding', 'Brick Exterior') -- Keep material options
-            ) ranked 
-            WHERE rn > 1
+            SELECT sub.id FROM (
+                SELECT co.id, 
+                       ROW_NUMBER() OVER (PARTITION BY co.name ORDER BY co.created_at ASC) as rn
+                FROM customization_options co
+                WHERE co.category_id = exterior_category_id
+                AND co.name NOT IN ('Vinyl Siding', 'Fiber Cement Siding', 'Brick Exterior') -- Keep material options
+            ) sub
+            WHERE sub.rn > 1
         );
         
         -- Reset sort orders - materials first (1-3), then colors (10+)
