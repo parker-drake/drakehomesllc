@@ -40,11 +40,11 @@ export async function GET(request: Request) {
         ).sort((a: any, b: any) => a.sort_order - b.sort_order)
       }))
     } else {
-      // If no plan ID, show options available for all plans
+      // If no plan ID, show ALL active options (for admin interface)
       filteredCategories = categories.map(category => ({
         ...category,
         customization_options: category.customization_options.filter(
-          (option: any) => option.is_active && option.plan_id === null
+          (option: any) => option.is_active
         ).sort((a: any, b: any) => a.sort_order - b.sort_order)
       }))
     }
