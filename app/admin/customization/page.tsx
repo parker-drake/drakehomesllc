@@ -113,7 +113,7 @@ export default function CustomizationManagementPage() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('folder', 'customization-options')
+      formData.append('type', 'image')  // Add required type parameter
 
       const response = await fetch('/api/upload', {
         method: 'POST',
