@@ -47,10 +47,10 @@ END $$;
 
 -- Verify the cleanup
 SELECT 
-    name,
-    description,
-    is_default,
-    sort_order
+    o.name,
+    o.description,
+    o.is_default,
+    o.sort_order
 FROM customization_options o
 JOIN customization_categories c ON o.category_id = c.id
 WHERE c.name = 'Exterior'
