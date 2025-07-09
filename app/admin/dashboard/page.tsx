@@ -429,6 +429,12 @@ export default function AdminDashboard() {
                     </Link>
                   </Button>
                   <Button variant="outline" asChild className="w-full justify-start">
+                    <Link href="/admin/lots">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Manage Lots
+                    </Link>
+                  </Button>
+                  <Button variant="outline" asChild className="w-full justify-start">
                     <Link href="/admin/customization">
                       <Settings className="w-4 h-4 mr-2" />
                       Configurator Options
