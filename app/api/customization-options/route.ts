@@ -7,6 +7,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const planId = searchParams.get('plan_id')
     
+    console.log('API called with planId:', planId)
+    
     // Get categories with their options
     const { data: categories, error } = await supabase
       .from('customization_categories')
@@ -33,14 +35,26 @@ export async function GET(request: Request) {
     // Filter options based on plan if provided
     let filteredCategories = categories
     if (planId) {
+      console.log('Filtering for plan:', planId)
       filteredCategories = categories.map(category => ({
         ...category,
         customization_options: category.customization_options.filter(
-          (option: any) => option.is_active && (option.plan_id === planId || option.plan_id === null)
+          (option: any) => {
+            const isValid = option.is_active && (option.plan_id === planId || option.plan_id === null || option.plan_id === undefined)
+            if (!isValid) {
+              console.log('Filtered out option:', option.name, 'plan_id:', option.plan_id, 'is_active:', option.is_active)
+            }
+            return isValid
+          }
         ).sort((a: any, b: any) => a.sort_order - b.sort_order)
       }))
+      console.log('Filtered categories:', filteredCategories.map(cat => ({
+        name: cat.name,
+        optionCount: cat.customization_options.length
+      })))
     } else {
       // If no plan ID, show ALL active options (for admin interface)
+      console.log('No planId provided, showing all active options')
       filteredCategories = categories.map(category => ({
         ...category,
         customization_options: category.customization_options.filter(
