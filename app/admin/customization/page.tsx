@@ -182,7 +182,6 @@ export default function CustomizationManagementPage() {
 
       if (response.ok) {
         fetchData()
-        alert('Option deleted successfully!')
       } else {
         const result = await response.json()
         alert(`Error deleting option: ${result.error || 'Unknown error'}`)
