@@ -64,7 +64,7 @@ export default function PlanConfiguratorPage() {
   const [plan, setPlan] = useState<Plan | null>(null)
   const [categories, setCategories] = useState<CustomizationCategory[]>([])
   const [currentStep, setCurrentStep] = useState(0)
-  const [selectedOptions, setSelectedOptions] = useState<{[categoryId: string]: string | string[]}>({})
+  const [selectedOptions, setSelectedOptions] = useState<{[categoryId: string]: string | string[] | {material?: string, primary?: string, accent?: string}}>({})
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: '',
     email: '',
@@ -95,13 +95,28 @@ export default function PlanConfiguratorPage() {
         setCategories(optionsData)
         
         // Set default selections
-        const defaults: {[categoryId: string]: string | string[]} = {}
+        const defaults: {[categoryId: string]: string | string[] | {material?: string, primary?: string, accent?: string}} = {}
         optionsData.forEach((category: CustomizationCategory) => {
           if (category.name === 'Exterior') {
-            // Handle multiple defaults for exterior category
-            const defaultOptions = category.customization_options.filter(option => option.is_default)
-            if (defaultOptions.length > 0) {
-              defaults[category.id] = defaultOptions.map(option => option.id)
+            // Handle exterior category with separate material/primary/accent defaults
+            const defaultMaterial = category.customization_options.find(option => {
+              const materialKeywords = ['vinyl', 'siding', 'fiber', 'cement', 'brick', 'exterior']
+              return option.is_default && materialKeywords.some(keyword => option.name.toLowerCase().includes(keyword))
+            })
+            
+            const colorOptions = category.customization_options.filter(option => {
+              const materialKeywords = ['vinyl', 'siding', 'fiber', 'cement', 'brick', 'exterior']
+              return !materialKeywords.some(keyword => option.name.toLowerCase().includes(keyword))
+            })
+            
+            // Set default primary and accent colors (first two color options if available)
+            const defaultPrimary = colorOptions[0]
+            const defaultAccent = colorOptions[1] || colorOptions[0] // Use same color if only one available
+            
+            defaults[category.id] = {
+              material: defaultMaterial?.id,
+              primary: defaultPrimary?.id,
+              accent: defaultAccent?.id
             }
           } else {
             // Single default for other categories
@@ -127,29 +142,27 @@ export default function PlanConfiguratorPage() {
     }))
   }
 
-  const handleMultipleOptionSelect = (categoryId: string, optionId: string, selectionType: 'material' | 'primary' | 'accent') => {
+  const handleExteriorOptionSelect = (categoryId: string, optionId: string, selectionType: 'material' | 'primary' | 'accent') => {
     setSelectedOptions(prev => {
-      const current = prev[categoryId] as string[] || []
+      const current = prev[categoryId] as {material?: string, primary?: string, accent?: string} || {}
       
-      // Remove any existing selection of this type
-      const filtered = current.filter(id => {
-        const option = categories.find(c => c.id === categoryId)?.customization_options.find(o => o.id === id)
-        if (!option) return false
-        
-        if (selectionType === 'material') {
-          return option.name.startsWith('Primary:') || option.name.startsWith('Accent:')
-        } else if (selectionType === 'primary') {
-          return !option.name.startsWith('Primary:')
-        } else if (selectionType === 'accent') {
-          return !option.name.startsWith('Accent:')
-        }
-        return false
-      })
+      // For primary/accent, ensure we don't select the same color for both
+      if (selectionType === 'primary' && current.accent === optionId) {
+        alert('This color is already selected as the accent color. Please choose a different color.')
+        return prev
+      }
       
-      // Add the new selection
+      if (selectionType === 'accent' && current.primary === optionId) {
+        alert('This color is already selected as the primary color. Please choose a different color.')
+        return prev
+      }
+      
       return {
         ...prev,
-        [categoryId]: [...filtered, optionId]
+        [categoryId]: {
+          ...current,
+          [selectionType]: optionId
+        }
       }
     })
   }
@@ -191,7 +204,16 @@ export default function PlanConfiguratorPage() {
           customer_name: customerInfo.name,
           customer_phone: customerInfo.phone,
           customer_message: customerInfo.message,
-          selected_options: Object.values(selectedOptions).flat()
+          selected_options: Object.values(selectedOptions).flatMap(value => {
+            if (typeof value === 'object' && !Array.isArray(value)) {
+              // Handle exterior category structure
+              return Object.values(value).filter(Boolean) as string[]
+            }
+            if (Array.isArray(value)) {
+              return value
+            }
+            return value ? [value] : []
+          })
         })
       })
 
@@ -215,25 +237,8 @@ export default function PlanConfiguratorPage() {
     
     // For exterior category, check if we have material, primary, and accent selections
     if (category.name === 'Exterior') {
-      const selectionsArray = Array.isArray(selections) ? selections : (selections ? [selections] : [])
-      const options = category.customization_options
-      
-      const hasMaterial = selectionsArray.some(id => {
-        const option = options.find(o => o.id === id)
-        return option && !option.name.startsWith('Primary:') && !option.name.startsWith('Accent:')
-      })
-      
-      const hasPrimary = selectionsArray.some(id => {
-        const option = options.find(o => o.id === id)
-        return option && option.name.startsWith('Primary:')
-      })
-      
-      const hasAccent = selectionsArray.some(id => {
-        const option = options.find(o => o.id === id)
-        return option && option.name.startsWith('Accent:')
-      })
-      
-      return hasMaterial && hasPrimary && hasAccent
+      const exteriorSelections = selections as {material?: string, primary?: string, accent?: string} || {}
+      return !!(exteriorSelections.material && exteriorSelections.primary && exteriorSelections.accent)
     }
     
     return selections !== undefined
@@ -250,9 +255,20 @@ export default function PlanConfiguratorPage() {
 
   const getSelectedOptions = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId)
+    if (!category) return []
+    
     const selections = selectedOptions[categoryId]
+    
+    // Handle exterior category differently
+    if (category.name === 'Exterior') {
+      const exteriorSelections = selections as {material?: string, primary?: string, accent?: string} || {}
+      const selectedIds = Object.values(exteriorSelections).filter(Boolean) as string[]
+      return category.customization_options.filter(opt => selectedIds.includes(opt.id))
+    }
+    
+    // Handle other categories
     const selectionsArray = Array.isArray(selections) ? selections : (selections ? [selections] : [])
-    return category?.customization_options.filter(opt => selectionsArray.includes(opt.id)) || []
+    return category.customization_options.filter(opt => selectionsArray.includes(opt.id))
   }
 
   // Check if category is likely a color/material category
@@ -416,16 +432,21 @@ export default function PlanConfiguratorPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Exterior Material</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {currentCategory.customization_options
-                      .filter(option => !option.name.startsWith('Primary:') && !option.name.startsWith('Accent:'))
+                      .filter(option => {
+                        // Show material options (vinyl, fiber cement, brick, etc.)
+                        const materialKeywords = ['vinyl', 'siding', 'fiber', 'cement', 'brick', 'exterior']
+                        return materialKeywords.some(keyword => option.name.toLowerCase().includes(keyword))
+                      })
                       .map((option) => {
-                        const isSelected = getSelectedOptions(currentCategory.id).some(selected => selected.id === option.id)
+                        const exteriorSelections = selectedOptions[currentCategory.id] as {material?: string, primary?: string, accent?: string} || {}
+                        const isSelected = exteriorSelections.material === option.id
                         return (
                           <Card 
                             key={option.id} 
                             className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
                               isSelected ? 'ring-2 ring-red-600 shadow-lg' : 'hover:shadow-md'
                             }`}
-                            onClick={() => handleMultipleOptionSelect(currentCategory.id, option.id, 'material')}
+                            onClick={() => handleExteriorOptionSelect(currentCategory.id, option.id, 'material')}
                           >
                             <CardContent className="p-4">
                               {option.image_url && (
@@ -465,17 +486,22 @@ export default function PlanConfiguratorPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Primary Siding Color</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     {currentCategory.customization_options
-                      .filter(option => option.name.startsWith('Primary:'))
+                      .filter(option => {
+                        // Show color options (exclude materials)
+                        const materialKeywords = ['vinyl', 'siding', 'fiber', 'cement', 'brick', 'exterior']
+                        return !materialKeywords.some(keyword => option.name.toLowerCase().includes(keyword))
+                      })
                       .map((option) => {
-                        const isSelected = getSelectedOptions(currentCategory.id).some(selected => selected.id === option.id)
-                        const displayName = option.name.replace('Primary: ', '')
+                        const exteriorSelections = selectedOptions[currentCategory.id] as {material?: string, primary?: string, accent?: string} || {}
+                        const isSelected = exteriorSelections.primary === option.id
+                        const displayName = option.name
                         return (
                           <div
                             key={option.id}
                             className={`group cursor-pointer transition-all duration-200 ${
                               isSelected ? 'transform scale-105' : 'hover:transform hover:scale-105'
                             }`}
-                            onClick={() => handleMultipleOptionSelect(currentCategory.id, option.id, 'primary')}
+                            onClick={() => handleExteriorOptionSelect(currentCategory.id, option.id, 'primary')}
                           >
                             <div className={`relative rounded-lg overflow-hidden border-4 transition-all ${
                               isSelected ? 'border-red-600 shadow-lg' : 'border-gray-200 hover:border-gray-300'
@@ -518,17 +544,22 @@ export default function PlanConfiguratorPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Accent Siding Color</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     {currentCategory.customization_options
-                      .filter(option => option.name.startsWith('Accent:'))
+                      .filter(option => {
+                        // Show color options (exclude materials)
+                        const materialKeywords = ['vinyl', 'siding', 'fiber', 'cement', 'brick', 'exterior']
+                        return !materialKeywords.some(keyword => option.name.toLowerCase().includes(keyword))
+                      })
                       .map((option) => {
-                        const isSelected = getSelectedOptions(currentCategory.id).some(selected => selected.id === option.id)
-                        const displayName = option.name.replace('Accent: ', '')
+                        const exteriorSelections = selectedOptions[currentCategory.id] as {material?: string, primary?: string, accent?: string} || {}
+                        const isSelected = exteriorSelections.accent === option.id
+                        const displayName = option.name
                         return (
                           <div
                             key={option.id}
                             className={`group cursor-pointer transition-all duration-200 ${
                               isSelected ? 'transform scale-105' : 'hover:transform hover:scale-105'
                             }`}
-                            onClick={() => handleMultipleOptionSelect(currentCategory.id, option.id, 'accent')}
+                            onClick={() => handleExteriorOptionSelect(currentCategory.id, option.id, 'accent')}
                           >
                             <div className={`relative rounded-lg overflow-hidden border-4 transition-all ${
                               isSelected ? 'border-red-600 shadow-lg' : 'border-gray-200 hover:border-gray-300'
