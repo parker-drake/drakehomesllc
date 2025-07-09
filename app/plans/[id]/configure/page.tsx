@@ -177,6 +177,15 @@ export default function PlanConfiguratorPage() {
     return category?.customization_options.find(opt => opt.id === optionId)
   }
 
+  // Check if category is likely a color/material category
+  const isColorCategory = (category: CustomizationCategory) => {
+    const colorKeywords = ['color', 'colors', 'siding', 'paint', 'stain', 'finish', 'material']
+    const categoryName = category.name.toLowerCase()
+    const hasColorKeyword = colorKeywords.some(keyword => categoryName.includes(keyword))
+    const hasMoreThanFiveOptions = category.customization_options.length > 5
+    return hasColorKeyword || hasMoreThanFiveOptions
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -309,53 +318,119 @@ export default function PlanConfiguratorPage() {
               <p className="text-gray-600">{currentCategory.description}</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {currentCategory.customization_options.map((option) => (
-                <Card 
-                  key={option.id} 
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                    selectedOptions[currentCategory.id] === option.id 
-                      ? 'ring-2 ring-red-600 shadow-lg' 
-                      : 'hover:shadow-md'
-                  }`}
-                  onClick={() => handleOptionSelect(currentCategory.id, option.id)}
-                >
-                  <CardContent className="p-6">
-                    {option.image_url && (
-                      <div className="relative h-48 mb-4 bg-gray-100 rounded-lg overflow-hidden">
-                        <Image
-                          src={option.image_url}
-                          alt={option.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-                    
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{option.name}</h3>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+            {isColorCategory(currentCategory) ? (
+              // Compact color/material layout
+              <div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {currentCategory.customization_options.map((option) => (
+                    <div
+                      key={option.id}
+                      className={`group cursor-pointer transition-all duration-200 ${
+                        selectedOptions[currentCategory.id] === option.id 
+                          ? 'transform scale-105' 
+                          : 'hover:transform hover:scale-105'
+                      }`}
+                      onClick={() => handleOptionSelect(currentCategory.id, option.id)}
+                    >
+                      <div className={`relative rounded-lg overflow-hidden border-4 transition-all ${
                         selectedOptions[currentCategory.id] === option.id
-                          ? 'border-red-600 bg-red-600'
-                          : 'border-gray-300'
+                          ? 'border-red-600 shadow-lg'
+                          : 'border-gray-200 hover:border-gray-300'
                       }`}>
+                        {option.image_url ? (
+                          <div className="relative h-24 w-full bg-gray-100">
+                            <Image
+                              src={option.image_url}
+                              alt={option.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-24 w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                            <span className="text-gray-500 text-xs font-medium">{option.name}</span>
+                          </div>
+                        )}
+                        
                         {selectedOptions[currentCategory.id] === option.id && (
-                          <CheckCircle className="w-3 h-3 text-white" />
+                          <div className="absolute top-1 right-1 bg-red-600 rounded-full p-1">
+                            <CheckCircle className="w-3 h-3 text-white" />
+                          </div>
+                        )}
+                        
+                        {option.is_default && (
+                          <div className="absolute bottom-1 left-1">
+                            <Badge variant="secondary" className="text-xs py-0 px-1">
+                              Standard
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="mt-2 text-center">
+                        <p className="text-sm font-medium text-gray-900 group-hover:text-red-600 transition-colors">
+                          {option.name}
+                        </p>
+                        {option.description && (
+                          <p className="text-xs text-gray-500 mt-1 truncate">
+                            {option.description}
+                          </p>
                         )}
                       </div>
                     </div>
-                    
-                    <p className="text-gray-600 text-sm mb-3">{option.description}</p>
-                    
-                    {option.is_default && (
-                      <Badge variant="secondary" className="text-xs">
-                        Standard
-                      </Badge>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              // Standard layout for non-color options
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {currentCategory.customization_options.map((option) => (
+                  <Card 
+                    key={option.id} 
+                    className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                      selectedOptions[currentCategory.id] === option.id 
+                        ? 'ring-2 ring-red-600 shadow-lg' 
+                        : 'hover:shadow-md'
+                    }`}
+                    onClick={() => handleOptionSelect(currentCategory.id, option.id)}
+                  >
+                    <CardContent className="p-6">
+                      {option.image_url && (
+                        <div className="relative h-48 mb-4 bg-gray-100 rounded-lg overflow-hidden">
+                          <Image
+                            src={option.image_url}
+                            alt={option.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                      
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">{option.name}</h3>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          selectedOptions[currentCategory.id] === option.id
+                            ? 'border-red-600 bg-red-600'
+                            : 'border-gray-300'
+                        }`}>
+                          {selectedOptions[currentCategory.id] === option.id && (
+                            <CheckCircle className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      <p className="text-gray-600 text-sm mb-3">{option.description}</p>
+                      
+                      {option.is_default && (
+                        <Badge variant="secondary" className="text-xs">
+                          Standard
+                        </Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           // Summary and Contact Form
