@@ -170,6 +170,29 @@ export default function CustomizationManagementPage() {
     }
   }
 
+  const deleteOption = async (optionId: string, optionName: string) => {
+    if (!confirm(`Are you sure you want to delete "${optionName}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/customization-options/${optionId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        fetchData()
+        alert('Option deleted successfully!')
+      } else {
+        const result = await response.json()
+        alert(`Error deleting option: ${result.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Error deleting option:', error)
+      alert(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
   const getIconComponent = (iconName: string) => {
     const icons: { [key: string]: React.ComponentType<any> } = {
       'home': Home,
@@ -366,6 +389,14 @@ export default function CustomizationManagementPage() {
                           onClick={() => setEditingOption(option.id)}
                         >
                           <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => deleteOption(option.id, option.name)}
+                          className="text-red-600 hover:bg-red-50 hover:border-red-300"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
