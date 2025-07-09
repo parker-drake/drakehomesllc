@@ -64,7 +64,7 @@ export default function PlanConfiguratorPage() {
   const [plan, setPlan] = useState<Plan | null>(null)
   const [categories, setCategories] = useState<CustomizationCategory[]>([])
   const [currentStep, setCurrentStep] = useState(0)
-  const [selectedOptions, setSelectedOptions] = useState<{[categoryId: string]: string}>({})
+  const [selectedOptions, setSelectedOptions] = useState<{[categoryId: string]: string | string[]}>({})
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: '',
     email: '',
@@ -95,11 +95,20 @@ export default function PlanConfiguratorPage() {
         setCategories(optionsData)
         
         // Set default selections
-        const defaults: {[categoryId: string]: string} = {}
+        const defaults: {[categoryId: string]: string | string[]} = {}
         optionsData.forEach((category: CustomizationCategory) => {
-          const defaultOption = category.customization_options.find(option => option.is_default)
-          if (defaultOption) {
-            defaults[category.id] = defaultOption.id
+          if (category.name === 'Exterior') {
+            // Handle multiple defaults for exterior category
+            const defaultOptions = category.customization_options.filter(option => option.is_default)
+            if (defaultOptions.length > 0) {
+              defaults[category.id] = defaultOptions.map(option => option.id)
+            }
+          } else {
+            // Single default for other categories
+            const defaultOption = category.customization_options.find(option => option.is_default)
+            if (defaultOption) {
+              defaults[category.id] = defaultOption.id
+            }
           }
         })
         setSelectedOptions(defaults)
@@ -116,6 +125,33 @@ export default function PlanConfiguratorPage() {
       ...prev,
       [categoryId]: optionId
     }))
+  }
+
+  const handleMultipleOptionSelect = (categoryId: string, optionId: string, selectionType: 'material' | 'primary' | 'accent') => {
+    setSelectedOptions(prev => {
+      const current = prev[categoryId] as string[] || []
+      
+      // Remove any existing selection of this type
+      const filtered = current.filter(id => {
+        const option = categories.find(c => c.id === categoryId)?.customization_options.find(o => o.id === id)
+        if (!option) return false
+        
+        if (selectionType === 'material') {
+          return option.name.startsWith('Primary:') || option.name.startsWith('Accent:')
+        } else if (selectionType === 'primary') {
+          return !option.name.startsWith('Primary:')
+        } else if (selectionType === 'accent') {
+          return !option.name.startsWith('Accent:')
+        }
+        return false
+      })
+      
+      // Add the new selection
+      return {
+        ...prev,
+        [categoryId]: [...filtered, optionId]
+      }
+    })
   }
 
   const handleNext = () => {
@@ -155,7 +191,7 @@ export default function PlanConfiguratorPage() {
           customer_name: customerInfo.name,
           customer_phone: customerInfo.phone,
           customer_message: customerInfo.message,
-          selected_options: Object.values(selectedOptions)
+          selected_options: Object.values(selectedOptions).flat()
         })
       })
 
@@ -174,13 +210,49 @@ export default function PlanConfiguratorPage() {
 
   const isStepComplete = (stepIndex: number) => {
     if (stepIndex >= categories.length) return true
-    return selectedOptions[categories[stepIndex].id] !== undefined
+    const category = categories[stepIndex]
+    const selections = selectedOptions[category.id]
+    
+    // For exterior category, check if we have material, primary, and accent selections
+    if (category.name === 'Exterior') {
+      const selectionsArray = Array.isArray(selections) ? selections : (selections ? [selections] : [])
+      const options = category.customization_options
+      
+      const hasMaterial = selectionsArray.some(id => {
+        const option = options.find(o => o.id === id)
+        return option && !option.name.startsWith('Primary:') && !option.name.startsWith('Accent:')
+      })
+      
+      const hasPrimary = selectionsArray.some(id => {
+        const option = options.find(o => o.id === id)
+        return option && option.name.startsWith('Primary:')
+      })
+      
+      const hasAccent = selectionsArray.some(id => {
+        const option = options.find(o => o.id === id)
+        return option && option.name.startsWith('Accent:')
+      })
+      
+      return hasMaterial && hasPrimary && hasAccent
+    }
+    
+    return selections !== undefined
   }
 
   const getSelectedOption = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId)
     const optionId = selectedOptions[categoryId]
+    if (Array.isArray(optionId)) {
+      return category?.customization_options.filter(opt => optionId.includes(opt.id))
+    }
     return category?.customization_options.find(opt => opt.id === optionId)
+  }
+
+  const getSelectedOptions = (categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId)
+    const selections = selectedOptions[categoryId]
+    const selectionsArray = Array.isArray(selections) ? selections : (selections ? [selections] : [])
+    return category?.customization_options.filter(opt => selectionsArray.includes(opt.id)) || []
   }
 
   // Check if category is likely a color/material category
@@ -336,7 +408,165 @@ export default function PlanConfiguratorPage() {
               <p className="text-gray-600">{currentCategory.description}</p>
             </div>
 
-            {isColorCategory(currentCategory) ? (
+            {currentCategory.name === 'Exterior' ? (
+              // Special exterior category with material and color selections
+              <div className="space-y-8">
+                {/* Material Selection */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Exterior Material</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {currentCategory.customization_options
+                      .filter(option => !option.name.startsWith('Primary:') && !option.name.startsWith('Accent:'))
+                      .map((option) => {
+                        const isSelected = getSelectedOptions(currentCategory.id).some(selected => selected.id === option.id)
+                        return (
+                          <Card 
+                            key={option.id} 
+                            className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                              isSelected ? 'ring-2 ring-red-600 shadow-lg' : 'hover:shadow-md'
+                            }`}
+                            onClick={() => handleMultipleOptionSelect(currentCategory.id, option.id, 'material')}
+                          >
+                            <CardContent className="p-4">
+                              {option.image_url && (
+                                <div className="relative h-32 mb-3 bg-gray-100 rounded-lg overflow-hidden">
+                                  <Image
+                                    src={option.image_url}
+                                    alt={option.name}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                </div>
+                              )}
+                              
+                              <div className="flex items-start justify-between mb-2">
+                                <h4 className="font-medium text-gray-900">{option.name}</h4>
+                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                  isSelected ? 'border-red-600 bg-red-600' : 'border-gray-300'
+                                }`}>
+                                  {isSelected && <CheckCircle className="w-3 h-3 text-white" />}
+                                </div>
+                              </div>
+                              
+                              <p className="text-gray-600 text-sm">{option.description}</p>
+                              
+                              {option.is_default && (
+                                <Badge variant="secondary" className="text-xs mt-2">Standard</Badge>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                  </div>
+                </div>
+
+                {/* Primary Siding Color */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Primary Siding Color</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {currentCategory.customization_options
+                      .filter(option => option.name.startsWith('Primary:'))
+                      .map((option) => {
+                        const isSelected = getSelectedOptions(currentCategory.id).some(selected => selected.id === option.id)
+                        const displayName = option.name.replace('Primary: ', '')
+                        return (
+                          <div
+                            key={option.id}
+                            className={`group cursor-pointer transition-all duration-200 ${
+                              isSelected ? 'transform scale-105' : 'hover:transform hover:scale-105'
+                            }`}
+                            onClick={() => handleMultipleOptionSelect(currentCategory.id, option.id, 'primary')}
+                          >
+                            <div className={`relative rounded-lg overflow-hidden border-4 transition-all ${
+                              isSelected ? 'border-red-600 shadow-lg' : 'border-gray-200 hover:border-gray-300'
+                            }`}>
+                              {option.image_url ? (
+                                <div className="relative h-24 w-full bg-gray-100">
+                                  <Image
+                                    src={option.image_url}
+                                    alt={displayName}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="h-24 w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                                  <span className="text-gray-500 text-xs font-medium">{displayName}</span>
+                                </div>
+                              )}
+                              
+                              {isSelected && (
+                                <div className="absolute top-1 right-1 bg-red-600 rounded-full p-1">
+                                  <CheckCircle className="w-3 h-3 text-white" />
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="mt-2 text-center">
+                              <p className="text-sm font-medium text-gray-900 group-hover:text-red-600 transition-colors">
+                                {displayName}
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+
+                {/* Accent Siding Color */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Accent Siding Color</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {currentCategory.customization_options
+                      .filter(option => option.name.startsWith('Accent:'))
+                      .map((option) => {
+                        const isSelected = getSelectedOptions(currentCategory.id).some(selected => selected.id === option.id)
+                        const displayName = option.name.replace('Accent: ', '')
+                        return (
+                          <div
+                            key={option.id}
+                            className={`group cursor-pointer transition-all duration-200 ${
+                              isSelected ? 'transform scale-105' : 'hover:transform hover:scale-105'
+                            }`}
+                            onClick={() => handleMultipleOptionSelect(currentCategory.id, option.id, 'accent')}
+                          >
+                            <div className={`relative rounded-lg overflow-hidden border-4 transition-all ${
+                              isSelected ? 'border-red-600 shadow-lg' : 'border-gray-200 hover:border-gray-300'
+                            }`}>
+                              {option.image_url ? (
+                                <div className="relative h-24 w-full bg-gray-100">
+                                  <Image
+                                    src={option.image_url}
+                                    alt={displayName}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="h-24 w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                                  <span className="text-gray-500 text-xs font-medium">{displayName}</span>
+                                </div>
+                              )}
+                              
+                              {isSelected && (
+                                <div className="absolute top-1 right-1 bg-red-600 rounded-full p-1">
+                                  <CheckCircle className="w-3 h-3 text-white" />
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="mt-2 text-center">
+                              <p className="text-sm font-medium text-gray-900 group-hover:text-red-600 transition-colors">
+                                {displayName}
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+              </div>
+            ) : isColorCategory(currentCategory) ? (
               // Compact color/material layout
               <div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -465,8 +695,8 @@ export default function PlanConfiguratorPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Selected Options</h3>
                   <div className="space-y-4">
                     {categories.map((category) => {
-                      const selectedOption = getSelectedOption(category.id)
-                      const hasSelection = selectedOption !== undefined
+                      const selectedOptions = getSelectedOptions(category.id)
+                      const hasSelection = selectedOptions.length > 0
                       return (
                         <div key={category.id} className="border-b border-gray-200 pb-3">
                           <div className="flex justify-between items-start">
@@ -479,9 +709,21 @@ export default function PlanConfiguratorPage() {
                                   <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
                                 )}
                               </div>
-                              <p className={`text-sm ${hasSelection ? 'text-gray-600' : 'text-gray-400 italic'}`}>
-                                {selectedOption?.name || 'No selection yet'}
-                              </p>
+                              <div className={`text-sm ${hasSelection ? 'text-gray-600' : 'text-gray-400 italic'}`}>
+                                {hasSelection ? (
+                                  selectedOptions.length === 1 ? (
+                                    selectedOptions[0].name
+                                  ) : (
+                                    <div className="space-y-1">
+                                      {selectedOptions.map((option) => (
+                                        <div key={option.id}>• {option.name}</div>
+                                      ))}
+                                    </div>
+                                  )
+                                ) : (
+                                  'No selection yet'
+                                )}
+                              </div>
                             </div>
                             <Button
                               variant="outline"
