@@ -130,6 +130,12 @@ export default function PlanConfiguratorPage() {
     }
   }
 
+  const goToStep = (stepIndex: number) => {
+    if (stepIndex >= 0 && stepIndex <= categories.length) {
+      setCurrentStep(stepIndex)
+    }
+  }
+
   const handleSubmit = async () => {
     if (!customerInfo.name || !customerInfo.email) {
       alert('Please fill in your name and email address.')
@@ -269,40 +275,52 @@ export default function PlanConfiguratorPage() {
           <div className="flex items-center justify-between">
             {categories.map((category, index) => (
               <div key={category.id} className="flex items-center">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                  index < currentStep ? 'bg-green-600 text-white' :
-                  index === currentStep ? 'bg-red-600 text-white' :
-                  'bg-gray-200 text-gray-600'
-                }`}>
-                  {index < currentStep ? (
+                <button
+                  onClick={() => goToStep(index)}
+                  className={`flex items-center justify-center w-8 h-8 rounded-full transition-all hover:scale-110 ${
+                    isStepComplete(index) ? 'bg-green-600 text-white hover:bg-green-700' :
+                    index === currentStep ? 'bg-red-600 text-white hover:bg-red-700' :
+                    'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                  }`}
+                >
+                  {isStepComplete(index) ? (
                     <CheckCircle className="w-5 h-5" />
                   ) : (
                     <span className="text-sm font-medium">{index + 1}</span>
                   )}
-                </div>
-                <span className={`ml-2 text-sm font-medium ${
-                  index <= currentStep ? 'text-gray-900' : 'text-gray-500'
-                }`}>
+                </button>
+                <button
+                  onClick={() => goToStep(index)}
+                  className={`ml-2 text-sm font-medium transition-colors hover:text-red-600 ${
+                    index <= currentStep ? 'text-gray-900' : 'text-gray-500'
+                  }`}
+                >
                   {category.name}
-                </span>
+                </button>
                 {index < categories.length - 1 && (
                   <div className={`w-12 h-0.5 mx-4 ${
-                    index < currentStep ? 'bg-green-600' : 'bg-gray-200'
+                    isStepComplete(index) ? 'bg-green-600' : 'bg-gray-200'
                   }`} />
                 )}
               </div>
             ))}
             <div className="flex items-center">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                currentStep === categories.length ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
+              <button
+                onClick={() => goToStep(categories.length)}
+                className={`flex items-center justify-center w-8 h-8 rounded-full transition-all hover:scale-110 ${
+                  currentStep === categories.length ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                }`}
+              >
                 <span className="text-sm font-medium">{categories.length + 1}</span>
-              </div>
-              <span className={`ml-2 text-sm font-medium ${
-                currentStep === categories.length ? 'text-gray-900' : 'text-gray-500'
-              }`}>
+              </button>
+              <button
+                onClick={() => goToStep(categories.length)}
+                className={`ml-2 text-sm font-medium transition-colors hover:text-red-600 ${
+                  currentStep === categories.length ? 'text-gray-900' : 'text-gray-500'
+                }`}
+              >
                 Summary
-              </span>
+              </button>
             </div>
           </div>
         </div>
@@ -448,13 +466,31 @@ export default function PlanConfiguratorPage() {
                   <div className="space-y-4">
                     {categories.map((category) => {
                       const selectedOption = getSelectedOption(category.id)
+                      const hasSelection = selectedOption !== undefined
                       return (
                         <div key={category.id} className="border-b border-gray-200 pb-3">
                           <div className="flex justify-between items-start">
-                            <div>
-                              <p className="font-medium text-gray-900">{category.name}</p>
-                              <p className="text-sm text-gray-600">{selectedOption?.name || 'No selection'}</p>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-gray-900">{category.name}</p>
+                                {hasSelection ? (
+                                  <CheckCircle className="w-4 h-4 text-green-600" />
+                                ) : (
+                                  <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
+                                )}
+                              </div>
+                              <p className={`text-sm ${hasSelection ? 'text-gray-600' : 'text-gray-400 italic'}`}>
+                                {selectedOption?.name || 'No selection yet'}
+                              </p>
                             </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => goToStep(categories.indexOf(category))}
+                              className="text-xs"
+                            >
+                              {hasSelection ? 'Change' : 'Select'}
+                            </Button>
                           </div>
                         </div>
                       )
@@ -539,7 +575,6 @@ export default function PlanConfiguratorPage() {
           {!isLastStep ? (
             <Button 
               onClick={handleNext}
-              disabled={!isStepComplete(currentStep)}
               className="bg-red-600 hover:bg-red-700"
             >
               Next
