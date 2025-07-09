@@ -53,6 +53,13 @@ export default function CustomizationManagementPage() {
   const [loading, setLoading] = useState(true)
   const [editingCategory, setEditingCategory] = useState<string | null>(null)
   const [editingOption, setEditingOption] = useState<string | null>(null)
+  const [editFormData, setEditFormData] = useState<{
+    name: string
+    description: string
+    image_url: string
+    is_default: boolean
+    sort_order: number
+  } | null>(null)
   const [newOption, setNewOption] = useState<{
     categoryId: string
     name: string
@@ -200,6 +207,55 @@ export default function CustomizationManagementPage() {
     } catch (error) {
       console.error('Error toggling option:', error)
     }
+  }
+
+  const startEditOption = (option: CustomizationOption) => {
+    setEditingOption(option.id)
+    setEditFormData({
+      name: option.name,
+      description: option.description,
+      image_url: option.image_url || '',
+      is_default: option.is_default,
+      sort_order: option.sort_order
+    })
+  }
+
+  const handleUpdateOption = async () => {
+    if (!editingOption || !editFormData || !editFormData.name.trim()) return
+
+    try {
+      const response = await fetch(`/api/customization-options/${editingOption}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editFormData.name,
+          description: editFormData.description,
+          image_url: editFormData.image_url || null,
+          is_default: editFormData.is_default,
+          sort_order: editFormData.sort_order
+        })
+      })
+
+      if (response.ok) {
+        setEditingOption(null)
+        setEditFormData(null)
+        fetchData()
+        alert('Option updated successfully!')
+      } else {
+        const result = await response.json()
+        alert(`Error updating option: ${result.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Error updating option:', error)
+      alert(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  const cancelEdit = () => {
+    setEditingOption(null)
+    setEditFormData(null)
   }
 
   const deleteOption = async (optionId: string, optionName: string) => {
@@ -395,6 +451,113 @@ export default function CustomizationManagementPage() {
                 </div>
               )}
 
+              {/* Edit Option Form */}
+              {editingOption && editFormData && category.customization_options.some(opt => opt.id === editingOption) && (
+                <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
+                  <h4 className="font-medium text-gray-900 mb-3">Edit Option</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Option Name *
+                      </label>
+                      <Input
+                        type="text"
+                        value={editFormData.name}
+                        onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                        placeholder="e.g., Hardwood Floors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Upload New Image (optional)
+                      </label>
+                      <div className="space-y-2">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              const url = await handleImageUpload(file)
+                              if (url) {
+                                setEditFormData({...editFormData, image_url: url})
+                              }
+                            }
+                          }}
+                          disabled={uploadingImage}
+                        />
+                        {uploadingImage && (
+                          <div className="text-sm text-gray-500 flex items-center">
+                            <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-red-600 rounded-full mr-2"></div>
+                            Uploading image...
+                          </div>
+                        )}
+                        {editFormData.image_url && (
+                          <div className="mt-2">
+                            <img
+                              src={editFormData.image_url}
+                              alt="Preview"
+                              className="w-20 h-20 object-cover rounded-lg border"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description
+                      </label>
+                      <textarea
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                        rows={3}
+                        value={editFormData.description}
+                        onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                        placeholder="Describe this option..."
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={editFormData.is_default}
+                          onChange={(e) => setEditFormData({...editFormData, is_default: e.target.checked})}
+                          className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                        />
+                        <span className="text-sm text-gray-700">Make this the default option</span>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Sort Order
+                      </label>
+                      <Input
+                        type="number"
+                        value={editFormData.sort_order}
+                        onChange={(e) => setEditFormData({...editFormData, sort_order: parseInt(e.target.value) || 0})}
+                        min="1"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-2 mt-4">
+                    <Button
+                      variant="outline"
+                      onClick={cancelEdit}
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleUpdateOption}
+                      disabled={!editFormData.name.trim()}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Update Option
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Options List */}
               <div className="space-y-3">
                 {category.customization_options.length === 0 ? (
@@ -442,7 +605,7 @@ export default function CustomizationManagementPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setEditingOption(option.id)}
+                          onClick={() => startEditOption(option)}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
