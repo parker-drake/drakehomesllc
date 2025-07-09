@@ -146,17 +146,6 @@ export default function PlanConfiguratorPage() {
     setSelectedOptions(prev => {
       const current = prev[categoryId] as {material?: string, primary?: string, accent?: string} || {}
       
-      // For primary/accent, ensure we don't select the same color for both
-      if (selectionType === 'primary' && current.accent === optionId) {
-        alert('This color is already selected as the accent color. Please choose a different color.')
-        return prev
-      }
-      
-      if (selectionType === 'accent' && current.primary === optionId) {
-        alert('This color is already selected as the primary color. Please choose a different color.')
-        return prev
-      }
-      
       return {
         ...prev,
         [categoryId]: {
