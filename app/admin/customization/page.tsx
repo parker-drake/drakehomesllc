@@ -61,6 +61,7 @@ export default function CustomizationManagementPage() {
     is_default: boolean
     sort_order: number
   } | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -102,6 +103,37 @@ export default function CustomizationManagementPage() {
       alert(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return null
+
+    setUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', 'customization-options')
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        return result.url
+      } else {
+        const error = await response.json()
+        alert(`Error uploading image: ${error.error || 'Unknown error'}`)
+        return null
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert(`Upload error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      return null
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -274,14 +306,39 @@ export default function CustomizationManagementPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Image URL (optional)
+                        Upload Image (optional)
                       </label>
-                      <Input
-                        type="url"
-                        value={newOption.image_url}
-                        onChange={(e) => setNewOption({...newOption, image_url: e.target.value})}
-                        placeholder="https://example.com/image.jpg"
-                      />
+                      <div className="space-y-2">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              const url = await handleImageUpload(file)
+                              if (url) {
+                                setNewOption({...newOption, image_url: url})
+                              }
+                            }
+                          }}
+                          disabled={uploadingImage}
+                        />
+                        {uploadingImage && (
+                          <div className="text-sm text-gray-500 flex items-center">
+                            <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-red-600 rounded-full mr-2"></div>
+                            Uploading image...
+                          </div>
+                        )}
+                        {newOption.image_url && (
+                          <div className="mt-2">
+                            <img
+                              src={newOption.image_url}
+                              alt="Preview"
+                              className="w-20 h-20 object-cover rounded-lg border"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
