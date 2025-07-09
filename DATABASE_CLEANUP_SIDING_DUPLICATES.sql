@@ -29,16 +29,14 @@ BEGIN
             WHERE rn > 1
         );
         
-        -- Reset sort orders to be clean
+        -- Reset sort orders - materials first (1-3), then colors (10+)
         UPDATE customization_options 
-        SET sort_order = (
-            CASE 
-                WHEN name = 'Vinyl Siding' THEN 1
-                WHEN name = 'Fiber Cement Siding' THEN 2
-                WHEN name = 'Brick Exterior' THEN 3
-                ELSE ROW_NUMBER() OVER (ORDER BY name) + 10
-            END
-        )
+        SET sort_order = CASE 
+            WHEN name = 'Vinyl Siding' THEN 1
+            WHEN name = 'Fiber Cement Siding' THEN 2  
+            WHEN name = 'Brick Exterior' THEN 3
+            ELSE 10
+        END
         WHERE category_id = exterior_category_id;
         
         RAISE NOTICE 'Cleaned up siding color duplicates';
