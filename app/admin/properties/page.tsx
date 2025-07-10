@@ -203,9 +203,9 @@ export default function AdminProperties() {
       const availabilityMatch = availabilityStatusFilter === 'all' || 
         propertyAvailabilityStatus === availabilityStatusFilter
 
-      // Price range filter
+      // Price range filter - handle non-numeric values like "SOLD"
       const price = parseFloat(property.price.replace(/[$,]/g, ''))
-      const priceMatch = !isNaN(price) && price >= priceRange[0] && price <= priceRange[1]
+      const priceMatch = isNaN(price) || (price >= priceRange[0] && price <= priceRange[1])
 
       // Bedroom filter
       const bedroomMatch = bedroomFilter === 'all' || property.beds.toString() === bedroomFilter
