@@ -20,7 +20,9 @@ import {
   ChevronRight,
   Calendar,
   Check,
-  ArrowLeft
+  ArrowLeft,
+  Grid,
+  X
 } from "lucide-react"
 import PropertyMap from "@/components/property-map"
 import emailjs from '@emailjs/browser'
@@ -84,6 +86,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [showAllImages, setShowAllImages] = useState(false)
 
   useEffect(() => {
     fetchProperty()
@@ -312,10 +315,10 @@ export default function PropertyPage({ params }: PropertyPageProps) {
             </Link>
 
             {/* Property Images Gallery */}
-            <div className="mb-8">
+            <div className="mb-6">
               <div className="relative">
                 {/* Main Image Display */}
-                <div className="relative h-96 lg:h-[500px] w-full rounded-lg overflow-hidden">
+                <div className="relative h-64 lg:h-80 w-full rounded-lg overflow-hidden">
                   <Image
                     src={propertyImages[currentImageIndex] || "/placeholder.svg"}
                     alt={`${property.title} - Image ${currentImageIndex + 1}`}
@@ -365,33 +368,60 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                     </Button>
                   </div>
                   
-                  {/* Image Counter */}
-                  {propertyImages.length > 1 && (
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
-                      {currentImageIndex + 1} / {propertyImages.length}
-                    </div>
-                  )}
+                  {/* Image Counter and View All Button */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3">
+                    {propertyImages.length > 1 && (
+                      <div className="bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+                        {currentImageIndex + 1} / {propertyImages.length}
+                      </div>
+                    )}
+                    {propertyImages.length > 1 && (
+                      <Button
+                        size="sm"
+                        className="bg-white/90 text-gray-800 hover:bg-white"
+                        onClick={() => setShowAllImages(!showAllImages)}
+                      >
+                        <Grid className="h-4 w-4 mr-1" />
+                        View All Photos
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 
-                {/* Thumbnail Gallery */}
-                {propertyImages.length > 1 && (
-                  <div className="mt-4 grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-                    {propertyImages.map((image, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={`relative aspect-square rounded overflow-hidden cursor-pointer ${
-                          index === currentImageIndex ? 'ring-2 ring-red-600' : 'hover:opacity-80'
-                        }`}
+                {/* Compact Thumbnail Strip (only show first 6) */}
+                {propertyImages.length > 1 && showAllImages && (
+                  <div className="mt-3 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-medium text-gray-900">All Photos ({propertyImages.length})</h3>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setShowAllImages(false)}
                       >
-                        <Image
-                          src={image}
-                          alt={`Thumbnail ${index + 1}`}
-                          fill
-                          className="object-cover"
-                        />
-                      </button>
-                    ))}
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                      {propertyImages.map((image, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            setCurrentImageIndex(index)
+                            setShowAllImages(false)
+                          }}
+                          className={`relative aspect-square rounded overflow-hidden cursor-pointer ${
+                            index === currentImageIndex ? 'ring-2 ring-red-600' : 'hover:opacity-80'
+                          }`}
+                        >
+                          <Image
+                            src={image}
+                            alt={`Photo ${index + 1}`}
+                            fill
+                            className="object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
