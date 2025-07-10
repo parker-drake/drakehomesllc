@@ -20,7 +20,8 @@ import {
   ChevronRight,
   Calendar,
   Check,
-  ArrowLeft
+  ArrowLeft,
+  X
 } from "lucide-react"
 import PropertyMap from "@/components/property-map"
 import emailjs from '@emailjs/browser'
@@ -84,6 +85,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false)
 
   useEffect(() => {
     fetchProperty()
@@ -263,6 +265,49 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     setCurrentImageIndex((prev) => (prev === propertyImages.length - 1 ? 0 : prev + 1))
   }
 
+  const openLightbox = (index: number) => {
+    setCurrentImageIndex(index)
+    setIsLightboxOpen(true)
+  }
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false)
+  }
+
+  // Handle keyboard navigation for lightbox
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isLightboxOpen) return
+      
+      switch (e.key) {
+        case 'Escape':
+          closeLightbox()
+          break
+        case 'ArrowLeft':
+          e.preventDefault()
+          handlePreviousImage()
+          break
+        case 'ArrowRight':
+          e.preventDefault()
+          handleNextImage()
+          break
+      }
+    }
+
+    if (isLightboxOpen) {
+      document.addEventListener('keydown', handleKeyDown)
+      // Prevent body scroll when lightbox is open
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = 'unset'
+    }
+  }, [isLightboxOpen, propertyImages.length])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -315,7 +360,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
             <div className="mb-8">
               <div className="relative">
                 {/* Main Image Display */}
-                <div className="relative h-96 lg:h-[500px] w-full rounded-lg overflow-hidden">
+                <div className="relative h-96 lg:h-[500px] w-full rounded-lg overflow-hidden cursor-pointer" onClick={() => openLightbox(currentImageIndex)}>
                   <Image
                     src={propertyImages[currentImageIndex] || "/placeholder.svg"}
                     alt={`${property.title} - Image ${currentImageIndex + 1}`}
@@ -380,7 +425,10 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                       {propertyImages.map((image, index) => (
                         <button
                           key={index}
-                          onClick={() => setCurrentImageIndex(index)}
+                          onClick={() => {
+                            setCurrentImageIndex(index)
+                            openLightbox(index)
+                          }}
                           className={`relative flex-shrink-0 w-20 h-20 rounded overflow-hidden cursor-pointer ${
                             index === currentImageIndex ? 'ring-2 ring-red-600' : 'hover:opacity-80'
                           }`}
@@ -658,6 +706,60 @@ export default function PropertyPage({ params }: PropertyPageProps) {
           </div>
         )}
       </div>
+
+             {/* Lightbox Modal */}
+       {isLightboxOpen && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={closeLightbox}>
+           <div className="relative w-full h-full max-w-7xl max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+             {/* Close Button */}
+             <button
+               onClick={closeLightbox}
+               className="absolute top-4 right-4 z-10 text-white hover:text-gray-300 bg-black/50 rounded-full p-2 transition-colors"
+             >
+               <X className="h-6 w-6" />
+             </button>
+             
+             {/* Main Image */}
+             <div className="relative w-full h-full flex items-center justify-center">
+               <Image
+                 src={propertyImages[currentImageIndex] || "/placeholder.svg"}
+                 alt={`${property.title} - Image ${currentImageIndex + 1}`}
+                 width={1200}
+                 height={800}
+                 className="object-contain w-full h-full"
+                 priority
+               />
+             </div>
+             
+             {/* Navigation Arrows */}
+             {propertyImages.length > 1 && (
+               <>
+                 <Button
+                   variant="ghost"
+                   size="icon"
+                   className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white hover:text-white z-10"
+                   onClick={handlePreviousImage}
+                 >
+                   <ChevronLeft className="h-8 w-8" />
+                 </Button>
+                 <Button
+                   variant="ghost"
+                   size="icon"
+                   className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white hover:text-white z-10"
+                   onClick={handleNextImage}
+                 >
+                   <ChevronRight className="h-8 w-8" />
+                 </Button>
+               </>
+             )}
+             
+             {/* Image Counter */}
+             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-sm z-10">
+               {currentImageIndex + 1} / {propertyImages.length}
+             </div>
+           </div>
+         </div>
+       )}
     </div>
   )
 } 
