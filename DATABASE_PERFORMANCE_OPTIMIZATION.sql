@@ -18,8 +18,8 @@ CREATE INDEX IF NOT EXISTS idx_property_images_is_main ON property_images(is_mai
 CREATE INDEX IF NOT EXISTS idx_property_images_display_order ON property_images(display_order);
 
 -- Create indexes for plans table
-CREATE INDEX IF NOT EXISTS idx_plans_base_price ON plans(base_price);
-CREATE INDEX IF NOT EXISTS idx_plans_beds_baths ON plans(beds, baths);
+CREATE INDEX IF NOT EXISTS idx_plans_price ON plans(price);
+CREATE INDEX IF NOT EXISTS idx_plans_beds_baths ON plans(bedrooms, bathrooms);
 CREATE INDEX IF NOT EXISTS idx_plans_created_at ON plans(created_at DESC);
 
 -- Create indexes for lots table
