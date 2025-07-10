@@ -245,7 +245,7 @@ export default function AvailableHomes() {
               <Phone className="h-5 w-5 mr-2" />
               Schedule a Tour
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900 min-h-[48px] text-base">
+            <Button size="lg" className="bg-red-600 hover:bg-red-700 min-h-[48px] text-base">
               <Mail className="h-5 w-5 mr-2" />
               Custom Home Consultation
             </Button>
