@@ -187,6 +187,16 @@ export default function AdminProperties() {
   }
 
   const filterAndSortProperties = () => {
+    console.log('Filtering properties:', properties.length)
+    console.log('Filter values:', { 
+      statusFilter, 
+      availabilityStatusFilter, 
+      searchTerm, 
+      priceRange, 
+      bedroomFilter, 
+      bathroomFilter 
+    })
+    
     let filtered = properties.filter(property => {
       // Search term filter
       const searchMatch = searchTerm === '' || 
@@ -199,7 +209,8 @@ export default function AdminProperties() {
       const statusMatch = statusFilter === 'all' || property.status === statusFilter
 
       // Availability status filter
-      const availabilityMatch = availabilityStatusFilter === 'all' || property.availability_status === availabilityStatusFilter
+      const availabilityMatch = availabilityStatusFilter === 'all' || 
+        (property.availability_status || 'Available') === availabilityStatusFilter
 
       // Price range filter
       const price = parseFloat(property.price.replace(/[$,]/g, ''))
@@ -211,7 +222,28 @@ export default function AdminProperties() {
       // Bathroom filter
       const bathroomMatch = bathroomFilter === 'all' || property.baths.toString() === bathroomFilter
 
-      return searchMatch && statusMatch && availabilityMatch && priceMatch && bedroomMatch && bathroomMatch
+      const matches = searchMatch && statusMatch && availabilityMatch && priceMatch && bedroomMatch && bathroomMatch
+      
+      if (!matches) {
+        console.log('Property filtered out:', property.title, {
+          searchMatch,
+          statusMatch,
+          availabilityMatch,
+          priceMatch,
+          bedroomMatch,
+          bathroomMatch,
+          availability_status: property.availability_status,
+          status: property.status,
+          price: property.price
+        })
+      }
+      
+      return matches
+    })
+    
+    console.log('Filtered properties:', filtered.length)
+    properties.forEach(p => {
+      console.log('Property:', p.title, 'Status:', p.status, 'Availability:', p.availability_status)
     })
 
     // Sort properties
