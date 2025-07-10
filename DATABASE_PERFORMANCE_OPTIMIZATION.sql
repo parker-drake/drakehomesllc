@@ -27,10 +27,9 @@ CREATE INDEX IF NOT EXISTS idx_lots_status ON lots(status);
 CREATE INDEX IF NOT EXISTS idx_lots_price ON lots(price);
 CREATE INDEX IF NOT EXISTS idx_lots_created_at ON lots(created_at DESC);
 
--- Create indexes for gallery table
-CREATE INDEX IF NOT EXISTS idx_gallery_project_id ON gallery(project_id);
-CREATE INDEX IF NOT EXISTS idx_gallery_display_order ON gallery(display_order);
-CREATE INDEX IF NOT EXISTS idx_gallery_created_at ON gallery(created_at DESC);
+-- Create indexes for gallery_images table
+CREATE INDEX IF NOT EXISTS idx_gallery_images_sort_order ON gallery_images(sort_order);
+CREATE INDEX IF NOT EXISTS idx_gallery_images_created_at ON gallery_images(created_at DESC);
 
 -- Create text search configurations for better search performance
 ALTER TABLE properties ADD COLUMN IF NOT EXISTS search_vector tsvector;
@@ -73,7 +72,7 @@ ANALYZE properties;
 ANALYZE property_images;
 ANALYZE plans;
 ANALYZE lots;
-ANALYZE gallery;
+ANALYZE gallery_images;
 
 -- Enable query performance insights (if not already enabled)
 -- Note: These are suggestions for monitoring - verify with your Supabase plan
