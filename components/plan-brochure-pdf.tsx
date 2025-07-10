@@ -14,9 +14,9 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
   },
   logo: {
-    width: 120,
-    height: 40,
-    marginBottom: 10,
+    width: 150,
+    height: 50,
+    objectFit: 'contain',
   },
   title: {
     fontSize: 24,
@@ -172,10 +172,12 @@ export const PlanBrochurePDF: React.FC<PlanBrochureProps> = ({ plan }) => {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Image 
-            style={styles.logo} 
-            src="/DrakeHomes_Logo.jpg"
-          />
+          <View style={{ marginBottom: 10 }}>
+            <Image 
+              style={styles.logo} 
+              src={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://drakehomesllc.com'}/DrakeHomes_Logo.jpg`}
+            />
+          </View>
           <Text style={styles.title}>{plan.name}</Text>
           <Text style={styles.subtitle}>Custom Home Floor Plan</Text>
         </View>

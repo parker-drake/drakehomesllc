@@ -21,9 +21,9 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
   },
   logo: {
-    width: 120,
-    height: 40,
-    marginBottom: 10,
+    width: 150,
+    height: 50,
+    objectFit: 'contain',
   },
   title: {
     fontSize: 24,
@@ -208,17 +208,21 @@ export const PropertyBrochurePDF: React.FC<PropertyBrochureProps> = ({ property 
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Image 
-            style={styles.logo} 
-            src="/DrakeHomes_Logo.jpg"
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+            <Image 
+              style={styles.logo} 
+              src={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://drakehomesllc.com'}/DrakeHomes_Logo.jpg`}
+            />
+            <View style={{ marginLeft: 'auto' }}>
+              {property.availability_status && property.availability_status !== 'Available' && (
+                <View style={styles.badge}>
+                  <Text>{property.availability_status}</Text>
+                </View>
+              )}
+            </View>
+          </View>
           <Text style={styles.title}>{property.title}</Text>
           <Text style={styles.subtitle}>{property.location}</Text>
-          {property.availability_status && property.availability_status !== 'Available' && (
-            <View style={styles.badge}>
-              <Text>{property.availability_status}</Text>
-            </View>
-          )}
         </View>
 
         {/* Main Image */}
