@@ -85,6 +85,7 @@ export default function AdminProperties() {
   // Search and Filter States
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [availabilityStatusFilter, setAvailabilityStatusFilter] = useState<string>('all')
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000000])
   const [bedroomFilter, setBedroomFilter] = useState<string>('all')
   const [bathroomFilter, setBathroomFilter] = useState<string>('all')
@@ -131,7 +132,7 @@ export default function AdminProperties() {
 
   useEffect(() => {
     filterAndSortProperties()
-  }, [properties, searchTerm, statusFilter, priceRange, bedroomFilter, bathroomFilter, sortBy])
+  }, [properties, searchTerm, statusFilter, availabilityStatusFilter, priceRange, bedroomFilter, bathroomFilter, sortBy])
 
   // Keyboard shortcut for opening add property modal
   useEffect(() => {
@@ -197,9 +198,12 @@ export default function AdminProperties() {
       // Status filter
       const statusMatch = statusFilter === 'all' || property.status === statusFilter
 
+      // Availability status filter
+      const availabilityMatch = availabilityStatusFilter === 'all' || property.availability_status === availabilityStatusFilter
+
       // Price range filter
       const price = parseFloat(property.price.replace(/[$,]/g, ''))
-      const priceMatch = price >= priceRange[0] && price <= priceRange[1]
+      const priceMatch = !isNaN(price) && price >= priceRange[0] && price <= priceRange[1]
 
       // Bedroom filter
       const bedroomMatch = bedroomFilter === 'all' || property.beds.toString() === bedroomFilter
@@ -207,7 +211,7 @@ export default function AdminProperties() {
       // Bathroom filter
       const bathroomMatch = bathroomFilter === 'all' || property.baths.toString() === bathroomFilter
 
-      return searchMatch && statusMatch && priceMatch && bedroomMatch && bathroomMatch
+      return searchMatch && statusMatch && availabilityMatch && priceMatch && bedroomMatch && bathroomMatch
     })
 
     // Sort properties
@@ -237,6 +241,7 @@ export default function AdminProperties() {
   const clearAllFilters = () => {
     setSearchTerm('')
     setStatusFilter('all')
+    setAvailabilityStatusFilter('all')
     setPriceRange([0, 2000000])
     setBedroomFilter('all')
     setBathroomFilter('all')
@@ -247,6 +252,7 @@ export default function AdminProperties() {
     let count = 0
     if (searchTerm !== '') count++
     if (statusFilter !== 'all') count++
+    if (availabilityStatusFilter !== 'all') count++
     if (priceRange[0] !== 0 || priceRange[1] !== 2000000) count++
     if (bedroomFilter !== 'all') count++
     if (bathroomFilter !== 'all') count++
@@ -847,7 +853,7 @@ export default function AdminProperties() {
 
         {/* Quick Stats */}
         {properties.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <div className="bg-white rounded-lg border p-3">
               <div className="text-2xl font-bold text-gray-900">{properties.length}</div>
               <div className="text-sm text-gray-600">Total Properties</div>
@@ -869,6 +875,12 @@ export default function AdminProperties() {
                 {properties.filter(p => p.status === 'Pre-Construction').length}
               </div>
               <div className="text-sm text-gray-600">Pre-Construction</div>
+            </div>
+            <div className="bg-white rounded-lg border p-3">
+              <div className="text-2xl font-bold text-red-600">
+                {properties.filter(p => p.availability_status === 'Sold').length}
+              </div>
+              <div className="text-sm text-gray-600">Sold</div>
             </div>
           </div>
         )}
@@ -931,7 +943,7 @@ export default function AdminProperties() {
               {/* Advanced Filters Panel */}
               {showFilters && (
                 <div className="border-t pt-4 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     {/* Status Filter */}
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
@@ -945,6 +957,22 @@ export default function AdminProperties() {
                         <option value="Nearly Complete">Nearly Complete</option>
                         <option value="Under Construction">Under Construction</option>
                         <option value="Pre-Construction">Pre-Construction</option>
+                      </select>
+                    </div>
+
+                    {/* Availability Status Filter */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Availability</label>
+                      <select
+                        value={availabilityStatusFilter}
+                        onChange={(e) => setAvailabilityStatusFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-input rounded-md text-sm bg-background"
+                      >
+                        <option value="all">All Availability</option>
+                        <option value="Available">Available</option>
+                        <option value="Under Contract">Under Contract</option>
+                        <option value="Coming Soon">Coming Soon</option>
+                        <option value="Sold">Sold</option>
                       </select>
                     </div>
 
@@ -1950,16 +1978,31 @@ export default function AdminProperties() {
                 
                 {/* Status and Date Row */}
                 <div className="flex items-center justify-between mb-3">
-                  <Badge 
-                    className={`text-xs px-2 py-1 font-medium ${
-                      property.status === 'Move-In Ready' ? 'bg-green-500' :
-                      property.status === 'Nearly Complete' ? 'bg-blue-500' :
-                      property.status === 'Under Construction' ? 'bg-orange-500' :
-                      'bg-purple-500'
-                    } text-white`}
-                  >
-                    {property.status}
-                  </Badge>
+                  <div className="flex gap-2">
+                    <Badge 
+                      className={`text-xs px-2 py-1 font-medium ${
+                        property.status === 'Move-In Ready' ? 'bg-green-500' :
+                        property.status === 'Nearly Complete' ? 'bg-blue-500' :
+                        property.status === 'Under Construction' ? 'bg-orange-500' :
+                        'bg-purple-500'
+                      } text-white`}
+                    >
+                      {property.status}
+                    </Badge>
+                    {property.availability_status && (
+                      <Badge 
+                        className={`text-xs px-2 py-1 font-medium ${
+                          property.availability_status === 'Available' ? 'bg-green-600' :
+                          property.availability_status === 'Under Contract' ? 'bg-yellow-600' :
+                          property.availability_status === 'Coming Soon' ? 'bg-blue-600' :
+                          property.availability_status === 'Sold' ? 'bg-red-600' :
+                          'bg-gray-600'
+                        } text-white`}
+                      >
+                        {property.availability_status}
+                      </Badge>
+                    )}
+                  </div>
                   <span className="text-xs text-gray-600">{property.completion_date}</span>
                 </div>
                 
