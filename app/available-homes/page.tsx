@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Heart, MapPin, Bed, Bath, Square, Phone, Mail } from "lucide-react"
 import PropertiesMap from "@/components/properties-map"
+import Script from "next/script"
 
 interface Property {
   id: string
@@ -94,8 +95,52 @@ export default function AvailableHomes() {
     }
   }
 
+  // Create structured data for property listings
+  const propertyListingsSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Available Homes by Drake Homes LLC",
+    "description": "Browse our collection of available new construction homes in Wisconsin's Fox Valley area",
+    "numberOfItems": properties.length,
+    "itemListElement": properties.map((property, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "RealEstateListing",
+        "@id": `https://drakehomesllc.com/available-homes/${property.id}`,
+        "name": property.title,
+        "description": property.description.slice(0, 160),
+        "url": `https://drakehomesllc.com/available-homes/${property.id}`,
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": property.location.split(',')[0]?.trim(),
+          "addressLocality": property.location.split(',')[1]?.trim() || "Fox Valley",
+          "addressRegion": "WI",
+          "addressCountry": "US"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": property.price === "SOLD" ? undefined : property.price.replace(/[$,]/g, ''),
+          "priceCurrency": "USD"
+        },
+        "numberOfBedrooms": property.beds,
+        "numberOfBathroomsTotal": property.baths,
+        "floorSize": {
+          "@type": "QuantitativeValue",
+          "value": property.sqft.replace(/[^0-9]/g, ''),
+          "unitCode": "FTK"
+        }
+      }
+    }))
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <Script
+        id="property-listings-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(propertyListingsSchema) }}
+      />
       {/* Hero Section with Search */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">

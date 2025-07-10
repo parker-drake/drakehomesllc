@@ -363,9 +363,10 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                 <div className="relative h-96 lg:h-[500px] w-full rounded-lg overflow-hidden cursor-pointer" onClick={() => openLightbox(currentImageIndex)}>
                   <Image
                     src={propertyImages[currentImageIndex] || "/placeholder.svg"}
-                    alt={`${property.title} - Image ${currentImageIndex + 1}`}
+                    alt={`${property.location} - ${property.beds} bedroom ${property.baths} bathroom home exterior view ${currentImageIndex + 1}`}
                     fill
                     className="object-cover"
+                    priority
                   />
                   
                   {/* Navigation Arrows */}
@@ -435,9 +436,11 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                         >
                           <Image
                             src={image}
-                            alt={`Thumbnail ${index + 1}`}
+                            alt={`${property.location} home - view ${index + 1}`}
                             fill
                             className="object-cover"
+                            sizes="80px"
+                            loading="lazy"
                           />
                         </button>
                       ))}

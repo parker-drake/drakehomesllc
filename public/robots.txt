@@ -5,12 +5,20 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 
-# Allow important pages
+# Allow important pages and dynamic content
 Allow: /
 Allow: /about
 Allow: /contact
 Allow: /available-homes
+Allow: /available-homes/*
+Allow: /lots
+Allow: /lots/*
+Allow: /plans
+Allow: /plans/*
 Allow: /gallery
+
+# Crawl delay to be respectful
+Crawl-delay: 1
 
 # Sitemap location
 Sitemap: https://drakehomesllc.com/sitemap.xml 
