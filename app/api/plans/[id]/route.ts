@@ -73,7 +73,7 @@ export async function PUT(
         floors: parseInt(floors) || 1,
         garage_spaces: parseInt(garage_spaces) || 0,
         style,
-        price: parseFloat(price),
+        price: price ? parseFloat(price) : null,
         main_image,
         is_featured: Boolean(is_featured),
         updated_at: new Date().toISOString()

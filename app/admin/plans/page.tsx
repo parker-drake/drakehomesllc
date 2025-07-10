@@ -316,14 +316,13 @@ export default function AdminPlansPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium mb-2">Price *</label>
+                    <label className="block text-sm font-medium mb-2">Price</label>
                     <Input
                       type="number"
                       step="0.01"
                       value={formData.price}
                       onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                       placeholder="e.g., 189900"
-                      required
                     />
                   </div>
                   
