@@ -5,150 +5,202 @@ const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
-    padding: 20,
+    padding: 30,
+    fontFamily: 'Helvetica',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
-    paddingBottom: 10,
-    borderBottomWidth: 2,
+    marginBottom: 25,
+    paddingBottom: 15,
+    borderBottomWidth: 3,
     borderBottomColor: '#DC2626',
   },
   logo: {
-    width: 120,
-    height: 40,
+    width: 140,
+    height: 50,
     objectFit: 'contain',
   },
   headerText: {
     textAlign: 'right',
   },
   companyName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#111827',
-    marginBottom: 2,
+    marginBottom: 3,
+    letterSpacing: 0.5,
   },
   tagline: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#6B7280',
+    fontStyle: 'italic',
+  },
+  titleSection: {
+    marginBottom: 25,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#111827',
-    marginBottom: 15,
+    marginBottom: 8,
     textAlign: 'center',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#DC2626',
+    textAlign: 'center',
+    fontWeight: 'medium',
   },
   propertiesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 15,
+    gap: 15,
+    marginBottom: 20,
+    justifyContent: 'space-between',
   },
   propertyCard: {
     width: '48%',
-    marginBottom: 10,
+    marginBottom: 15,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 6,
+    borderRadius: 8,
     overflow: 'hidden',
+    backgroundColor: '#FAFAFA',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   propertyCard3: {
     width: '31%',
-    marginBottom: 10,
+    marginBottom: 15,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 6,
+    borderRadius: 8,
     overflow: 'hidden',
+    backgroundColor: '#FAFAFA',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   propertyImage: {
     width: '100%',
-    height: 120,
+    height: 140,
     objectFit: 'cover',
   },
   propertyImageSmall: {
     width: '100%',
-    height: 100,
+    height: 110,
     objectFit: 'cover',
   },
   propertyDetails: {
-    padding: 8,
+    padding: 10,
+    backgroundColor: '#FFFFFF',
   },
   propertyTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#111827',
-    marginBottom: 3,
+    marginBottom: 4,
+    lineHeight: 1.3,
   },
   propertyLocation: {
-    fontSize: 9,
+    fontSize: 10,
     color: '#6B7280',
-    marginBottom: 3,
+    marginBottom: 6,
+    lineHeight: 1.2,
   },
   propertyPrice: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#DC2626',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   propertySpecs: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    padding: 6,
+    borderRadius: 4,
+    marginBottom: 4,
   },
   spec: {
-    fontSize: 8,
+    fontSize: 9,
     color: '#374151',
+    fontWeight: 'medium',
+  },
+  specDivider: {
+    fontSize: 8,
+    color: '#D1D5DB',
   },
   propertyStatus: {
-    fontSize: 8,
-    color: '#FFFFFF',
-    backgroundColor: '#DC2626',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 3,
+    fontSize: 9,
+    color: '#065F46',
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
     alignSelf: 'flex-start',
-    marginTop: 3,
+    marginTop: 4,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   footer: {
     position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    bottom: 25,
+    left: 30,
+    right: 30,
+    paddingTop: 15,
+    borderTopWidth: 2,
+    borderTopColor: '#DC2626',
+    backgroundColor: '#FFFFFF',
+  },
+  footerContent: {
+    backgroundColor: '#FEF2F2',
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 8,
   },
   contactRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 5,
   },
   contactInfo: {
     flexDirection: 'row',
-    gap: 20,
+    gap: 25,
+    alignItems: 'center',
   },
   contactItem: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#374151',
+    fontWeight: 'medium',
   },
   contactBold: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#111827',
   },
   website: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#DC2626',
+    fontWeight: 'bold',
     textDecoration: 'none',
   },
   disclaimer: {
-    fontSize: 8,
-    color: '#9CA3AF',
-    marginTop: 5,
+    fontSize: 9,
+    color: '#6B7280',
+    marginTop: 4,
     textAlign: 'center',
+    fontStyle: 'italic',
   },
   noImageBox: {
     width: '100%',
@@ -194,6 +246,32 @@ export const PropertyFlyerPDF: React.FC<PropertyFlyerProps> = ({ properties }) =
   const imageStyle = useThreeColumn ? styles.propertyImageSmall : styles.propertyImage
   const noImageStyle = useThreeColumn ? styles.noImageBoxSmall : styles.noImageBox
 
+  // Get status color based on property status
+  const getStatusStyle = (status: string) => {
+    switch(status) {
+      case 'Move-In Ready':
+        return {
+          color: '#065F46',
+          backgroundColor: '#D1FAE5',
+        }
+      case 'Under Construction':
+        return {
+          color: '#92400E',
+          backgroundColor: '#FED7AA',
+        }
+      case 'Nearly Complete':
+        return {
+          color: '#1E40AF',
+          backgroundColor: '#DBEAFE',
+        }
+      default:
+        return {
+          color: '#374151',
+          backgroundColor: '#F3F4F6',
+        }
+    }
+  }
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -209,8 +287,11 @@ export const PropertyFlyerPDF: React.FC<PropertyFlyerProps> = ({ properties }) =
           </View>
         </View>
 
-        {/* Title */}
-        <Text style={styles.title}>Available Homes</Text>
+        {/* Title Section */}
+        <View style={styles.titleSection}>
+          <Text style={styles.title}>Available Homes</Text>
+          <Text style={styles.subtitle}>Exceptional Properties in Wisconsin</Text>
+        </View>
 
         {/* Properties Grid */}
         <View style={styles.propertiesGrid}>
@@ -233,12 +314,12 @@ export const PropertyFlyerPDF: React.FC<PropertyFlyerProps> = ({ properties }) =
                 <Text style={styles.propertyPrice}>{property.price || 'Price TBD'}</Text>
                 <View style={styles.propertySpecs}>
                   <Text style={styles.spec}>{property.beds || 0} Beds</Text>
-                  <Text style={styles.spec}>•</Text>
+                  <Text style={styles.specDivider}>•</Text>
                   <Text style={styles.spec}>{property.baths || 0} Baths</Text>
-                  <Text style={styles.spec}>•</Text>
+                  <Text style={styles.specDivider}>•</Text>
                   <Text style={styles.spec}>{property.sqft || 'TBD'}</Text>
                 </View>
-                <Text style={styles.propertyStatus}>{property.status || 'Status TBD'}</Text>
+                <Text style={[styles.propertyStatus, getStatusStyle(property.status || '')]}>{property.status || 'Status TBD'}</Text>
               </View>
             </View>
           ))}
@@ -246,15 +327,17 @@ export const PropertyFlyerPDF: React.FC<PropertyFlyerProps> = ({ properties }) =
 
         {/* Footer */}
         <View style={styles.footer}>
-          <View style={styles.contactRow}>
-            <View style={styles.contactInfo}>
-              <Text style={styles.contactBold}>(920) 740-6660</Text>
-              <Text style={styles.contactItem}>info@drakehomesllc.com</Text>
+          <View style={styles.footerContent}>
+            <View style={styles.contactRow}>
+              <View style={styles.contactInfo}>
+                <Text style={styles.contactBold}>Call: (920) 740-6660</Text>
+                <Text style={styles.contactItem}>Email: info@drakehomesllc.com</Text>
+              </View>
+              <Text style={styles.website}>www.drakehomesllc.com</Text>
             </View>
-            <Text style={styles.website}>drakehomesllc.com</Text>
           </View>
           <Text style={styles.disclaimer}>
-            Information deemed reliable but not guaranteed. Prices and availability subject to change without notice.
+            Information deemed reliable but not guaranteed. Prices and availability subject to change without notice. Equal Housing Opportunity.
           </Text>
         </View>
       </Page>
