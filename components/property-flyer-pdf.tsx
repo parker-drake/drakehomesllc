@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
     paddingBottom: 10,
-    borderBottom: 2,
+    borderBottomWidth: 2,
     borderBottomColor: '#DC2626',
   },
   logo: {
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   propertyCard: {
     width: '48%',
     marginBottom: 10,
-    border: 1,
+    borderWidth: 1,
     borderColor: '#E5E7EB',
     borderRadius: 6,
     overflow: 'hidden',
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   propertyCard3: {
     width: '31%',
     marginBottom: 10,
-    border: 1,
+    borderWidth: 1,
     borderColor: '#E5E7EB',
     borderRadius: 6,
     overflow: 'hidden',
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     paddingTop: 10,
-    borderTop: 1,
+    borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
   },
   contactRow: {
