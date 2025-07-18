@@ -64,8 +64,9 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error generating property flyer:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to generate flyer' },
+      { error: 'Failed to generate flyer', details: errorMessage },
       { status: 500 }
     )
   }

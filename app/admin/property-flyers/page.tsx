@@ -119,11 +119,13 @@ export default function PropertyFlyersPage() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        alert('Failed to generate flyer. Please try again.')
+        const errorData = await response.json()
+        console.error('Server error:', errorData)
+        alert(`Failed to generate flyer: ${errorData.error}. ${errorData.details || ''}`)
       }
     } catch (error) {
       console.error('Error generating flyer:', error)
-      alert('Error generating flyer. Please try again.')
+      alert(`Error generating flyer: ${error instanceof Error ? error.message : 'Unknown error'}. Please check the console for details.`)
     } finally {
       setGenerating(false)
     }
@@ -142,7 +144,7 @@ export default function PropertyFlyersPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Property Flyers</h1>
         <p className="text-gray-600">
-          Select up to 6 properties to create a single-page marketing flyer
+          Select 1 to 6 properties to create a single-page marketing flyer
         </p>
       </div>
 
