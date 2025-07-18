@@ -453,6 +453,12 @@ export default function AdminDashboard() {
                     </Link>
                   </Button>
                   <Button variant="outline" asChild className="w-full justify-start">
+                    <Link href="/admin/property-flyers">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Property Flyers
+                    </Link>
+                  </Button>
+                  <Button variant="outline" asChild className="w-full justify-start">
                     <Link href="/available-homes">
                       <Eye className="w-4 h-4 mr-2" />
                       View Public Listings
