@@ -316,7 +316,7 @@ export const PropertyFlyerPDF: React.FC<PropertyFlyerProps> = ({ properties }) =
                   <Text style={styles.specDivider}>•</Text>
                   <Text style={styles.spec}>{property.baths || 0} Baths</Text>
                   <Text style={styles.specDivider}>•</Text>
-                  <Text style={styles.spec}>{property.sqft || 'TBD'}</Text>
+                  <Text style={styles.spec}>{property.sqft ? `${property.sqft} sq ft` : 'TBD'}</Text>
                 </View>
                 <Text style={[styles.propertyStatus, getStatusStyle(property.status || '')]}>{property.status || 'Status TBD'}</Text>
               </View>
