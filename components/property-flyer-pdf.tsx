@@ -290,7 +290,6 @@ export const PropertyFlyerPDF: React.FC<PropertyFlyerProps> = ({ properties }) =
         {/* Title Section */}
         <View style={styles.titleSection}>
           <Text style={styles.title}>Available Homes</Text>
-          <Text style={styles.subtitle}>Exceptional Properties in Wisconsin</Text>
         </View>
 
         {/* Properties Grid */}
@@ -336,9 +335,7 @@ export const PropertyFlyerPDF: React.FC<PropertyFlyerProps> = ({ properties }) =
               <Text style={styles.website}>www.drakehomesllc.com</Text>
             </View>
           </View>
-          <Text style={styles.disclaimer}>
-            Information deemed reliable but not guaranteed. Prices and availability subject to change without notice. Equal Housing Opportunity.
-          </Text>
+
         </View>
       </Page>
     </Document>
