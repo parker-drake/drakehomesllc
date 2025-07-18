@@ -46,9 +46,22 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Log properties for debugging
+    console.log('Generating PDF for properties:', properties.map(p => ({
+      id: p.id,
+      title: p.title,
+      main_image: p.main_image ? 'Has image' : 'No image'
+    })))
+
     // Generate PDF
-    const pdfElement = React.createElement(PropertyFlyerPDF, { properties })
-    const pdfBuffer = await renderToBuffer(pdfElement as any)
+    let pdfBuffer
+    try {
+      const pdfElement = React.createElement(PropertyFlyerPDF, { properties })
+      pdfBuffer = await renderToBuffer(pdfElement as any)
+    } catch (pdfError) {
+      console.error('PDF generation error:', pdfError)
+      throw new Error(`PDF generation failed: ${pdfError instanceof Error ? pdfError.message : 'Unknown error'}`)
+    }
 
     // Create filename
     const filename = `property-flyer-${new Date().toISOString().split('T')[0]}.pdf`

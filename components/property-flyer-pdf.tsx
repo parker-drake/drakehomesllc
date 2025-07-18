@@ -217,24 +217,28 @@ export const PropertyFlyerPDF: React.FC<PropertyFlyerProps> = ({ properties }) =
           {properties.map((property) => (
             <View key={property.id} style={cardStyle}>
               {property.main_image ? (
-                <Image style={imageStyle} src={property.main_image} />
+                <Image 
+                  style={imageStyle} 
+                  src={property.main_image}
+                  cache={false}
+                />
               ) : (
                 <View style={noImageStyle}>
                   <Text style={styles.noImageText}>No Image Available</Text>
                 </View>
               )}
               <View style={styles.propertyDetails}>
-                <Text style={styles.propertyTitle}>{property.title}</Text>
-                <Text style={styles.propertyLocation}>{property.location}</Text>
-                <Text style={styles.propertyPrice}>{property.price}</Text>
+                <Text style={styles.propertyTitle}>{property.title || 'Untitled'}</Text>
+                <Text style={styles.propertyLocation}>{property.location || 'Location TBD'}</Text>
+                <Text style={styles.propertyPrice}>{property.price || 'Price TBD'}</Text>
                 <View style={styles.propertySpecs}>
-                  <Text style={styles.spec}>{property.beds} Beds</Text>
+                  <Text style={styles.spec}>{property.beds || 0} Beds</Text>
                   <Text style={styles.spec}>•</Text>
-                  <Text style={styles.spec}>{property.baths} Baths</Text>
+                  <Text style={styles.spec}>{property.baths || 0} Baths</Text>
                   <Text style={styles.spec}>•</Text>
-                  <Text style={styles.spec}>{property.sqft}</Text>
+                  <Text style={styles.spec}>{property.sqft || 'TBD'}</Text>
                 </View>
-                <Text style={styles.propertyStatus}>{property.status}</Text>
+                <Text style={styles.propertyStatus}>{property.status || 'Status TBD'}</Text>
               </View>
             </View>
           ))}
