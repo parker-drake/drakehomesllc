@@ -110,3 +110,111 @@ export function formatPriceForStructuredData(price: string): string | undefined 
   }
   return price.replace(/[$,]/g, '')
 } 
+
+export function generateCanonicalUrl(path: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://drakehomesllc.com'
+  // Remove trailing slashes and ensure proper formatting
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  const finalPath = cleanPath === '/' ? '' : cleanPath.replace(/\/$/, '')
+  return `${baseUrl}${finalPath}`
+}
+
+export function generateMetaTags({
+  title,
+  description,
+  canonical,
+  ogImage,
+  noIndex = false,
+}: {
+  title: string
+  description: string
+  canonical: string
+  ogImage?: string
+  noIndex?: boolean
+}) {
+  const metaTags: any = {
+    title,
+    description,
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      siteName: 'Drake Homes LLC',
+      locale: 'en_US',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+  }
+
+  if (ogImage) {
+    metaTags.openGraph.images = [{
+      url: ogImage,
+      width: 1200,
+      height: 630,
+      alt: title,
+    }]
+    metaTags.twitter.images = [ogImage]
+  }
+
+  if (noIndex) {
+    metaTags.robots = {
+      index: false,
+      follow: false,
+    }
+  }
+
+  return metaTags
+}
+
+export function generateBreadcrumbSchema(breadcrumbs: Array<{ name: string; url: string }>) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbs.map((crumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: crumb.name,
+      item: crumb.url,
+    })),
+  }
+}
+
+export function generatePropertySchema(property: any) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: property.title,
+    description: property.description,
+    image: property.main_image,
+    offers: {
+      '@type': 'Offer',
+      price: property.price?.replace(/[^0-9]/g, '') || '0',
+      priceCurrency: 'USD',
+      availability: property.status === 'Move-In Ready' 
+        ? 'https://schema.org/InStock' 
+        : 'https://schema.org/PreOrder',
+      priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+    },
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: property.location,
+      addressLocality: property.city || 'Appleton',
+      addressRegion: 'WI',
+      addressCountry: 'US',
+    },
+    numberOfRooms: property.beds,
+    numberOfBathroomsTotal: property.baths,
+    floorSize: {
+      '@type': 'QuantitativeValue',
+      value: property.sqft,
+      unitCode: 'FTK', // Square feet
+    },
+  }
+} 

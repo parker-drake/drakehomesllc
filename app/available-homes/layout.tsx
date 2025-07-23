@@ -1,22 +1,13 @@
-import { Metadata } from "next"
+import { Metadata } from 'next'
+import { generateCanonicalUrl, generateMetaTags } from '@/lib/seo-utils'
 
-export const metadata: Metadata = {
-  title: "Available Homes - Quality New Construction in Wisconsin",
-  description: "Browse available new construction homes by Drake Homes LLC in Wisconsin's Fox Valley area. Quality custom homes with no shortcuts, modern features, and excellent craftsmanship.",
-  keywords: ["available homes Wisconsin", "new construction Fox Valley", "quality homes for sale", "custom homes Wisconsin", "Drake Homes properties", "Fox Valley new homes"],
-  openGraph: {
-    title: "Available Homes - Quality New Construction in Wisconsin",
-    description: "Browse available new construction homes in Wisconsin's Fox Valley area. Quality custom homes with excellent craftsmanship.",
-    url: "https://drakehomesllc.com/available-homes",
-    type: "website",
-  },
-  twitter: {
-    title: "Available Homes - Quality New Construction",
-    description: "Browse available new construction homes in Wisconsin's Fox Valley area.",
-  },
-  alternates: {
-    canonical: "/available-homes",
-  },
+export function generateMetadata(): Metadata {
+  return generateMetaTags({
+    title: 'Available Homes | Drake Homes LLC',
+    description: 'Browse our selection of quality homes available in Wisconsin\'s Fox Valley area. Find move-in ready homes and properties under construction.',
+    canonical: generateCanonicalUrl('/available-homes'),
+    ogImage: '/DrakeHomes_Logo.jpg',
+  })
 }
 
 export default function AvailableHomesLayout({
@@ -24,5 +15,5 @@ export default function AvailableHomesLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <>{children}</>
+  return children
 } 
