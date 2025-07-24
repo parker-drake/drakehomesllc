@@ -837,6 +837,35 @@ export default function AdminProperties() {
             if (deleteError) {
               console.error('Error deleting from property_images:', deleteError)
             }
+            
+            // Also try to delete from storage bucket
+            try {
+              const imagePath = imageToDelete.image_url.split('/').pop()
+              if (imagePath) {
+                const { error: storageError } = await supabase.storage
+                  .from('property-images')
+                  .remove([imagePath])
+                
+                if (storageError) {
+                  console.error('Error deleting from storage:', storageError)
+                }
+              }
+            } catch (e) {
+              console.error('Error parsing image path:', e)
+            }
+          }
+          
+          // Force a complete refresh of property data
+          if (editingProperty?.id) {
+            const { data: updatedProperty } = await supabase
+              .from('properties')
+              .select('*')
+              .eq('id', editingProperty.id)
+              .single()
+            
+            if (updatedProperty) {
+              setEditingProperty(updatedProperty)
+            }
           }
           
           alert('Main image deleted successfully.')
@@ -875,6 +904,8 @@ export default function AdminProperties() {
         // Update the editing property to reflect the change
         if (editingProperty) {
           setEditingProperty({ ...editingProperty, main_image: undefined })
+          // Also update the form data
+          setFormData(prev => ({ ...prev, main_image: '' }))
         }
       } else {
         // Regular image from property_images table
@@ -897,7 +928,12 @@ export default function AdminProperties() {
       }
 
       if (editingProperty?.id) {
-        await fetchPropertyImages(editingProperty.id)
+        // If we just deleted a legacy main image, filter it out immediately
+        if (isLegacyMain && shouldDelete) {
+          setPropertyImages(prev => prev.filter(img => img.id !== imageId))
+        } else {
+          await fetchPropertyImages(editingProperty.id)
+        }
         await fetchProperties() // Refresh the properties list
       }
     } catch (error) {
