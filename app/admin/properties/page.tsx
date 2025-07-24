@@ -791,11 +791,40 @@ export default function AdminProperties() {
   const deletePropertyImage = async (imageId: string) => {
     if (!confirm('Are you sure you want to delete this image?')) return
 
+    console.log('Deleting image with ID:', imageId)
+    console.log('Current property images:', propertyImages)
+
     try {
       // Check if this is the special main image from properties table
       if (imageId.startsWith('main-')) {
         // This is the main_image from properties table
         const propertyId = imageId.replace('main-', '')
+        const imageToDelete = propertyImages.find(img => img.id === imageId)
+        
+        console.log('Deleting legacy main image:', imageToDelete)
+        
+        if (imageToDelete) {
+          // First, add this image to property_images table so we can manage it properly
+          const { data: existingImage } = await supabase
+            .from('property_images')
+            .select('id')
+            .eq('property_id', propertyId)
+            .eq('image_url', imageToDelete.image_url)
+            .single()
+
+          if (!existingImage) {
+            // Image doesn't exist in property_images, add it
+            await supabase
+              .from('property_images')
+              .insert({
+                property_id: propertyId,
+                image_url: imageToDelete.image_url,
+                is_main: false,
+                display_order: propertyImages.length,
+                alt_text: imageToDelete.alt_text
+              })
+          }
+        }
         
         // Clear the main_image field in properties table
         const { error: updateError } = await supabase
@@ -805,15 +834,7 @@ export default function AdminProperties() {
 
         if (updateError) throw updateError
         
-        // Also clear is_main from any property_images that might have the same URL
-        const mainImageUrl = propertyImages.find(img => img.id === imageId)?.image_url
-        if (mainImageUrl) {
-          await supabase
-            .from('property_images')
-            .update({ is_main: false })
-            .eq('property_id', propertyId)
-            .eq('image_url', mainImageUrl)
-        }
+        alert('Main image reference removed. The image is now in your gallery as a regular image.')
       } else {
         // Regular image from property_images table
         const imageToDelete = propertyImages.find(img => img.id === imageId)
@@ -840,7 +861,7 @@ export default function AdminProperties() {
       }
     } catch (error) {
       console.error('Error deleting image:', error)
-      alert('Error deleting image')
+      alert('Error deleting image: ' + (error as any).message)
     }
   }
 
@@ -1487,6 +1508,11 @@ export default function AdminProperties() {
                               {image.is_main && (
                                 <div className="absolute top-2 left-2 bg-yellow-500 text-white p-1 rounded">
                                   <Star className="w-4 h-4" />
+                                </div>
+                              )}
+                              {image.id.startsWith('main-') && (
+                                <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                                  Legacy
                                 </div>
                               )}
                             </div>
