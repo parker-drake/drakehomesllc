@@ -794,61 +794,88 @@ export default function AdminProperties() {
   }
 
   const deletePropertyImage = async (imageId: string) => {
-    if (!confirm('Are you sure you want to delete this image?')) return
+    const isLegacyMain = imageId.startsWith('main-')
+    
+    // Different confirmation messages for legacy main images
+    const confirmMessage = isLegacyMain 
+      ? 'This is the main image. Do you want to delete it completely? (Click Cancel to keep it as a regular image)'
+      : 'Are you sure you want to delete this image?'
+    
+    const shouldDelete = confirm(confirmMessage)
+    if (!shouldDelete && !isLegacyMain) return
 
     console.log('Deleting image with ID:', imageId)
     console.log('Current property images:', propertyImages)
 
     try {
       // Check if this is the special main image from properties table
-      if (imageId.startsWith('main-')) {
+      if (isLegacyMain) {
         // This is the main_image from properties table
         const propertyId = imageId.replace('main-', '')
         const imageToDelete = propertyImages.find(img => img.id === imageId)
         
         console.log('Deleting legacy main image:', imageToDelete)
         
-        if (imageToDelete) {
-          // First, check if this image already exists in property_images
-          const { data: existingImages } = await supabase
-            .from('property_images')
-            .select('*')
-            .eq('property_id', propertyId)
-            .eq('image_url', imageToDelete.image_url)
+        if (shouldDelete) {
+          // User wants to delete completely
+          // Clear the main_image field in properties table
+          const { error: updateError } = await supabase
+            .from('properties')
+            .update({ main_image: null })
+            .eq('id', propertyId)
 
-          if (!existingImages || existingImages.length === 0) {
-            // Image doesn't exist in property_images, add it
-            const { error: insertError } = await supabase
+          if (updateError) throw updateError
+          
+          // Also delete any matching images from property_images table
+          if (imageToDelete) {
+            const { error: deleteError } = await supabase
               .from('property_images')
-              .insert({
-                property_id: propertyId,
-                image_url: imageToDelete.image_url,
-                is_main: false,
-                display_order: propertyImages.filter(img => !img.id.startsWith('main-')).length,
-                alt_text: imageToDelete.alt_text
-              })
+              .delete()
+              .eq('property_id', propertyId)
+              .eq('image_url', imageToDelete.image_url)
             
-            if (insertError) {
-              console.error('Error adding image to property_images:', insertError)
-              throw insertError
+            if (deleteError) {
+              console.error('Error deleting from property_images:', deleteError)
             }
           }
-        }
-        
-        // Clear the main_image field in properties table
-        const { error: updateError } = await supabase
-          .from('properties')
-          .update({ main_image: null })
-          .eq('id', propertyId)
+          
+          alert('Main image deleted successfully.')
+        } else {
+          // User wants to keep it as a regular image
+          if (imageToDelete) {
+            // Add to property_images if not already there
+            const { data: existingImages } = await supabase
+              .from('property_images')
+              .select('*')
+              .eq('property_id', propertyId)
+              .eq('image_url', imageToDelete.image_url)
 
-        if (updateError) throw updateError
+            if (!existingImages || existingImages.length === 0) {
+              await supabase
+                .from('property_images')
+                .insert({
+                  property_id: propertyId,
+                  image_url: imageToDelete.image_url,
+                  is_main: false,
+                  display_order: propertyImages.filter(img => !img.id.startsWith('main-')).length,
+                  alt_text: imageToDelete.alt_text
+                })
+            }
+          }
+          
+          // Clear the main_image field
+          await supabase
+            .from('properties')
+            .update({ main_image: null })
+            .eq('id', propertyId)
+          
+          alert('Main image status removed. The image is now a regular gallery image.')
+        }
         
         // Update the editing property to reflect the change
         if (editingProperty) {
           setEditingProperty({ ...editingProperty, main_image: undefined })
         }
-        
-        alert('Main image removed. The image has been moved to your gallery as a regular image.')
       } else {
         // Regular image from property_images table
         const imageToDelete = propertyImages.find(img => img.id === imageId)
