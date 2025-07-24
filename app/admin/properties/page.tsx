@@ -356,6 +356,16 @@ export default function AdminProperties() {
 
   const fetchPropertyImages = async (propertyId: string) => {
     try {
+      // First get the property to check its main_image
+      const { data: propertyData, error: propertyError } = await supabase
+        .from('properties')
+        .select('main_image, title')
+        .eq('id', propertyId)
+        .single()
+
+      if (propertyError) throw propertyError
+
+      // Then get images from property_images table
       const { data, error } = await supabase
         .from('property_images')
         .select('*')
@@ -363,7 +373,26 @@ export default function AdminProperties() {
         .order('display_order')
 
       if (error) throw error
-      setPropertyImages(data || [])
+      
+      const images = data || []
+      
+      // Check if there's a main_image on the property that's not in property_images
+      if (propertyData?.main_image) {
+        const mainImageExists = images.some(img => img.image_url === propertyData.main_image)
+        if (!mainImageExists) {
+          // Add the main_image as the first image if it's not already in the list
+          images.unshift({
+            id: `main-${propertyId}`,
+            property_id: propertyId,
+            image_url: propertyData.main_image,
+            is_main: true,
+            display_order: -1,
+            alt_text: propertyData.title || 'Property main image'
+          })
+        }
+      }
+      
+      setPropertyImages(images)
     } catch (error) {
       console.error('Error fetching property images:', error)
       setPropertyImages([])
@@ -471,9 +500,13 @@ export default function AdminProperties() {
       exterior_materials: property.exterior_materials || ''
     })
     setIsAddingNew(false)
-    if (property.id) {
-      fetchPropertyImages(property.id)
-    }
+    
+    // Fetch property images after setting editingProperty
+    setTimeout(() => {
+      if (property.id) {
+        fetchPropertyImages(property.id)
+      }
+    }, 0)
   }
 
   const startAddNew = () => {
@@ -689,7 +722,20 @@ export default function AdminProperties() {
 
       if (error) throw error
 
+      // If this is marked as main, also update the properties table
+      if (isMain) {
+        const { error: updateError } = await supabase
+          .from('properties')
+          .update({ main_image: imageUrl })
+          .eq('id', editingProperty.id)
+
+        if (updateError) {
+          console.error('Error updating main_image in properties table:', updateError)
+        }
+      }
+
       await fetchPropertyImages(editingProperty.id)
+      await fetchProperties() // Refresh the properties list
     } catch (error) {
       console.error('Error adding property image:', error)
       alert('Error adding image to property')
@@ -714,8 +760,20 @@ export default function AdminProperties() {
 
       if (setError) throw setError
 
+      // Also update the main_image field in properties table
+      const selectedImage = propertyImages.find(img => img.id === imageId)
+      if (selectedImage && editingProperty?.id) {
+        const { error: updateError } = await supabase
+          .from('properties')
+          .update({ main_image: selectedImage.image_url })
+          .eq('id', editingProperty.id)
+
+        if (updateError) throw updateError
+      }
+
       if (editingProperty?.id) {
         await fetchPropertyImages(editingProperty.id)
+        await fetchProperties() // Refresh the properties list
       }
     } catch (error) {
       console.error('Error setting main image:', error)
