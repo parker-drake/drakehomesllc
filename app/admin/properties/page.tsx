@@ -698,12 +698,21 @@ export default function AdminProperties() {
 
   const setMainImage = async (imageId: string) => {
     try {
-      const { error } = await supabase
+      // First, unset all images as main for this property
+      const { error: unsetError } = await supabase
+        .from('property_images')
+        .update({ is_main: false })
+        .eq('property_id', editingProperty?.id)
+
+      if (unsetError) throw unsetError
+
+      // Then set the selected image as main
+      const { error: setError } = await supabase
         .from('property_images')
         .update({ is_main: true })
         .eq('id', imageId)
 
-      if (error) throw error
+      if (setError) throw setError
 
       if (editingProperty?.id) {
         await fetchPropertyImages(editingProperty.id)
