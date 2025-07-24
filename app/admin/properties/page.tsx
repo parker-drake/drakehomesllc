@@ -402,6 +402,8 @@ export default function AdminProperties() {
         })
       }
       
+      console.log('Fetched property images with main status:', images)
+      
       setPropertyImages(images)
     } catch (error) {
       console.error('Error fetching property images:', error)
@@ -753,9 +755,17 @@ export default function AdminProperties() {
   }
 
   const setMainImage = async (imageId: string) => {
+    console.log('Setting main image:', imageId)
+    console.log('Current property images:', propertyImages)
+    
     try {
       const selectedImage = propertyImages.find(img => img.id === imageId)
-      if (!selectedImage || !editingProperty?.id) return
+      if (!selectedImage || !editingProperty?.id) {
+        console.error('Selected image not found or no editing property')
+        return
+      }
+      
+      console.log('Selected image:', selectedImage)
 
       // First, unset all images as main for this property
       const { error: unsetError } = await supabase
@@ -783,13 +793,24 @@ export default function AdminProperties() {
 
       if (updateError) throw updateError
 
+      // Update local state immediately
+      setEditingProperty({ ...editingProperty, main_image: selectedImage.image_url })
+      setFormData(prev => ({ ...prev, main_image: selectedImage.image_url }))
+      
+      // Update the property images to reflect the new main status
+      setPropertyImages(prev => prev.map(img => ({
+        ...img,
+        is_main: img.id === imageId
+      })))
+
       if (editingProperty?.id) {
-        await fetchPropertyImages(editingProperty.id)
         await fetchProperties() // Refresh the properties list
       }
+      
+      alert('Main image updated successfully!')
     } catch (error) {
       console.error('Error setting main image:', error)
-      alert('Error setting main image')
+      alert('Error setting main image: ' + (error as any).message)
     }
   }
 
