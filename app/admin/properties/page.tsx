@@ -389,6 +389,11 @@ export default function AdminProperties() {
             display_order: -1,
             alt_text: propertyData.title || 'Property main image'
           })
+        } else {
+          // If the main_image exists in property_images, make sure only it is marked as main
+          images.forEach(img => {
+            img.is_main = img.image_url === propertyData.main_image
+          })
         }
       }
       
@@ -744,32 +749,34 @@ export default function AdminProperties() {
 
   const setMainImage = async (imageId: string) => {
     try {
+      const selectedImage = propertyImages.find(img => img.id === imageId)
+      if (!selectedImage || !editingProperty?.id) return
+
       // First, unset all images as main for this property
       const { error: unsetError } = await supabase
         .from('property_images')
         .update({ is_main: false })
-        .eq('property_id', editingProperty?.id)
+        .eq('property_id', editingProperty.id)
 
       if (unsetError) throw unsetError
 
-      // Then set the selected image as main
-      const { error: setError } = await supabase
-        .from('property_images')
-        .update({ is_main: true })
-        .eq('id', imageId)
+      // If this is not the special main-{id} image, update it in property_images
+      if (!imageId.startsWith('main-')) {
+        const { error: setError } = await supabase
+          .from('property_images')
+          .update({ is_main: true })
+          .eq('id', imageId)
 
-      if (setError) throw setError
-
-      // Also update the main_image field in properties table
-      const selectedImage = propertyImages.find(img => img.id === imageId)
-      if (selectedImage && editingProperty?.id) {
-        const { error: updateError } = await supabase
-          .from('properties')
-          .update({ main_image: selectedImage.image_url })
-          .eq('id', editingProperty.id)
-
-        if (updateError) throw updateError
+        if (setError) throw setError
       }
+
+      // Always update the main_image field in properties table
+      const { error: updateError } = await supabase
+        .from('properties')
+        .update({ main_image: selectedImage.image_url })
+        .eq('id', editingProperty.id)
+
+      if (updateError) throw updateError
 
       if (editingProperty?.id) {
         await fetchPropertyImages(editingProperty.id)
@@ -785,15 +792,51 @@ export default function AdminProperties() {
     if (!confirm('Are you sure you want to delete this image?')) return
 
     try {
-      const { error } = await supabase
-        .from('property_images')
-        .delete()
-        .eq('id', imageId)
+      // Check if this is the special main image from properties table
+      if (imageId.startsWith('main-')) {
+        // This is the main_image from properties table
+        const propertyId = imageId.replace('main-', '')
+        
+        // Clear the main_image field in properties table
+        const { error: updateError } = await supabase
+          .from('properties')
+          .update({ main_image: null })
+          .eq('id', propertyId)
 
-      if (error) throw error
+        if (updateError) throw updateError
+        
+        // Also clear is_main from any property_images that might have the same URL
+        const mainImageUrl = propertyImages.find(img => img.id === imageId)?.image_url
+        if (mainImageUrl) {
+          await supabase
+            .from('property_images')
+            .update({ is_main: false })
+            .eq('property_id', propertyId)
+            .eq('image_url', mainImageUrl)
+        }
+      } else {
+        // Regular image from property_images table
+        const imageToDelete = propertyImages.find(img => img.id === imageId)
+        
+        const { error } = await supabase
+          .from('property_images')
+          .delete()
+          .eq('id', imageId)
+
+        if (error) throw error
+        
+        // If this was the main image, also clear main_image in properties table
+        if (imageToDelete?.is_main && editingProperty?.id) {
+          await supabase
+            .from('properties')
+            .update({ main_image: null })
+            .eq('id', editingProperty.id)
+        }
+      }
 
       if (editingProperty?.id) {
         await fetchPropertyImages(editingProperty.id)
+        await fetchProperties() // Refresh the properties list
       }
     } catch (error) {
       console.error('Error deleting image:', error)
