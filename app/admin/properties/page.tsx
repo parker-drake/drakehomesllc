@@ -395,6 +395,11 @@ export default function AdminProperties() {
             img.is_main = img.image_url === propertyData.main_image
           })
         }
+      } else {
+        // If there's no main_image set, ensure no images are marked as main
+        images.forEach(img => {
+          img.is_main = false
+        })
       }
       
       setPropertyImages(images)
@@ -804,25 +809,29 @@ export default function AdminProperties() {
         console.log('Deleting legacy main image:', imageToDelete)
         
         if (imageToDelete) {
-          // First, add this image to property_images table so we can manage it properly
-          const { data: existingImage } = await supabase
+          // First, check if this image already exists in property_images
+          const { data: existingImages } = await supabase
             .from('property_images')
-            .select('id')
+            .select('*')
             .eq('property_id', propertyId)
             .eq('image_url', imageToDelete.image_url)
-            .single()
 
-          if (!existingImage) {
+          if (!existingImages || existingImages.length === 0) {
             // Image doesn't exist in property_images, add it
-            await supabase
+            const { error: insertError } = await supabase
               .from('property_images')
               .insert({
                 property_id: propertyId,
                 image_url: imageToDelete.image_url,
                 is_main: false,
-                display_order: propertyImages.length,
+                display_order: propertyImages.filter(img => !img.id.startsWith('main-')).length,
                 alt_text: imageToDelete.alt_text
               })
+            
+            if (insertError) {
+              console.error('Error adding image to property_images:', insertError)
+              throw insertError
+            }
           }
         }
         
@@ -834,7 +843,12 @@ export default function AdminProperties() {
 
         if (updateError) throw updateError
         
-        alert('Main image reference removed. The image is now in your gallery as a regular image.')
+        // Update the editing property to reflect the change
+        if (editingProperty) {
+          setEditingProperty({ ...editingProperty, main_image: undefined })
+        }
+        
+        alert('Main image removed. The image has been moved to your gallery as a regular image.')
       } else {
         // Regular image from property_images table
         const imageToDelete = propertyImages.find(img => img.id === imageId)
