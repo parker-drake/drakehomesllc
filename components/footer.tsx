@@ -14,9 +14,6 @@ export function Footer() {
             <p className="text-xs text-gray-500 mt-1">
               "Where Quality and Value Meet"
             </p>
-            <p className="text-xs text-gray-500 mt-1">
-              hello dayne
-            </p>
           </div>
           
           <div className="flex items-center gap-4">
