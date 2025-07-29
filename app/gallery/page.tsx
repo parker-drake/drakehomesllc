@@ -73,7 +73,7 @@ export default function GalleryPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Project Gallery</h1>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Discover the quality and craftsmanship that defines every Drake Homes project. Browse our galleries to explore our custom home builds.
+            Discover the quality and craftsmanship that defines every Drake Homes project. Browse our galleries to explore our home builds.
           </p>
         </div>
 
