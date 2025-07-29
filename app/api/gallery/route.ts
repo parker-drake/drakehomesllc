@@ -47,12 +47,17 @@ export async function GET(request: NextRequest) {
 // POST - Create new gallery image
 export async function POST(request: NextRequest) {
   try {
+    const contentLength = request.headers.get('content-length')
+    console.log(`Gallery upload request size: ${contentLength} bytes`)
+    
     const formData = await request.formData()
     
     // Check if this is a multi-upload request
     const isMultiUpload = formData.get('multiUpload') === 'true'
     
     if (isMultiUpload) {
+      console.log('Processing multi-upload request')
+      
       // Handle multiple file uploads
       const files: File[] = []
       const uploadData: any[] = []
@@ -64,6 +69,8 @@ export async function POST(request: NextRequest) {
           files.push(value)
         }
       }
+      
+      console.log(`Found ${files.length} files to upload`)
       
       if (files.length === 0) {
         return NextResponse.json({ error: 'No files provided' }, { status: 400 })
@@ -87,8 +94,15 @@ export async function POST(request: NextRequest) {
       // Process each file
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
+        console.log(`Processing file ${i + 1}/${files.length}: ${file.name} (${file.size} bytes)`)
         
         try {
+          // Check file size (limit to 10MB per file)
+          if (file.size > 10 * 1024 * 1024) {
+            failedUploads.push({ fileName: file.name, error: 'File size exceeds 10MB limit' })
+            continue
+          }
+          
           // Generate unique filename with delay to ensure different timestamps
           await new Promise(resolve => setTimeout(resolve, 10))
           const fileExt = file.name.split('.').pop()

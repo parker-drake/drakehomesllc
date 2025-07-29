@@ -172,49 +172,95 @@ export default function AdminGalleryPage() {
       return
     }
     
-    // Add files to formData
-    for (let i = 0; i < files.length; i++) {
-      formData.append(`images[${i}]`, files[i])
-    }
-    
-    // Add other form fields
-    const titleInput = form.querySelector('input[name="title"]') as HTMLInputElement
-    const descriptionInput = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement
-    const locationInput = form.querySelector('input[name="location"]') as HTMLInputElement
-    const yearInput = form.querySelector('input[name="year"]') as HTMLInputElement
-    const galleryInput = form.querySelector('input[name="gallery_id"]') as HTMLInputElement
-    const isFeaturedInput = form.querySelector('input[name="is_featured"]') as HTMLInputElement
-    
-    formData.append('title', titleInput?.value || '')
-    formData.append('description', descriptionInput?.value || '')
-    formData.append('location', locationInput?.value || '')
-    formData.append('year', yearInput?.value || '')
-    formData.append('gallery_id', galleryInput?.value || '')
-    formData.append('is_featured', isFeaturedInput?.checked ? 'true' : 'false')
-    formData.append('multiUpload', 'true')
+    // For large batches, upload in chunks
+    const CHUNK_SIZE = 5 // Upload 5 images at a time
+    const totalFiles = files.length
+    let successCount = 0
+    let failedCount = 0
+    const errors: string[] = []
     
     try {
-      const response = await fetch('/api/gallery', {
-        method: 'POST',
-        body: formData
-      })
+      // Get form values once
+      const titleInput = form.querySelector('input[name="title"]') as HTMLInputElement
+      const descriptionInput = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement
+      const locationInput = form.querySelector('input[name="location"]') as HTMLInputElement
+      const yearInput = form.querySelector('input[name="year"]') as HTMLInputElement
+      const galleryInput = form.querySelector('input[name="gallery_id"]') as HTMLInputElement
+      const isFeaturedInput = form.querySelector('input[name="is_featured"]') as HTMLInputElement
+      
+      const baseData = {
+        title: titleInput?.value || '',
+        description: descriptionInput?.value || '',
+        location: locationInput?.value || '',
+        year: yearInput?.value || '',
+        gallery_id: galleryInput?.value || '',
+        is_featured: isFeaturedInput?.checked ? 'true' : 'false'
+      }
+      
+      // Process files in chunks
+      for (let i = 0; i < totalFiles; i += CHUNK_SIZE) {
+        const chunk = Array.from(files).slice(i, i + CHUNK_SIZE)
+        const chunkFormData = new FormData()
+        
+        // Add files to this chunk
+        chunk.forEach((file, index) => {
+          chunkFormData.append(`images[${index}]`, file)
+        })
+        
+        // Add other form fields
+        Object.entries(baseData).forEach(([key, value]) => {
+          chunkFormData.append(key, value)
+        })
+        chunkFormData.append('multiUpload', 'true')
+        
+        try {
+          const response = await fetch('/api/gallery', {
+            method: 'POST',
+            body: chunkFormData
+          })
 
-      if (response.ok) {
-        const result = await response.json()
+          if (response.ok) {
+            const result = await response.json()
+            successCount += result.successful?.length || 0
+            failedCount += result.failed?.length || 0
+            
+            if (result.failed?.length > 0) {
+              result.failed.forEach((fail: any) => {
+                errors.push(`${fail.fileName}: ${fail.error}`)
+              })
+            }
+          } else {
+            const errorData = await response.json()
+            const errorMsg = errorData.error || `Failed to upload chunk ${Math.floor(i / CHUNK_SIZE) + 1}`
+            errors.push(errorMsg)
+            failedCount += chunk.length
+          }
+        } catch (error) {
+          console.error('Chunk upload error:', error)
+          errors.push(`Network error uploading chunk ${Math.floor(i / CHUNK_SIZE) + 1}`)
+          failedCount += chunk.length
+        }
+        
+        // Update progress (you could show this in UI)
+        console.log(`Uploaded ${i + chunk.length} of ${totalFiles} images...`)
+      }
+      
+      // Show final results
+      if (successCount > 0) {
         setMultiUploadFormOpen(false)
         fetchImages()
         form.reset()
-        
-        // Show success message with results
-        if (result.failed && result.failed.length > 0) {
-          setError(`Uploaded ${result.successful.length} of ${result.total} images. ${result.failed.length} failed.`)
-        }
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Failed to upload images')
+      }
+      
+      if (errors.length > 0) {
+        const errorMessage = failedCount === totalFiles 
+          ? 'Failed to upload images. Please try with fewer images or check your connection.'
+          : `Uploaded ${successCount} of ${totalFiles} images. ${failedCount} failed.\n\nErrors:\n${errors.slice(0, 3).join('\n')}${errors.length > 3 ? `\n...and ${errors.length - 3} more errors` : ''}`
+        setError(errorMessage)
       }
     } catch (error) {
-      setError('Error uploading images')
+      console.error('Upload error:', error)
+      setError('Error uploading images. Please try with fewer images.')
     } finally {
       setUploading(false)
     }
@@ -799,8 +845,8 @@ function MultiUploadImageModal({ galleries, onClose, onSubmit, uploading, error 
 
         <div className="flex-1 overflow-y-auto p-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
-              <p className="text-red-700 text-sm">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4 max-h-40 overflow-y-auto">
+              <p className="text-red-700 text-sm whitespace-pre-wrap">{error}</p>
             </div>
           )}
 
