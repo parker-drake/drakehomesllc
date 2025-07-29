@@ -2,12 +2,29 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // GET - Fetch all gallery images
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { data: images, error } = await supabaseAdmin
+    const searchParams = request.nextUrl.searchParams
+    const galleryId = searchParams.get('galleryId')
+    
+    let query = supabaseAdmin
       .from('gallery_images')
-      .select('*')
+      .select(`
+        *,
+        gallery:galleries (
+          id,
+          name,
+          slug
+        )
+      `)
       .order('sort_order', { ascending: true })
+    
+    // Filter by gallery if specified
+    if (galleryId) {
+      query = query.eq('gallery_id', galleryId)
+    }
+
+    const { data: images, error } = await query
 
     if (error) {
       console.error('Error fetching gallery images:', error)
@@ -51,11 +68,11 @@ export async function POST(request: NextRequest) {
       const description = formData.get('description') as string
       const location = formData.get('location') as string
       const year = formData.get('year') as string
-      const category = formData.get('category') as string
+      const galleryId = formData.get('gallery_id') as string
       const isFeatured = formData.get('is_featured') === 'true'
       
-      if (!category) {
-        return NextResponse.json({ error: 'Category is required' }, { status: 400 })
+      if (!galleryId) {
+        return NextResponse.json({ error: 'Gallery is required' }, { status: 400 })
       }
       
       const successfulUploads = []
@@ -98,7 +115,7 @@ export async function POST(request: NextRequest) {
               description,
               location,
               year,
-              category,
+              gallery_id: galleryId,
               image_url: urlData.publicUrl,
               image_path: filePath,
               is_featured: isFeatured && i === 0 // Only first image can be featured in batch
@@ -131,10 +148,10 @@ export async function POST(request: NextRequest) {
     const description = formData.get('description') as string
     const location = formData.get('location') as string
     const year = formData.get('year') as string
-    const category = formData.get('category') as string
+    const galleryId = formData.get('gallery_id') as string
     const isFeatured = formData.get('is_featured') === 'true'
 
-    if (!file || !title || !category) {
+    if (!file || !title || !galleryId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -166,7 +183,7 @@ export async function POST(request: NextRequest) {
         description,
         location,
         year,
-        category,
+        gallery_id: galleryId,
         image_url: urlData.publicUrl,
         image_path: filePath,
         is_featured: isFeatured

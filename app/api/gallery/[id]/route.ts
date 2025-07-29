@@ -5,30 +5,34 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { id } = params
-    const body = await request.json()
-    const { title, description, location, year, category, is_featured, sort_order } = body
+    const data = await request.json()
+    
+    // Validate gallery_id if provided
+    if (data.gallery_id) {
+      const { data: gallery, error } = await supabaseAdmin
+        .from('galleries')
+        .select('id')
+        .eq('id', data.gallery_id)
+        .single()
+      
+      if (error || !gallery) {
+        return NextResponse.json({ error: 'Invalid gallery ID' }, { status: 400 })
+      }
+    }
 
-    const { data, error } = await supabaseAdmin
+    const { data: imageData, error } = await supabaseAdmin
       .from('gallery_images')
-      .update({
-        title,
-        description,
-        location,
-        year,
-        category,
-        is_featured,
-        sort_order
-      })
+      .update(data)
       .eq('id', id)
       .select()
       .single()
 
     if (error) {
       console.error('Error updating gallery image:', error)
-      return NextResponse.json({ error: 'Failed to update gallery image' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to update image' }, { status: 500 })
     }
 
-    return NextResponse.json(data)
+    return NextResponse.json(imageData)
   } catch (error) {
     console.error('Error in gallery PUT:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -40,27 +44,18 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   try {
     const { id } = params
 
-    // First, get the image data to find the file path
-    const { data: imageData, error: fetchError } = await supabaseAdmin
+    // Get image path before deletion
+    const { data: image, error: fetchError } = await supabaseAdmin
       .from('gallery_images')
       .select('image_path')
       .eq('id', id)
       .single()
 
-    if (fetchError || !imageData) {
-      return NextResponse.json({ error: 'Gallery image not found' }, { status: 404 })
+    if (fetchError || !image) {
+      return NextResponse.json({ error: 'Image not found' }, { status: 404 })
     }
 
-    // Delete the image from storage
-    const { error: storageError } = await supabaseAdmin.storage
-      .from('property-images')
-      .remove([imageData.image_path])
-
-    if (storageError) {
-      console.error('Error deleting image from storage:', storageError)
-    }
-
-    // Delete the record from database
+    // Delete from database
     const { error: deleteError } = await supabaseAdmin
       .from('gallery_images')
       .delete()
@@ -68,10 +63,21 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     if (deleteError) {
       console.error('Error deleting gallery image:', deleteError)
-      return NextResponse.json({ error: 'Failed to delete gallery image' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to delete image' }, { status: 500 })
     }
 
-    return NextResponse.json({ message: 'Gallery image deleted successfully' })
+    // Delete from storage
+    if (image.image_path) {
+      const { error: storageError } = await supabaseAdmin.storage
+        .from('property-images')
+        .remove([image.image_path])
+
+      if (storageError) {
+        console.error('Error deleting image from storage:', storageError)
+      }
+    }
+
+    return NextResponse.json({ message: 'Image deleted successfully' })
   } catch (error) {
     console.error('Error in gallery DELETE:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

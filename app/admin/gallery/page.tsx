@@ -16,8 +16,20 @@ import {
   Image as ImageIcon,
   Star,
   Eye,
-  ImagePlus
+  ImagePlus,
+  FolderPlus,
+  LayoutGrid
 } from 'lucide-react'
+
+interface Gallery {
+  id: string
+  name: string
+  slug: string
+  description?: string
+  sort_order: number
+  is_active: boolean
+  image_count?: number
+}
 
 interface GalleryImage {
   id: string
@@ -25,7 +37,8 @@ interface GalleryImage {
   description: string
   location: string
   year: string
-  category: 'exterior' | 'interior' | 'kitchen' | 'living' | 'bedroom' | 'bathroom'
+  gallery_id: string
+  gallery?: Gallery
   image_url: string
   image_path: string
   sort_order: number
@@ -34,31 +47,43 @@ interface GalleryImage {
   updated_at: string
 }
 
-const categories = [
-  { value: 'exterior', label: 'Exterior' },
-  { value: 'interior', label: 'Interior' },
-  { value: 'kitchen', label: 'Kitchen' },
-  { value: 'living', label: 'Living Area' },
-  { value: 'bedroom', label: 'Bedroom' },
-  { value: 'bathroom', label: 'Bathroom' }
-]
-
 export default function AdminGalleryPage() {
   const [images, setImages] = useState<GalleryImage[]>([])
+  const [galleries, setGalleries] = useState<Gallery[]>([])
+  const [selectedGallery, setSelectedGallery] = useState<string>('all')
   const [loading, setLoading] = useState(true)
   const [uploadFormOpen, setUploadFormOpen] = useState(false)
   const [multiUploadFormOpen, setMultiUploadFormOpen] = useState(false)
+  const [galleryFormOpen, setGalleryFormOpen] = useState(false)
   const [editingImage, setEditingImage] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    fetchGalleries()
     fetchImages()
-  }, [])
+  }, [selectedGallery])
+
+  const fetchGalleries = async () => {
+    try {
+      const response = await fetch('/api/galleries')
+      if (response.ok) {
+        const data = await response.json()
+        setGalleries(data)
+      }
+    } catch (error) {
+      console.error('Error fetching galleries:', error)
+    }
+  }
 
   const fetchImages = async () => {
     try {
-      const response = await fetch('/api/gallery')
+      let url = '/api/gallery'
+      if (selectedGallery !== 'all') {
+        url += `?galleryId=${selectedGallery}`
+      }
+      
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         setImages(data)
@@ -67,6 +92,32 @@ export default function AdminGalleryPage() {
       console.error('Error fetching images:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCreateGallery = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const name = formData.get('name') as string
+    const description = formData.get('description') as string
+
+    try {
+      const response = await fetch('/api/galleries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description })
+      })
+
+      if (response.ok) {
+        setGalleryFormOpen(false)
+        fetchGalleries()
+        e.currentTarget.reset()
+      } else {
+        const error = await response.json()
+        setError(error.error || 'Failed to create gallery')
+      }
+    } catch (error) {
+      setError('Error creating gallery')
     }
   }
 
@@ -166,17 +217,9 @@ export default function AdminGalleryPage() {
     }
   }
 
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      exterior: 'bg-green-100 text-green-800',
-      interior: 'bg-blue-100 text-blue-800',
-      kitchen: 'bg-orange-100 text-orange-800',
-      living: 'bg-purple-100 text-purple-800',
-      bedroom: 'bg-pink-100 text-pink-800',
-      bathroom: 'bg-cyan-100 text-cyan-800'
-    }
-    return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800'
-  }
+  const filteredImages = selectedGallery === 'all' 
+    ? images 
+    : images.filter(img => img.gallery_id === selectedGallery)
 
   if (loading) {
     return (
@@ -203,6 +246,13 @@ export default function AdminGalleryPage() {
               </a>
             </Button>
             <Button 
+              onClick={() => setGalleryFormOpen(true)}
+              variant="outline"
+            >
+              <FolderPlus className="w-4 h-4 mr-2" />
+              New Gallery
+            </Button>
+            <Button 
               onClick={() => setMultiUploadFormOpen(true)}
               variant="outline"
             >
@@ -219,6 +269,33 @@ export default function AdminGalleryPage() {
           </div>
         </div>
 
+        {/* Gallery Filter */}
+        <div className="mb-6">
+          <Select value={selectedGallery} onValueChange={setSelectedGallery}>
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder="Select a gallery" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                <div className="flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4" />
+                  All Galleries
+                </div>
+              </SelectItem>
+              {galleries.map(gallery => (
+                <SelectItem key={gallery.id} value={gallery.id}>
+                  <div className="flex items-center justify-between w-full">
+                    <span>{gallery.name}</span>
+                    {gallery.image_count !== undefined && (
+                      <span className="text-gray-500 text-sm ml-2">({gallery.image_count})</span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
@@ -229,6 +306,17 @@ export default function AdminGalleryPage() {
                   <p className="text-3xl font-bold text-gray-900">{images.length}</p>
                 </div>
                 <ImageIcon className="w-8 h-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Galleries</p>
+                  <p className="text-3xl font-bold text-gray-900">{galleries.length}</p>
+                </div>
+                <FolderPlus className="w-8 h-8 text-purple-600" />
               </div>
             </CardContent>
           </Card>
@@ -249,19 +337,6 @@ export default function AdminGalleryPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Categories</p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {new Set(images.map(img => img.category)).size}
-                  </p>
-                </div>
-                <Edit className="w-8 h-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
                   <p className="text-sm font-medium text-gray-600">This Year</p>
                   <p className="text-3xl font-bold text-gray-900">
                     {images.filter(img => img.year === new Date().getFullYear().toString()).length}
@@ -275,7 +350,7 @@ export default function AdminGalleryPage() {
 
         {/* Images Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {images.map((image) => (
+          {filteredImages.map((image) => (
             <Card key={image.id} className="overflow-hidden">
               <div className="relative h-48 bg-gray-200">
                 <img 
@@ -296,6 +371,7 @@ export default function AdminGalleryPage() {
                 {editingImage === image.id ? (
                   <EditImageForm 
                     image={image}
+                    galleries={galleries}
                     onSave={(updatedData) => handleUpdate(image.id, updatedData)}
                     onCancel={() => setEditingImage(null)}
                   />
@@ -303,8 +379,8 @@ export default function AdminGalleryPage() {
                   <>
                     <h3 className="font-semibold text-gray-900 mb-2">{image.title}</h3>
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge className={getCategoryColor(image.category)}>
-                        {image.category}
+                      <Badge className="bg-blue-100 text-blue-800">
+                        {image.gallery?.name || 'Unknown Gallery'}
                       </Badge>
                       <span className="text-sm text-gray-500">{image.year}</span>
                     </div>
@@ -334,10 +410,12 @@ export default function AdminGalleryPage() {
           ))}
         </div>
 
-        {images.length === 0 && (
+        {filteredImages.length === 0 && (
           <div className="text-center py-12">
             <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No images yet</h3>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              {selectedGallery === 'all' ? 'No images yet' : 'No images in this gallery'}
+            </h3>
             <p className="text-gray-500 mb-4">Upload your first gallery image to get started.</p>
             <Button 
               onClick={() => setUploadFormOpen(true)}
@@ -349,9 +427,19 @@ export default function AdminGalleryPage() {
           </div>
         )}
 
+        {/* New Gallery Modal */}
+        {galleryFormOpen && (
+          <CreateGalleryModal
+            onClose={() => setGalleryFormOpen(false)}
+            onSubmit={handleCreateGallery}
+            error={error}
+          />
+        )}
+
         {/* Upload Modal */}
         {uploadFormOpen && (
           <UploadImageModal 
+            galleries={galleries}
             onClose={() => setUploadFormOpen(false)}
             onSubmit={handleUpload}
             uploading={uploading}
@@ -362,6 +450,7 @@ export default function AdminGalleryPage() {
         {/* Multi-Upload Modal */}
         {multiUploadFormOpen && (
           <MultiUploadImageModal 
+            galleries={galleries}
             onClose={() => setMultiUploadFormOpen(false)}
             onSubmit={handleMultiUpload}
             uploading={uploading}
@@ -373,28 +462,97 @@ export default function AdminGalleryPage() {
   )
 }
 
+// Create Gallery Modal Component
+function CreateGalleryModal({ onClose, onSubmit, error }: {
+  onClose: () => void
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
+  error: string
+}) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Create New Gallery</h3>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+        )}
+
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Gallery Name *
+            </label>
+            <Input 
+              name="name" 
+              required 
+              placeholder="e.g., Custom Kitchens"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea 
+              name="description"
+              className="w-full p-2 border border-gray-300 rounded-md resize-none"
+              rows={3}
+              placeholder="Brief description of this gallery..."
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button 
+              type="submit" 
+              className="flex-1 bg-red-600 hover:bg-red-700"
+            >
+              <FolderPlus className="w-4 h-4 mr-2" />
+              Create Gallery
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // Upload Modal Component
-function UploadImageModal({ onClose, onSubmit, uploading, error }: {
+function UploadImageModal({ galleries, onClose, onSubmit, uploading, error }: {
+  galleries: Gallery[]
   onClose: () => void
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   uploading: boolean
   error: string
 }) {
-  const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedGallery, setSelectedGallery] = useState('')
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     
     // Validate required fields
-    if (!selectedCategory) {
-      return // Don't submit if category is not selected
+    if (!selectedGallery) {
+      return // Don't submit if gallery is not selected
     }
     
     const form = e.currentTarget
     const formData = new FormData(form)
     
-    // Add the selected category to form data
-    formData.set('category', selectedCategory)
+    // Add the selected gallery to form data
+    formData.set('gallery_id', selectedGallery)
     
     // Create a synthetic event to pass to the original handler
     const syntheticEvent = {
@@ -403,7 +561,7 @@ function UploadImageModal({ onClose, onSubmit, uploading, error }: {
         ...form,
         reset: () => {
           form.reset()
-          setSelectedCategory('')
+          setSelectedGallery('')
         }
       }
     } as React.FormEvent<HTMLFormElement>
@@ -425,9 +583,9 @@ function UploadImageModal({ onClose, onSubmit, uploading, error }: {
           <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
             <p className="text-red-700 text-sm">{error}</p>
           </div>
-                  )}
+        )}
 
-          <form id="multi-upload-form" onSubmit={handleFormSubmit} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Image File *
@@ -455,25 +613,25 @@ function UploadImageModal({ onClose, onSubmit, uploading, error }: {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category *
+              Gallery *
             </label>
             <Select 
-              value={selectedCategory} 
-              onValueChange={setSelectedCategory}
+              value={selectedGallery} 
+              onValueChange={setSelectedGallery}
             >
               <SelectTrigger disabled={uploading}>
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder="Select gallery" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map(cat => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
+                {galleries.map(gallery => (
+                  <SelectItem key={gallery.id} value={gallery.id}>
+                    {gallery.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {!selectedCategory && (
-              <p className="text-red-500 text-xs mt-1">Category is required</p>
+            {!selectedGallery && (
+              <p className="text-red-500 text-xs mt-1">Gallery is required</p>
             )}
           </div>
 
@@ -559,13 +717,14 @@ function UploadImageModal({ onClose, onSubmit, uploading, error }: {
 }
 
 // Multi-Upload Modal Component
-function MultiUploadImageModal({ onClose, onSubmit, uploading, error }: {
+function MultiUploadImageModal({ galleries, onClose, onSubmit, uploading, error }: {
+  galleries: Gallery[]
   onClose: () => void
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   uploading: boolean
   error: string
 }) {
-  const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedGallery, setSelectedGallery] = useState('')
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
 
@@ -599,7 +758,7 @@ function MultiUploadImageModal({ onClose, onSubmit, uploading, error }: {
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     
-    if (!selectedCategory || selectedFiles.length === 0) {
+    if (!selectedGallery || selectedFiles.length === 0) {
       return
     }
     
@@ -612,7 +771,7 @@ function MultiUploadImageModal({ onClose, onSubmit, uploading, error }: {
     })
     
     // Add form fields
-    formData.append('category', selectedCategory)
+    formData.append('gallery_id', selectedGallery)
     
     // Get other form values
     const titleInput = form.querySelector('input[name="title"]') as HTMLInputElement
@@ -640,7 +799,7 @@ function MultiUploadImageModal({ onClose, onSubmit, uploading, error }: {
         ...form,
         reset: () => {
           form.reset()
-          setSelectedCategory('')
+          setSelectedGallery('')
           setSelectedFiles([])
           setPreviewUrls([])
         }
@@ -667,7 +826,7 @@ function MultiUploadImageModal({ onClose, onSubmit, uploading, error }: {
             </div>
           )}
 
-          <form onSubmit={handleFormSubmit} className="space-y-4">
+          <form id="multi-upload-form" onSubmit={handleFormSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Select Images *
@@ -721,25 +880,25 @@ function MultiUploadImageModal({ onClose, onSubmit, uploading, error }: {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category *
+                Gallery *
               </label>
               <Select 
-                value={selectedCategory} 
-                onValueChange={setSelectedCategory}
+                value={selectedGallery} 
+                onValueChange={setSelectedGallery}
               >
                 <SelectTrigger disabled={uploading}>
-                  <SelectValue placeholder="Select category for all images" />
+                  <SelectValue placeholder="Select gallery for all images" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map(cat => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
+                  {galleries.map(gallery => (
+                    <SelectItem key={gallery.id} value={gallery.id}>
+                      {gallery.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {!selectedCategory && (
-                <p className="text-red-500 text-xs mt-1">Category is required</p>
+              {!selectedGallery && (
+                <p className="text-red-500 text-xs mt-1">Gallery is required</p>
               )}
             </div>
 
@@ -812,7 +971,7 @@ function MultiUploadImageModal({ onClose, onSubmit, uploading, error }: {
             <Button 
               type="submit" 
               form="multi-upload-form"
-              disabled={uploading || selectedFiles.length === 0 || !selectedCategory}
+              disabled={uploading || selectedFiles.length === 0 || !selectedGallery}
               className="flex-1 bg-red-600 hover:bg-red-700"
             >
               {uploading ? (
@@ -843,8 +1002,9 @@ function MultiUploadImageModal({ onClose, onSubmit, uploading, error }: {
 }
 
 // Edit Form Component
-function EditImageForm({ image, onSave, onCancel }: {
+function EditImageForm({ image, galleries, onSave, onCancel }: {
   image: GalleryImage
+  galleries: Gallery[]
   onSave: (data: Partial<GalleryImage>) => void
   onCancel: () => void
 }) {
@@ -853,7 +1013,7 @@ function EditImageForm({ image, onSave, onCancel }: {
     description: image.description,
     location: image.location,
     year: image.year,
-    category: image.category,
+    gallery_id: image.gallery_id,
     is_featured: image.is_featured
   })
 
@@ -872,16 +1032,16 @@ function EditImageForm({ image, onSave, onCancel }: {
       />
       
       <Select 
-        value={formData.category} 
-        onValueChange={(value) => setFormData({...formData, category: value as any})}
+        value={formData.gallery_id} 
+        onValueChange={(value) => setFormData({...formData, gallery_id: value})}
       >
         <SelectTrigger className="text-sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {categories.map(cat => (
-            <SelectItem key={cat.value} value={cat.value}>
-              {cat.label}
+          {galleries.map(gallery => (
+            <SelectItem key={gallery.id} value={gallery.id}>
+              {gallery.name}
             </SelectItem>
           ))}
         </SelectContent>
