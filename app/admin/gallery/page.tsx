@@ -159,7 +159,38 @@ export default function AdminGalleryPage() {
     setUploading(true)
     setError('')
 
-    const formData = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const formData = new FormData()
+    
+    // Get the file input
+    const fileInput = form.querySelector('input[type="file"]') as HTMLInputElement
+    const files = fileInput?.files
+    
+    if (!files || files.length === 0) {
+      setError('No files selected')
+      setUploading(false)
+      return
+    }
+    
+    // Add files to formData
+    for (let i = 0; i < files.length; i++) {
+      formData.append(`images[${i}]`, files[i])
+    }
+    
+    // Add other form fields
+    const titleInput = form.querySelector('input[name="title"]') as HTMLInputElement
+    const descriptionInput = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement
+    const locationInput = form.querySelector('input[name="location"]') as HTMLInputElement
+    const yearInput = form.querySelector('input[name="year"]') as HTMLInputElement
+    const galleryInput = form.querySelector('input[name="gallery_id"]') as HTMLInputElement
+    const isFeaturedInput = form.querySelector('input[name="is_featured"]') as HTMLInputElement
+    
+    formData.append('title', titleInput?.value || '')
+    formData.append('description', descriptionInput?.value || '')
+    formData.append('location', locationInput?.value || '')
+    formData.append('year', yearInput?.value || '')
+    formData.append('gallery_id', galleryInput?.value || '')
+    formData.append('is_featured', isFeaturedInput?.checked ? 'true' : 'false')
     formData.append('multiUpload', 'true')
     
     try {
@@ -172,7 +203,7 @@ export default function AdminGalleryPage() {
         const result = await response.json()
         setMultiUploadFormOpen(false)
         fetchImages()
-        e.currentTarget.reset()
+        form.reset()
         
         // Show success message with results
         if (result.failed && result.failed.length > 0) {
@@ -752,51 +783,8 @@ function MultiUploadImageModal({ galleries, onClose, onSubmit, uploading, error 
       return
     }
     
-    const form = e.currentTarget
-    const formData = new FormData()
-    
-    // Add files to formData
-    selectedFiles.forEach((file, index) => {
-      formData.append(`images[${index}]`, file)
-    })
-    
-    // Add form fields
-    formData.append('gallery_id', selectedGallery)
-    
-    // Get other form values
-    const titleInput = form.querySelector('input[name="title"]') as HTMLInputElement
-    const descriptionInput = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement
-    const locationInput = form.querySelector('input[name="location"]') as HTMLInputElement
-    const yearInput = form.querySelector('input[name="year"]') as HTMLInputElement
-    const isFeaturedInput = form.querySelector('input[name="is_featured"]') as HTMLInputElement
-    
-    const title = titleInput?.value || ''
-    const description = descriptionInput?.value || ''
-    const location = locationInput?.value || ''
-    const year = yearInput?.value || ''
-    const isFeatured = isFeaturedInput?.checked || false
-    
-    formData.append('title', title)
-    formData.append('description', description)
-    formData.append('location', location)
-    formData.append('year', year)
-    formData.append('is_featured', isFeatured.toString())
-    
-    // Create synthetic event
-    const syntheticEvent = {
-      ...e,
-      currentTarget: {
-        ...form,
-        reset: () => {
-          form.reset()
-          setSelectedGallery('')
-          setSelectedFiles([])
-          setPreviewUrls([])
-        }
-      }
-    } as React.FormEvent<HTMLFormElement>
-    
-    onSubmit(syntheticEvent)
+    // Pass the actual event to the handler
+    onSubmit(e)
   }
 
   return (
@@ -890,6 +878,8 @@ function MultiUploadImageModal({ galleries, onClose, onSubmit, uploading, error 
               {!selectedGallery && (
                 <p className="text-red-500 text-xs mt-1">Gallery is required</p>
               )}
+              {/* Hidden input to include gallery_id in form data */}
+              <input type="hidden" name="gallery_id" value={selectedGallery} />
             </div>
 
             <div>
