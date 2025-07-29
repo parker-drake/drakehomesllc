@@ -38,6 +38,29 @@ export default function GalleryDetailPage() {
     fetchGalleryAndImages()
   }, [slug])
 
+  useEffect(() => {
+    // Add keyboard navigation when lightbox is open
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (!selectedImage) return
+      
+      if (e.key === 'ArrowLeft') {
+        navigateImage('prev')
+      } else if (e.key === 'ArrowRight') {
+        navigateImage('next')
+      } else if (e.key === 'Escape') {
+        closeLightbox()
+      }
+    }
+
+    if (selectedImage) {
+      document.addEventListener('keydown', handleKeyPress)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress)
+    }
+  }, [selectedImage, imageIndex, images.length])
+
   const fetchGalleryAndImages = async () => {
     setLoading(true)
     try {
@@ -223,21 +246,24 @@ export default function GalleryDetailPage() {
           <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
             <button
               onClick={closeLightbox}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
+              title="Close (Esc)"
             >
               <X className="w-8 h-8" />
             </button>
 
             <button
               onClick={() => navigateImage('prev')}
-              className="absolute left-4 text-white hover:text-gray-300 transition-colors"
+              className="absolute left-4 text-white hover:text-gray-300 transition-colors z-10"
+              title="Previous (←)"
             >
               <ChevronLeft className="w-8 h-8" />
             </button>
 
             <button
               onClick={() => navigateImage('next')}
-              className="absolute right-4 text-white hover:text-gray-300 transition-colors"
+              className="absolute right-4 text-white hover:text-gray-300 transition-colors z-10"
+              title="Next (→)"
             >
               <ChevronRight className="w-8 h-8" />
             </button>
@@ -266,6 +292,9 @@ export default function GalleryDetailPage() {
                       {selectedImage.year}
                     </span>
                   )}
+                </div>
+                <div className="mt-4 text-xs text-gray-500">
+                  {imageIndex + 1} of {images.length} • Use arrow keys to navigate
                 </div>
               </div>
             </div>
