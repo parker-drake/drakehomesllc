@@ -138,6 +138,11 @@ export default function AdminGalleryPage() {
         setUploadFormOpen(false)
         fetchImages()
         e.currentTarget.reset()
+        // Reset gallery selection when closing modal
+        const gallerySelect = e.currentTarget.querySelector('input[name="gallery_id"]') as HTMLInputElement
+        if (gallerySelect) {
+          gallerySelect.value = ''
+        }
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Failed to upload image')
@@ -548,25 +553,8 @@ function UploadImageModal({ galleries, onClose, onSubmit, uploading, error }: {
       return // Don't submit if gallery is not selected
     }
     
-    const form = e.currentTarget
-    const formData = new FormData(form)
-    
-    // Add the selected gallery to form data
-    formData.set('gallery_id', selectedGallery)
-    
-    // Create a synthetic event to pass to the original handler
-    const syntheticEvent = {
-      ...e,
-      currentTarget: {
-        ...form,
-        reset: () => {
-          form.reset()
-          setSelectedGallery('')
-        }
-      }
-    } as React.FormEvent<HTMLFormElement>
-    
-    onSubmit(syntheticEvent)
+    // Pass the actual event with the form data already set
+    onSubmit(e)
   }
 
   return (
@@ -633,6 +621,8 @@ function UploadImageModal({ galleries, onClose, onSubmit, uploading, error }: {
             {!selectedGallery && (
               <p className="text-red-500 text-xs mt-1">Gallery is required</p>
             )}
+            {/* Hidden input to include gallery_id in form data */}
+            <input type="hidden" name="gallery_id" value={selectedGallery} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
