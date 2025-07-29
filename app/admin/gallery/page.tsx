@@ -15,7 +15,8 @@ import {
   X, 
   Image as ImageIcon,
   Star,
-  Eye
+  Eye,
+  ImagePlus
 } from 'lucide-react'
 
 interface GalleryImage {
@@ -46,6 +47,7 @@ export default function AdminGalleryPage() {
   const [images, setImages] = useState<GalleryImage[]>([])
   const [loading, setLoading] = useState(true)
   const [uploadFormOpen, setUploadFormOpen] = useState(false)
+  const [multiUploadFormOpen, setMultiUploadFormOpen] = useState(false)
   const [editingImage, setEditingImage] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -91,6 +93,41 @@ export default function AdminGalleryPage() {
       }
     } catch (error) {
       setError('Error uploading image')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleMultiUpload = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setUploading(true)
+    setError('')
+
+    const formData = new FormData(e.currentTarget)
+    formData.append('multiUpload', 'true')
+    
+    try {
+      const response = await fetch('/api/gallery', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        setMultiUploadFormOpen(false)
+        fetchImages()
+        e.currentTarget.reset()
+        
+        // Show success message with results
+        if (result.failed && result.failed.length > 0) {
+          setError(`Uploaded ${result.successful.length} of ${result.total} images. ${result.failed.length} failed.`)
+        }
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to upload images')
+      }
+    } catch (error) {
+      setError('Error uploading images')
     } finally {
       setUploading(false)
     }
@@ -164,6 +201,13 @@ export default function AdminGalleryPage() {
                 <Eye className="w-4 h-4 mr-2" />
                 View Public Gallery
               </a>
+            </Button>
+            <Button 
+              onClick={() => setMultiUploadFormOpen(true)}
+              variant="outline"
+            >
+              <ImagePlus className="w-4 h-4 mr-2" />
+              Multi Upload
             </Button>
             <Button 
               onClick={() => setUploadFormOpen(true)}
@@ -314,6 +358,16 @@ export default function AdminGalleryPage() {
             error={error}
           />
         )}
+        
+        {/* Multi-Upload Modal */}
+        {multiUploadFormOpen && (
+          <MultiUploadImageModal 
+            onClose={() => setMultiUploadFormOpen(false)}
+            onSubmit={handleMultiUpload}
+            uploading={uploading}
+            error={error}
+          />
+        )}
       </div>
     </div>
   )
@@ -371,9 +425,9 @@ function UploadImageModal({ onClose, onSubmit, uploading, error }: {
           <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
             <p className="text-red-700 text-sm">{error}</p>
           </div>
-        )}
+                  )}
 
-        <form onSubmit={handleFormSubmit} className="space-y-4">
+          <form id="multi-upload-form" onSubmit={handleFormSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Image File *
@@ -499,6 +553,290 @@ function UploadImageModal({ onClose, onSubmit, uploading, error }: {
             </Button>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+// Multi-Upload Modal Component
+function MultiUploadImageModal({ onClose, onSubmit, uploading, error }: {
+  onClose: () => void
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
+  uploading: boolean
+  error: string
+}) {
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [previewUrls, setPreviewUrls] = useState<string[]>([])
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    setSelectedFiles(files)
+    
+    // Create preview URLs
+    const urls = files.map(file => URL.createObjectURL(file))
+    setPreviewUrls(urls)
+  }
+
+  const removeFile = (index: number) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index)
+    const newUrls = previewUrls.filter((_, i) => i !== index)
+    
+    // Revoke the removed URL to free memory
+    URL.revokeObjectURL(previewUrls[index])
+    
+    setSelectedFiles(newFiles)
+    setPreviewUrls(newUrls)
+  }
+
+  useEffect(() => {
+    // Cleanup URLs when component unmounts
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url))
+    }
+  }, [])
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    
+    if (!selectedCategory || selectedFiles.length === 0) {
+      return
+    }
+    
+    const form = e.currentTarget
+    const formData = new FormData()
+    
+    // Add files to formData
+    selectedFiles.forEach((file, index) => {
+      formData.append(`images[${index}]`, file)
+    })
+    
+    // Add form fields
+    formData.append('category', selectedCategory)
+    
+    // Get other form values
+    const titleInput = form.querySelector('input[name="title"]') as HTMLInputElement
+    const descriptionInput = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement
+    const locationInput = form.querySelector('input[name="location"]') as HTMLInputElement
+    const yearInput = form.querySelector('input[name="year"]') as HTMLInputElement
+    const isFeaturedInput = form.querySelector('input[name="is_featured"]') as HTMLInputElement
+    
+    const title = titleInput?.value || ''
+    const description = descriptionInput?.value || ''
+    const location = locationInput?.value || ''
+    const year = yearInput?.value || ''
+    const isFeatured = isFeaturedInput?.checked || false
+    
+    formData.append('title', title)
+    formData.append('description', description)
+    formData.append('location', location)
+    formData.append('year', year)
+    formData.append('is_featured', isFeatured.toString())
+    
+    // Create synthetic event
+    const syntheticEvent = {
+      ...e,
+      currentTarget: {
+        ...form,
+        reset: () => {
+          form.reset()
+          setSelectedCategory('')
+          setSelectedFiles([])
+          setPreviewUrls([])
+        }
+      }
+    } as React.FormEvent<HTMLFormElement>
+    
+    onSubmit(syntheticEvent)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">Upload Multiple Images</h3>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select Images *
+              </label>
+              <Input 
+                type="file" 
+                accept="image/*" 
+                multiple
+                onChange={handleFileSelect}
+                required 
+                disabled={uploading}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                You can select multiple images at once
+              </p>
+            </div>
+
+            {/* Image previews */}
+            {selectedFiles.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">
+                  Selected Images ({selectedFiles.length})
+                </p>
+                <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="relative group">
+                      <img 
+                        src={previewUrls[index]} 
+                        alt={file.name}
+                        className="w-full h-24 object-cover rounded border"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-opacity rounded flex items-center justify-center">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeFile(index)}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-600 truncate mt-1">
+                        {file.name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category *
+              </label>
+              <Select 
+                value={selectedCategory} 
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger disabled={uploading}>
+                  <SelectValue placeholder="Select category for all images" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!selectedCategory && (
+                <p className="text-red-500 text-xs mt-1">Category is required</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Title Prefix
+              </label>
+              <Input 
+                name="title" 
+                disabled={uploading}
+                placeholder="e.g., 'Modern Kitchen' (will be numbered)"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Images will be titled: "Title Prefix 1", "Title Prefix 2", etc.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Location
+                </label>
+                <Input 
+                  name="location" 
+                  disabled={uploading}
+                  placeholder="e.g., Green Bay, WI"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Year
+                </label>
+                <Input 
+                  name="year" 
+                  disabled={uploading}
+                  placeholder="2024"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea 
+                name="description"
+                className="w-full p-2 border border-gray-300 rounded-md resize-none"
+                rows={3}
+                disabled={uploading}
+                placeholder="Brief description for all images..."
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                name="is_featured" 
+                id="is_featured_multi"
+                disabled={uploading}
+              />
+              <label htmlFor="is_featured_multi" className="text-sm text-gray-700">
+                Feature the first image
+              </label>
+            </div>
+          </form>
+        </div>
+
+        <div className="border-t p-6">
+          <div className="flex gap-3">
+            <Button 
+              type="submit" 
+              form="multi-upload-form"
+              disabled={uploading || selectedFiles.length === 0 || !selectedCategory}
+              className="flex-1 bg-red-600 hover:bg-red-700"
+            >
+              {uploading ? (
+                <>
+                  <Upload className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading {selectedFiles.length} images...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload {selectedFiles.length || 'All'} Images
+                </>
+              )}
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              disabled={uploading}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -25,6 +25,107 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
+    
+    // Check if this is a multi-upload request
+    const isMultiUpload = formData.get('multiUpload') === 'true'
+    
+    if (isMultiUpload) {
+      // Handle multiple file uploads
+      const files: File[] = []
+      const uploadData: any[] = []
+      
+      // Collect all files from formData
+      const formDataEntries = Array.from(formData.entries())
+      for (const [key, value] of formDataEntries) {
+        if (key.startsWith('images[') && value instanceof File) {
+          files.push(value)
+        }
+      }
+      
+      if (files.length === 0) {
+        return NextResponse.json({ error: 'No files provided' }, { status: 400 })
+      }
+      
+      // Common metadata for all images
+      const title = formData.get('title') as string
+      const description = formData.get('description') as string
+      const location = formData.get('location') as string
+      const year = formData.get('year') as string
+      const category = formData.get('category') as string
+      const isFeatured = formData.get('is_featured') === 'true'
+      
+      if (!category) {
+        return NextResponse.json({ error: 'Category is required' }, { status: 400 })
+      }
+      
+      const successfulUploads = []
+      const failedUploads = []
+      
+      // Process each file
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        
+        try {
+          // Generate unique filename with delay to ensure different timestamps
+          await new Promise(resolve => setTimeout(resolve, 10))
+          const fileExt = file.name.split('.').pop()
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}-${i}.${fileExt}`
+          const filePath = `gallery/${fileName}`
+          
+          // Upload file to Supabase Storage
+          const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+            .from('property-images')
+            .upload(filePath, file)
+          
+          if (uploadError) {
+            failedUploads.push({ fileName: file.name, error: uploadError.message })
+            continue
+          }
+          
+          // Get public URL
+          const { data: urlData } = supabaseAdmin.storage
+            .from('property-images')
+            .getPublicUrl(filePath)
+          
+          // Generate title for individual image if not provided
+          const imageTitle = title || `${file.name.split('.')[0]} ${i + 1}`
+          
+          // Save image metadata to database
+          const { data: imageData, error: dbError } = await supabaseAdmin
+            .from('gallery_images')
+            .insert({
+              title: imageTitle,
+              description,
+              location,
+              year,
+              category,
+              image_url: urlData.publicUrl,
+              image_path: filePath,
+              is_featured: isFeatured && i === 0 // Only first image can be featured in batch
+            })
+            .select()
+            .single()
+          
+          if (dbError) {
+            // Clean up uploaded file if database insert fails
+            await supabaseAdmin.storage.from('property-images').remove([filePath])
+            failedUploads.push({ fileName: file.name, error: dbError.message })
+          } else {
+            successfulUploads.push(imageData)
+          }
+        } catch (error) {
+          failedUploads.push({ fileName: file.name, error: 'Unknown error' })
+        }
+      }
+      
+      return NextResponse.json({
+        successful: successfulUploads,
+        failed: failedUploads,
+        total: files.length
+      }, { status: 201 })
+    }
+    
+    // Single file upload (existing code)
     const file = formData.get('image') as File
     const title = formData.get('title') as string
     const description = formData.get('description') as string
