@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const galleryId = searchParams.get('galleryId')
+    const limit = searchParams.get('limit')
     
     let query = supabaseAdmin
       .from('gallery_images')
@@ -22,6 +23,11 @@ export async function GET(request: NextRequest) {
     // Filter by gallery if specified
     if (galleryId) {
       query = query.eq('gallery_id', galleryId)
+    }
+    
+    // Apply limit if specified
+    if (limit) {
+      query = query.limit(parseInt(limit))
     }
 
     const { data: images, error } = await query

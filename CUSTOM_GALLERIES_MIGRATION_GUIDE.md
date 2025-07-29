@@ -55,6 +55,12 @@ After deployment:
 - Only shows galleries that have images
 - Maintains all existing functionality (lightbox, featured images, etc.)
 
+### New Gallery Navigation
+- **Gallery Overview Page** (`/gallery`): Shows a grid of gallery cards with cover images
+- **Individual Gallery Pages** (`/gallery/[slug]`): Shows all images within a specific gallery
+- **Automatic Cover Images**: First image in each gallery is used as the cover
+- **Beautiful Gallery Cards**: Each gallery shows name, description, and image count
+
 ## Data Structure Changes
 
 ### Old Structure
