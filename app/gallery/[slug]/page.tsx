@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { LazyImage } from '@/components/ui/lazy-image'
 import { ChevronLeft, ChevronRight, X, MapPin, Calendar, ArrowLeft } from 'lucide-react'
 
 interface Gallery {
@@ -145,10 +144,11 @@ export default function GalleryDetailPage() {
                 onClick={() => openLightbox(image, index)}
               >
                 <div className="relative h-64 bg-gray-200">
-                  <LazyImage
+                  <img
                     src={image.image_url}
                     alt={image.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">

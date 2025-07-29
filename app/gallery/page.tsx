@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { LazyImage } from '@/components/ui/lazy-image'
 import { Card } from '@/components/ui/card'
 import { ImageIcon, ImagePlus } from 'lucide-react'
 
@@ -86,10 +85,11 @@ export default function GalleryPage() {
                 <Card className="group cursor-pointer overflow-hidden hover:shadow-xl transition-all duration-300">
                   <div className="relative h-64 bg-gray-200">
                     {gallery.cover_image ? (
-                      <LazyImage
+                      <img
                         src={gallery.cover_image.image_url}
                         alt={gallery.name}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-100">
