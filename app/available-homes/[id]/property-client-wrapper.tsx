@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import Image from "next/image"
+// import Image from "next/image" // Using standard img tags instead due to Next.js Image optimization issues with external URLs
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -311,13 +311,11 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
               <div className="relative">
                 {/* Main Image Display */}
                 <div className="relative h-96 lg:h-[500px] w-full rounded-lg overflow-hidden cursor-pointer" onClick={() => openLightbox(currentImageIndex)}>
-                  <Image
+                  <img
                     src={propertyImages[currentImageIndex] || "/placeholder.svg"}
                     alt={`${property.location} - ${property.beds} bedroom ${property.baths} bathroom home exterior view ${currentImageIndex + 1}`}
-                    fill
-                    className="object-cover"
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="eager"
                   />
                   
                   {/* Navigation Arrows */}
@@ -394,12 +392,10 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
                             index === currentImageIndex ? 'ring-2 ring-red-600' : 'hover:opacity-80'
                           }`}
                         >
-                          <Image
+                          <img
                             src={image}
                             alt={`${property.location} home - view ${index + 1}`}
-                            fill
-                            className="object-cover"
-                            sizes="80px"
+                            className="absolute inset-0 w-full h-full object-cover"
                             loading="lazy"
                           />
                         </button>
@@ -646,12 +642,11 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
                 <Card key={relatedProperty.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <Link href={`/available-homes/${relatedProperty.id}`}>
                     <div className="relative">
-                      <Image
+                      <img
                         src={relatedProperty.image || "/placeholder.svg"}
                         alt={relatedProperty.title}
-                        width={400}
-                        height={250}
                         className="w-full h-48 object-cover"
+                        loading="lazy"
                       />
                       <Badge className={`absolute top-3 left-3 text-white ${getStatusColor(relatedProperty.status)}`}>
                         {relatedProperty.status}
@@ -689,13 +684,11 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
             
             {/* Main Image */}
             <div className="relative w-full h-full flex items-center justify-center">
-              <Image
+              <img
                 src={propertyImages[currentImageIndex] || "/placeholder.svg"}
                 alt={`${property.title} - Image ${currentImageIndex + 1}`}
-                width={1200}
-                height={800}
                 className="object-contain w-full h-full"
-                priority
+                loading="eager"
               />
             </div>
             

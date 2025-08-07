@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import Image from "next/image"
+// import Image from "next/image" // Using standard img tags instead due to Next.js Image optimization issues with external URLs
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -188,12 +188,11 @@ export default function AvailableHomes() {
             <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
               <div className="relative overflow-hidden">
                 <Link href={`/available-homes/${property.id}`}>
-                  <Image
+                  <img
                     src={property.image || property.main_image || "/placeholder.svg"}
                     alt={property.title}
-                    width={400}
-                    height={300}
                     className="w-full h-56 object-cover cursor-pointer group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
                   />
                 </Link>
                 
