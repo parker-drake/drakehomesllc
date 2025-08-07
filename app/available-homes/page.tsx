@@ -20,6 +20,7 @@ interface Property {
   baths: number
   sqft: string
   image?: string
+  main_image?: string
   status: string
   availability_status?: string
   description: string
@@ -188,7 +189,7 @@ export default function AvailableHomes() {
               <div className="relative overflow-hidden">
                 <Link href={`/available-homes/${property.id}`}>
                   <Image
-                    src={property.image || "/placeholder.svg"}
+                    src={property.image || property.main_image || "/placeholder.svg"}
                     alt={property.title}
                     width={400}
                     height={300}

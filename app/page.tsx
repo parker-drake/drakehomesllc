@@ -18,6 +18,7 @@ interface Property {
   baths: number
   sqft: string
   image?: string
+  main_image?: string
   status: string
   description: string
   completion_date: string
@@ -139,9 +140,9 @@ export default function Home() {
                     index === currentSlide ? 'opacity-100' : 'opacity-0'
                   }`}
                 >
-                  {property.image ? (
+                  {(property.image || property.main_image) ? (
                     <Image
-                      src={property.image}
+                      src={property.image || property.main_image || "/placeholder.svg"}
                       alt={property.title}
                       fill
                       className="object-cover"
