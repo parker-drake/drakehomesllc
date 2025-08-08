@@ -80,7 +80,7 @@ export function Header() {
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2">
                 <img 
-                  src="/logo.png" 
+                  src="/DrakeHomes_Logo.jpg" 
                   alt="Drake Homes LLC Logo" 
                   className="w-8 h-8 object-contain"
                   onError={(e) => {

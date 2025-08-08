@@ -7,7 +7,6 @@ import { ArrowRight, Award, CheckCircle, Clock, Mail, MapPin, Phone } from "luci
 import { Button } from "@/components/ui/button"
 import Script from "next/script"
 import { faqSchema } from "./faq-schema"
-import { enhancedLocalBusinessSchema } from "./local-seo-schema"
 
 interface Property {
   id: string
@@ -28,6 +27,7 @@ export default function Home() {
   const [properties, setProperties] = useState<Property[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [autoAdvance, setAutoAdvance] = useState(true)
 
   useEffect(() => {
     fetchFeaturedProperties()
@@ -48,77 +48,34 @@ export default function Home() {
     }
   }
 
-  // Auto-advance the slider
+  // Respect prefers-reduced-motion
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const handleChange = () => setAutoAdvance(!mediaQuery.matches)
+    handleChange()
+    mediaQuery.addEventListener?.('change', handleChange)
+    return () => mediaQuery.removeEventListener?.('change', handleChange)
+  }, [])
+
+  // Auto-advance the slider (disabled when reduced motion is preferred)
+  useEffect(() => {
+    if (!autoAdvance) return
     if (properties.length > 1) {
       const timer = setInterval(() => {
         setCurrentSlide((prev) => {
           const maxSlides = Math.min(4, properties.length)
           return (prev + 1) % maxSlides
         })
-      }, 5000) // Change image every 5 seconds
-
+      }, 5000)
       return () => clearInterval(timer)
     }
-  }, [properties.length])
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": "Drake Homes LLC",
-    "description": "Quality construction services with a focus on excellence, reliability, and customer satisfaction. Over 20 years of home construction experience in Wisconsin's Fox Valley area.",
-    "url": "https://drakehomesllc.com",
-
-    "address": {
-      "@type": "PostalAddress",
-      "addressRegion": "Wisconsin",
-      "addressLocality": "Fox Valley",
-      "addressCountry": "US"
-    },
-    "areaServed": {
-      "@type": "GeoCircle",
-      "geoMidpoint": {
-        "@type": "GeoCoordinates",
-        "latitude": 44.2619,
-        "longitude": -88.4154
-      },
-      "geoRadius": 50000
-    },
-    "serviceType": ["Home Construction", "Custom Home Building", "Residential Construction"],
-    "priceRange": "$$",
-    "openingHours": "Mo-Fr 08:00-17:00",
-    "founder": {
-      "@type": "Person",
-      "name": "Drake Homes LLC Team"
-    },
-    "slogan": "Where Quality and Value Meet",
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "Construction Services",
-      "itemListElement": [
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Custom Home Construction",
-            "description": "Quality custom home building services"
-          }
-        }
-      ]
-    }
-  }
+  }, [properties.length, autoAdvance])
+  // Removed duplicate LocalBusiness JSON-LD. Sitewide Organization schema remains in `app/layout.tsx`.
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Script
-        id="structured-data"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
-      <Script
-        id="enhanced-local-business-data"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(enhancedLocalBusinessSchema) }}
-      />
+      {/* LocalBusiness/GeneralContractor JSON-LD removed to avoid duplication/conflicts */}
       <Script
         id="faq-structured-data"
         type="application/ld+json"
@@ -161,6 +118,7 @@ export default function Home() {
                     <button
                       key={index}
                       onClick={() => setCurrentSlide(index)}
+                      aria-label={`Go to slide ${index + 1}`}
                       className={`w-3 h-3 rounded-full transition-colors duration-300 ${
                         index === currentSlide ? 'bg-white' : 'bg-white/50'
                       }`}
@@ -287,12 +245,18 @@ export default function Home() {
               <p className="text-red-100">Located in Wisconsin</p>
             </div>
           </div>
-          <div className="text-center">
+          <div className="text-center flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100" asChild>
               <Link href="/contact">
                 Contact Us Today
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-red-600" asChild>
+              <a href="tel:+19207406660" aria-label="Call Drake Homes at (920) 740-6660">Call (920) 740-6660</a>
+            </Button>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-red-600" asChild>
+              <a href="mailto:info@drakehomesllc.com" aria-label="Email Drake Homes">Email Us</a>
             </Button>
           </div>
         </div>

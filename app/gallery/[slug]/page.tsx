@@ -248,6 +248,8 @@ export default function GalleryDetailPage() {
               onClick={closeLightbox}
               className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
               title="Close (Esc)"
+              aria-label="Close image viewer"
+              role="button"
             >
               <X className="w-8 h-8" />
             </button>
@@ -256,6 +258,7 @@ export default function GalleryDetailPage() {
               onClick={() => navigateImage('prev')}
               className="absolute left-4 text-white hover:text-gray-300 transition-colors z-10"
               title="Previous (←)"
+              aria-label="Previous image"
             >
               <ChevronLeft className="w-8 h-8" />
             </button>
@@ -264,6 +267,7 @@ export default function GalleryDetailPage() {
               onClick={() => navigateImage('next')}
               className="absolute right-4 text-white hover:text-gray-300 transition-colors z-10"
               title="Next (→)"
+              aria-label="Next image"
             >
               <ChevronRight className="w-8 h-8" />
             </button>

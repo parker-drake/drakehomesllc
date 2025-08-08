@@ -21,17 +21,14 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
+    // Allow normal in-browser display; do not force download
+    // contentDispositionType: 'attachment',
     // Removed restrictive CSP that was blocking external images
     // contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
-  api: {
-    bodyParser: {
-      sizeLimit: '100mb',
-    },
-  },
+  // Removed deprecated `api.bodyParser` (not used with App Router route handlers)
   poweredByHeader: false,
   compress: true,
   swcMinify: true,

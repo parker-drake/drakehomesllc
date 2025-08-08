@@ -326,7 +326,7 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
                         size="icon"
                         className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white"
                         onClick={handlePreviousImage}
-                      >
+                      aria-label="Previous image">
                         <ChevronLeft className="h-6 w-6 text-gray-800" />
                       </Button>
                       <Button
@@ -334,7 +334,7 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
                         size="icon"
                         className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white"
                         onClick={handleNextImage}
-                      >
+                        aria-label="Next image">
                         <ChevronRight className="h-6 w-6 text-gray-800" />
                       </Button>
                     </>
@@ -611,12 +611,14 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
                   </form>
                   
                   <div className="mt-6 pt-6 border-t">
-                    <Button variant="outline" className="w-full mb-3">
-                      <Phone className="w-4 h-4 mr-2" />
-                      Call (920) 740-6660
+                    <Button variant="outline" className="w-full mb-3" asChild>
+                      <a href="tel:+19207406660" aria-label="Call Drake Homes at (920) 740-6660">
+                        <Phone className="w-4 h-4 mr-2" />
+                        Call (920) 740-6660
+                      </a>
                     </Button>
-                    <Button variant="outline" className="w-full mb-3">
-                      Schedule a Tour
+                    <Button variant="outline" className="w-full mb-3" asChild>
+                      <Link href="/contact">Schedule a Tour</Link>
                     </Button>
                     <Button 
                       variant="outline" 
@@ -678,7 +680,7 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
             <button
               onClick={closeLightbox}
               className="absolute top-4 right-4 z-10 text-white hover:text-gray-300 bg-black/50 rounded-full p-2 transition-colors"
-            >
+                aria-label="Close image viewer">
               <X className="h-6 w-6" />
             </button>
             
@@ -700,7 +702,7 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
                   size="icon"
                   className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white hover:text-white z-10"
                   onClick={handlePreviousImage}
-                >
+                aria-label="Previous image">
                   <ChevronLeft className="h-8 w-8" />
                 </Button>
                 <Button
@@ -708,7 +710,7 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
                   size="icon"
                   className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white hover:text-white z-10"
                   onClick={handleNextImage}
-                >
+                  aria-label="Next image">
                   <ChevronRight className="h-8 w-8" />
                 </Button>
               </>
