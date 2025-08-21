@@ -2,7 +2,7 @@ import { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Contact Us - Free Construction Consultation & Quote",
-  description: "Contact Drake Homes LLC for your construction needs in Wisconsin's Fox Valley. Call (920) 740-6660 for a free consultation. Quality home builders serving Wisconsin.",
+  description: "Contact Drake Homes LLC: (920) 740-6660 | info@drakehomesllc.com. Free consultations for custom homes in Fox Valley, WI. Quick response, 20+ years experience. Get your quote today!",
   keywords: ["contact Drake Homes", "Wisconsin home builder contact", "Fox Valley construction quote", "free construction consultation", "home builder Wisconsin phone", "custom home quote"],
   openGraph: {
     title: "Contact Drake Homes LLC - Free Construction Consultation",

@@ -7,6 +7,7 @@ import { Footer } from "@/components/footer"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import Script from "next/script"
+import { enhancedLocalBusinessSchema } from "./enhanced-local-business-schema"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -15,7 +16,7 @@ export const metadata = {
     default: "Drake Homes LLC - Quality Home Construction in Wisconsin",
     template: "%s | Drake Homes LLC"
   },
-  description: "Drake Homes LLC builds quality custom homes in Wisconsin's Fox Valley area. Over 20 years of construction experience with no shortcuts, only quality. Contact us for your dream home.",
+  description: "Drake Homes LLC: Wisconsin's trusted custom home builder with 20+ years experience. Quality construction, no shortcuts. Move-in ready & custom homes from $250K. Free consultation: (920) 740-6660",
   keywords: ["home construction", "custom homes", "Wisconsin builder", "Fox Valley construction", "quality homes", "Drake Homes", "residential construction"],
   authors: [{ name: "Drake Homes LLC" }],
   creator: "Drake Homes LLC",
@@ -69,34 +70,17 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const organizationSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "Drake Homes LLC",
-    url: "https://drakehomesllc.com",
-    logo: "https://drakehomesllc.com/DrakeHomes_Logo.jpg",
-    description: "Quality home construction in Wisconsin's Fox Valley area with over 20 years of experience.",
-    address: {
-      "@type": "PostalAddress",
-      addressRegion: "WI",
-      addressCountry: "US",
-      addressLocality: "Appleton"
-    },
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: "+1-920-740-6660",
-      contactType: "sales",
-      areaServed: "US",
-      availableLanguage: "English"
-    },
-    sameAs: [
-      "https://www.facebook.com/drakehomesllc",
-      "https://www.instagram.com/drakehomesllc"
-    ]
-  }
+  // Use enhanced local business schema for better local SEO
+  const organizationSchema = enhancedLocalBusinessSchema
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://dkzfcltmpaskscaynfsm.supabase.co" />
+        <link rel="preconnect" href="https://fxaowczkvopxnmbkthtv.supabase.co" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://vercel.live" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <Header />
