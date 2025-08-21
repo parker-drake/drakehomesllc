@@ -82,8 +82,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         canonical: `/available-homes/${params.id}`,
       },
       robots: {
-        index: true,
-        follow: true,
+        index: property.availability_status !== 'Sold',
+        follow: property.availability_status !== 'Sold',
         "max-image-preview": "large",
         "max-snippet": -1,
       },

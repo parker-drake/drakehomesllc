@@ -4,7 +4,7 @@
 User-agent: *
 
 # Allow all public pages
-Allow: /$
+Allow: /
 Allow: /about
 Allow: /contact
 Allow: /available-homes
@@ -15,26 +15,35 @@ Allow: /plans
 Allow: /plans/*
 Allow: /plans/*/configure
 Allow: /gallery
+Allow: /gallery/*
 Allow: /sitemap.xml
+
+# Allow search engines to access CSS and JS files
+Allow: /_next/static/
+Allow: /*.css$
+Allow: /*.js$
+Allow: /*.webp$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.png$
+Allow: /*.svg$
 
 # Disallow admin and API routes
 Disallow: /admin
 Disallow: /admin/*
 Disallow: /api/*
 
-# Disallow internal routes and temporary pages
-Disallow: /_next/*
-Disallow: *.json$
-Disallow: /*?*
-Disallow: /404
-
-# Allow search engines to access CSS and JS files
-Allow: /_next/static/
-Allow: /*.css$
-Allow: /*.js$
+# Disallow internal routes only
+Disallow: /_next/image*
 
 # Sitemap location
 Sitemap: https://drakehomesllc.com/sitemap.xml
 
-# Crawl delay (removed as it can cause issues with Google)
-# Crawl-delay: 1 
+# User-agent specific rules for major search engines
+User-agent: Googlebot
+Crawl-delay: 0
+Allow: /
+
+User-agent: Bingbot
+Crawl-delay: 1
+Allow: /

@@ -86,7 +86,7 @@ export default function GalleryDetailPage() {
             setImages(sortedData)
           }
         } else {
-          // Gallery not found, redirect to galleries page
+          // Gallery not found, return 404
           router.push('/gallery')
         }
       }

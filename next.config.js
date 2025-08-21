@@ -63,6 +63,44 @@ const nextConfig = {
     }
     return config
   },
+  // Add redirects to handle common issues
+  async redirects() {
+    return [
+      // Remove trailing slashes
+      {
+        source: '/:path+/',
+        destination: '/:path+',
+        permanent: true,
+      },
+      // Handle old or alternative URLs
+      {
+        source: '/homes',
+        destination: '/available-homes',
+        permanent: true,
+      },
+      {
+        source: '/properties',
+        destination: '/available-homes',
+        permanent: true,
+      },
+      {
+        source: '/properties/:id',
+        destination: '/available-homes/:id',
+        permanent: true,
+      },
+      // Handle index.html requests
+      {
+        source: '/index.html',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/:path*/index.html',
+        destination: '/:path*',
+        permanent: true,
+      },
+    ]
+  },
   // Add headers for better caching
   async headers() {
     return [

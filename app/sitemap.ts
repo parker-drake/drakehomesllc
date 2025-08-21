@@ -4,46 +4,49 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://drakehomesllc.com'
   
+  // Ensure no trailing slashes in URLs
+  const formatUrl = (url: string) => url.replace(/\/$/, '')
+  
   // Base pages with specific change frequencies and priorities
   const staticPages = [
     {
-      url: baseUrl,
+      url: formatUrl(baseUrl),
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/about`,
+      url: formatUrl(`${baseUrl}/about`),
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/contact`,
+      url: formatUrl(`${baseUrl}/contact`),
       lastModified: new Date(),
       changeFrequency: 'yearly' as const,
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/available-homes`,
+      url: formatUrl(`${baseUrl}/available-homes`),
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.95,
     },
     {
-      url: `${baseUrl}/lots`,
+      url: formatUrl(`${baseUrl}/lots`),
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.85,
     },
     {
-      url: `${baseUrl}/plans`,
+      url: formatUrl(`${baseUrl}/plans`),
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.85,
     },
     {
-      url: `${baseUrl}/gallery`,
+      url: formatUrl(`${baseUrl}/gallery`),
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
@@ -56,11 +59,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const { data: properties, error } = await supabaseAdmin
       .from('properties')
       .select('id, updated_at, status, availability_status')
+      .neq('availability_status', 'Sold')
       .order('created_at', { ascending: false })
 
     if (!error && properties) {
       propertyPages = properties.map((property) => ({
-        url: `${baseUrl}/available-homes/${property.id}`,
+        url: formatUrl(`${baseUrl}/available-homes/${property.id}`),
         lastModified: new Date(property.updated_at),
         changeFrequency: property.status === 'Move-In Ready' ? 'monthly' as const : 'weekly' as const,
         priority: property.availability_status === 'Available' ? 0.9 : 0.7,
@@ -80,7 +84,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     if (!error && plans) {
       planPages = plans.map((plan) => ({
-        url: `${baseUrl}/plans/${plan.id}`,
+        url: formatUrl(`${baseUrl}/plans/${plan.id}`),
         lastModified: new Date(plan.updated_at),
         changeFrequency: 'monthly' as const,
         priority: 0.7,
@@ -89,7 +93,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // Add plan configuration pages
       plans.forEach((plan) => {
         planPages.push({
-          url: `${baseUrl}/plans/${plan.id}/configure`,
+          url: formatUrl(`${baseUrl}/plans/${plan.id}/configure`),
           lastModified: new Date(plan.updated_at),
           changeFrequency: 'monthly' as const,
           priority: 0.6,
@@ -110,7 +114,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     if (!error && lots) {
       lotPages = lots.map((lot) => ({
-        url: `${baseUrl}/lots/${lot.id}`,
+        url: formatUrl(`${baseUrl}/lots/${lot.id}`),
         lastModified: new Date(lot.updated_at),
         changeFrequency: lot.status === 'Available' ? 'weekly' as const : 'monthly' as const,
         priority: lot.status === 'Available' ? 0.7 : 0.5,
