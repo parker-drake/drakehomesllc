@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon, Star, StarOff, ArrowLeft, Search, Filter, SlidersHorizontal, RotateCcw, Check, CheckSquare, Square, Users, Edit2, Trash, MapPin, Bed, Bath, Home } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { v4 as uuidv4 } from "uuid"
-import Image from "next/image"
 
 interface PropertyImage {
   id: string
@@ -1597,11 +1596,10 @@ export default function AdminProperties() {
                         {propertyImages.map((image, index) => (
                           <div key={image.id} className="relative group">
                             <div className="relative aspect-square rounded-lg overflow-hidden">
-                              <Image
+                              <img
                                 src={image.image_url}
                                 alt={image.alt_text || `Property image ${index + 1}`}
-                                fill
-                                className="object-cover"
+                                className="absolute inset-0 w-full h-full object-cover"
                               />
                               {image.is_main && (
                                 <div className="absolute top-2 left-2 bg-yellow-500 text-white p-1 rounded">
@@ -1646,11 +1644,10 @@ export default function AdminProperties() {
                     {formData.main_image ? (
                       <div className="space-y-4">
                         <div className="relative w-full h-48 rounded-lg overflow-hidden">
-                          <Image
+                          <img
                             src={formData.main_image}
                             alt="Property preview"
-                            fill
-                            className="object-cover"
+                            className="absolute inset-0 w-full h-full object-cover"
                           />
                         </div>
                         <div className="flex gap-2 justify-center">
@@ -2006,11 +2003,10 @@ export default function AdminProperties() {
                     {formData.main_image ? (
                       <div className="space-y-4">
                         <div className="relative w-full h-48 rounded-lg overflow-hidden mx-auto max-w-md">
-                          <Image
+                          <img
                             src={formData.main_image}
                             alt="Property preview"
-                            fill
-                            className="object-cover"
+                            className="absolute inset-0 w-full h-full object-cover"
                           />
                         </div>
                         <div className="flex gap-3 justify-center">
@@ -2404,11 +2400,10 @@ export default function AdminProperties() {
                         )}
                         
                         {plan.main_image ? (
-                          <Image
+                          <img
                             src={plan.main_image}
                             alt={plan.title}
-                            fill
-                            className="object-cover"
+                            className="absolute inset-0 w-full h-full object-cover"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">

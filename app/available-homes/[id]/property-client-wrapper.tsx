@@ -645,7 +645,7 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
                   <Link href={`/available-homes/${relatedProperty.id}`}>
                     <div className="relative">
                       <img
-                        src={relatedProperty.image || "/placeholder.svg"}
+                        src={relatedProperty.main_image || relatedProperty.image || "/placeholder.svg"}
                         alt={relatedProperty.title}
                         className="w-full h-48 object-cover"
                         loading="lazy"

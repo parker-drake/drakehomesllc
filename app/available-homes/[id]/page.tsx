@@ -52,12 +52,40 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
   // Fetch related properties
   const { data: allProperties } = await supabaseAdmin
     .from('properties')
-    .select('*')
+    .select(`
+      *,
+      property_images (
+        id,
+        image_url,
+        is_main,
+        display_order
+      )
+    `)
     .neq('id', params.id)
     .limit(3)
     .order('created_at', { ascending: false })
 
-  const relatedProperties = allProperties || []
+  // Map related properties to include image field
+  const relatedProperties = (allProperties || []).map(prop => {
+    let imageUrl = prop.main_image
+    
+    // If no main_image, look for main image in property_images table
+    if (!imageUrl && prop.property_images && prop.property_images.length > 0) {
+      // First try to find image marked as main
+      const mainImage = prop.property_images.find((img: any) => img.is_main)
+      if (mainImage) {
+        imageUrl = mainImage.image_url
+      } else {
+        // If no main image marked, use first image
+        imageUrl = prop.property_images[0].image_url
+      }
+    }
+    
+    return {
+      ...prop,
+      image: imageUrl
+    }
+  })
 
   // Clean up property data
   const cleanedProperty = {
