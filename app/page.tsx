@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
+// import Image from "next/image" // Using standard img tags for Supabase external URLs
 import { ArrowRight, Award, CheckCircle, Clock, Mail, MapPin, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Script from "next/script"
@@ -99,13 +99,11 @@ export default function Home() {
                   }`}
                 >
                   {(property.image || property.main_image) ? (
-                    <Image
+                    <img
                       src={property.image || property.main_image || "/placeholder.svg"}
                       alt={`${property.title} - ${property.beds} bedroom, ${property.baths} bath home in ${property.location}. Drake Homes LLC quality construction.`}
-                      fill
-                      className="object-cover"
-                      priority={index === 0}
-                      sizes="100vw"
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading={index === 0 ? "eager" : "lazy"}
                     />
                   ) : (
                     <div className="bg-gradient-to-r from-red-600 to-red-800 w-full h-full"></div>

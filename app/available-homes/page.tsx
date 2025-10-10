@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import Image from "next/image"
+// import Image from "next/image" // Using standard img tags for Supabase external URLs
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -188,15 +188,12 @@ export default function AvailableHomes() {
             <Card key={property.id} className="overflow-hidden hover-lift group">
               <div className="relative overflow-hidden">
                 <Link href={`/available-homes/${property.id}`}>
-                  <div className="relative w-full h-56 cursor-pointer">
-                    <Image
-                      src={property.image || property.main_image || "/placeholder.svg"}
-                      alt={`${property.title} - ${property.beds} bed, ${property.baths} bath, ${property.sqft} sqft home in ${property.location}. ${property.status}. Drake Homes quality construction.`}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                  </div>
+                  <img
+                    src={property.image || property.main_image || "/placeholder.svg"}
+                    alt={`${property.title} - ${property.beds} bed, ${property.baths} bath, ${property.sqft} sqft home in ${property.location}. ${property.status}. Drake Homes quality construction.`}
+                    className="w-full h-56 object-cover cursor-pointer group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
                 </Link>
                 
                 {/* Construction Status Badge - Top Left */}
