@@ -17,8 +17,174 @@ import {
   Ruler,
   DollarSign,
   X,
-  Star
+  Star,
+  StarOff,
+  Check,
+  Eye
 } from "lucide-react"
+
+// Inline editable lot row
+function LotRow({ 
+  lot, 
+  onEdit, 
+  onDelete,
+  onUpdate 
+}: { 
+  lot: Lot
+  onEdit: () => void
+  onDelete: () => void
+  onUpdate: (id: string, field: string, value: any) => void
+}) {
+  const [isEditingPrice, setIsEditingPrice] = useState(false)
+  const [editedPrice, setEditedPrice] = useState(lot.price?.toString() || '')
+  
+  const handlePriceSave = () => {
+    onUpdate(lot.id, 'price', parseInt(editedPrice))
+    setIsEditingPrice(false)
+  }
+
+  const toggleFeatured = () => {
+    onUpdate(lot.id, 'is_featured', !lot.is_featured)
+  }
+
+  const handleStatusChange = (newStatus: string) => {
+    onUpdate(lot.id, 'status', newStatus)
+  }
+
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'available': return 'bg-green-100 text-green-800'
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'sold': return 'bg-red-100 text-red-800'
+      case 'reserved': return 'bg-blue-100 text-blue-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  return (
+    <tr className="hover:bg-gray-50 transition-colors">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          {lot.main_image ? (
+            <img 
+              src={lot.main_image} 
+              alt={lot.lot_number}
+              className="w-12 h-12 rounded object-cover"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded bg-gray-200 flex items-center justify-center">
+              <Trees className="w-6 h-6 text-gray-400" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-900">{lot.lot_number}</p>
+            <p className="text-xs text-gray-500 truncate">{lot.subdivision}</p>
+          </div>
+        </div>
+      </td>
+
+      <td className="px-4 py-3">
+        <div className="text-sm text-gray-600">
+          <div>{lot.address}</div>
+          <div className="text-xs text-gray-500">{lot.city}, {lot.state} {lot.zip_code}</div>
+        </div>
+      </td>
+
+      <td className="px-4 py-3 text-sm text-gray-600">
+        <div className="flex items-center gap-1">
+          <Ruler className="w-3 h-3" />
+          <span>{lot.lot_size} acres</span>
+        </div>
+      </td>
+
+      <td className="px-4 py-3">
+        {isEditingPrice ? (
+          <div className="flex items-center gap-2">
+            <Input
+              value={editedPrice}
+              onChange={(e) => setEditedPrice(e.target.value)}
+              className="w-28 h-8 text-sm"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handlePriceSave()
+                if (e.key === 'Escape') {
+                  setEditedPrice(lot.price?.toString() || '')
+                  setIsEditingPrice(false)
+                }
+              }}
+              autoFocus
+            />
+            <Button size="sm" onClick={handlePriceSave} className="h-6 px-2">
+              <Check className="w-3 h-3" />
+            </Button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsEditingPrice(true)}
+            className="text-sm font-semibold text-red-600 hover:text-red-700 hover:underline"
+          >
+            ${lot.price?.toLocaleString()}
+          </button>
+        )}
+      </td>
+
+      <td className="px-4 py-3">
+        <select
+          value={lot.status}
+          onChange={(e) => handleStatusChange(e.target.value)}
+          className={`text-xs px-2 py-1 rounded border-0 font-medium cursor-pointer ${getStatusColor(lot.status)}`}
+        >
+          <option value="available">Available</option>
+          <option value="pending">Pending</option>
+          <option value="sold">Sold</option>
+          <option value="reserved">Reserved</option>
+        </select>
+      </td>
+
+      <td className="px-4 py-3">
+        <button
+          onClick={toggleFeatured}
+          className="p-1.5 rounded hover:bg-gray-100 transition-colors"
+        >
+          {lot.is_featured ? (
+            <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+          ) : (
+            <StarOff className="w-5 h-5 text-gray-400" />
+          )}
+        </button>
+      </td>
+
+      <td className="px-4 py-3">
+        <div className="flex items-center justify-end gap-2">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={onEdit}
+            className="h-7 px-2"
+          >
+            <Edit className="w-3 h-3" />
+          </Button>
+          <Link href={`/lots/${lot.id}`} target="_blank">
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="h-7 px-2"
+            >
+              <Eye className="w-3 h-3" />
+            </Button>
+          </Link>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={onDelete}
+            className="h-7 px-2 text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        </div>
+      </td>
+    </tr>
+  )
+}
 
 interface Lot {
   id: string
@@ -201,6 +367,31 @@ export default function AdminLotsPage() {
     } catch (error) {
       console.error('Error deleting lot:', error)
       alert('Error deleting lot. Please try again.')
+    }
+  }
+
+  // Inline update function for quick edits
+  const updateLotInline = async (id: string, field: string, value: any) => {
+    try {
+      const response = await fetch(`/api/lots/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ [field]: value }),
+      })
+
+      if (response.ok) {
+        // Update local state
+        setLots(prev => prev.map(l => 
+          l.id === id ? { ...l, [field]: value } : l
+        ))
+      } else {
+        alert('Failed to update lot')
+      }
+    } catch (error) {
+      console.error('Error updating lot:', error)
+      alert('Error updating lot')
     }
   }
 
@@ -559,89 +750,47 @@ export default function AdminLotsPage() {
           </Card>
         )}
 
-        {/* Lots Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {lots.map((lot) => (
-            <Card key={lot.id} className="overflow-hidden">
-              <div className="relative h-48 bg-gray-200">
-                {lot.is_featured && (
-                  <Badge className="absolute top-2 left-2 z-10 bg-red-600">
-                    <Star className="w-3 h-3 mr-1 fill-current" />
-                    Featured
-                  </Badge>
-                )}
-                {getStatusBadge(lot.status) && (
-                  <div className="absolute top-2 right-2 z-10">
-                    {getStatusBadge(lot.status)}
-                  </div>
-                )}
-                {lot.main_image ? (
-                  <Image
-                    src={lot.main_image}
-                    alt={lot.lot_number}
-                    fill
-                    className="object-cover"
+        {/* Lots Table */}
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Lot</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Address</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Size</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Price</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">Featured</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {lots.map((lot) => (
+                  <LotRow
+                    key={lot.id}
+                    lot={lot}
+                    onEdit={() => handleEdit(lot)}
+                    onDelete={() => handleDelete(lot.id)}
+                    onUpdate={updateLotInline}
                   />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-                    <Trees className="w-12 h-12 text-gray-500" />
-                  </div>
-                )}
+                ))}
+              </tbody>
+            </table>
+            
+            {lots.length === 0 && (
+              <div className="text-center py-12 bg-white">
+                <Trees className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 text-lg mb-2">No lots yet</p>
+                <p className="text-gray-400 text-sm mb-4">Get started by adding your first lot</p>
+                <Button onClick={() => setShowAddForm(true)} className="bg-red-600 hover:bg-red-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add First Lot
+                </Button>
               </div>
-              
-              <CardContent className="p-4">
-                <h3 className="font-bold text-lg mb-1">{lot.lot_number}</h3>
-                <p className="text-gray-600 text-sm mb-2 flex items-center">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  {lot.subdivision}
-                </p>
-                
-                <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-                  <div className="flex items-center gap-1">
-                    <Ruler className="w-4 h-4 text-gray-500" />
-                    <span>{lot.lot_size} acres</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="w-4 h-4 text-gray-500" />
-                    <span>${lot.price?.toLocaleString()}</span>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(lot)}
-                  >
-                    <Edit className="w-4 h-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(lot.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        
-        {lots.length === 0 && !showAddForm && (
-          <div className="text-center py-12">
-            <Trees className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No lots yet</h3>
-            <p className="text-gray-600 mb-4">Get started by adding your first lot.</p>
-            <Button onClick={() => setShowAddForm(true)} className="bg-red-600 hover:bg-red-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Add First Lot
-            </Button>
+            )}
           </div>
-        )}
+        </Card>
       </div>
     </div>
   )

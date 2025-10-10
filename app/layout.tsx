@@ -2,6 +2,7 @@ import React from "react"
 import "./globals.css"
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
+import { ToastProvider } from "@/components/ui/toast"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Analytics } from "@vercel/analytics/react"
@@ -88,9 +89,11 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <Header />
-          <main>{children}</main>
-          <Footer />
+          <ToastProvider>
+            <Header />
+            <main>{children}</main>
+            <Footer />
+          </ToastProvider>
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />

@@ -13,6 +13,7 @@ import {
   Edit, 
   Trash2, 
   Star,
+  StarOff,
   Home,
   Bed,
   Bath,
@@ -20,8 +21,159 @@ import {
   Car,
   DollarSign,
   Upload,
-  X
+  X,
+  Check,
+  Eye
 } from "lucide-react"
+
+// Inline editable plan row
+function PlanRow({ 
+  plan, 
+  onEdit, 
+  onDelete,
+  onUpdate 
+}: { 
+  plan: Plan
+  onEdit: () => void
+  onDelete: () => void
+  onUpdate: (id: string, field: string, value: any) => void
+}) {
+  const [isEditingPrice, setIsEditingPrice] = useState(false)
+  const [editedPrice, setEditedPrice] = useState(plan.price?.toString() || '')
+  
+  const handlePriceSave = () => {
+    onUpdate(plan.id, 'price', parseInt(editedPrice))
+    setIsEditingPrice(false)
+  }
+
+  const toggleFeatured = () => {
+    onUpdate(plan.id, 'is_featured', !plan.is_featured)
+  }
+
+  return (
+    <tr className="hover:bg-gray-50 transition-colors">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          {plan.main_image ? (
+            <img 
+              src={plan.main_image} 
+              alt={plan.title}
+              className="w-12 h-12 rounded object-cover"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded bg-gray-200 flex items-center justify-center">
+              <Home className="w-6 h-6 text-gray-400" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{plan.title}</p>
+            <Badge variant="outline" className="text-xs mt-1">{plan.style}</Badge>
+          </div>
+        </div>
+      </td>
+
+      <td className="px-4 py-3 text-sm text-gray-600">
+        <div className="flex items-center gap-1">
+          <Square className="w-3 h-3" />
+          <span>{plan.square_footage?.toLocaleString()} sf</span>
+        </div>
+      </td>
+
+      <td className="px-4 py-3 text-sm text-gray-600">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <Bed className="w-3 h-3" />
+            <span>{plan.bedrooms}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Bath className="w-3 h-3" />
+            <span>{plan.bathrooms}</span>
+          </div>
+          {plan.garage_spaces > 0 && (
+            <div className="flex items-center gap-1">
+              <Car className="w-3 h-3" />
+              <span>{plan.garage_spaces}</span>
+            </div>
+          )}
+        </div>
+      </td>
+
+      <td className="px-4 py-3">
+        {isEditingPrice ? (
+          <div className="flex items-center gap-2">
+            <Input
+              value={editedPrice}
+              onChange={(e) => setEditedPrice(e.target.value)}
+              className="w-28 h-8 text-sm"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handlePriceSave()
+                if (e.key === 'Escape') {
+                  setEditedPrice(plan.price?.toString() || '')
+                  setIsEditingPrice(false)
+                }
+              }}
+              autoFocus
+            />
+            <Button size="sm" onClick={handlePriceSave} className="h-6 px-2">
+              <Check className="w-3 h-3" />
+            </Button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsEditingPrice(true)}
+            className="text-sm font-semibold text-red-600 hover:text-red-700 hover:underline"
+          >
+            ${plan.price?.toLocaleString()}
+          </button>
+        )}
+      </td>
+
+      <td className="px-4 py-3">
+        <button
+          onClick={toggleFeatured}
+          className="p-1.5 rounded hover:bg-gray-100 transition-colors"
+          title={plan.is_featured ? "Remove from featured" : "Make featured"}
+        >
+          {plan.is_featured ? (
+            <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+          ) : (
+            <StarOff className="w-5 h-5 text-gray-400" />
+          )}
+        </button>
+      </td>
+
+      <td className="px-4 py-3">
+        <div className="flex items-center justify-end gap-2">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={onEdit}
+            className="h-7 px-2"
+          >
+            <Edit className="w-3 h-3" />
+          </Button>
+          <Link href={`/plans/${plan.id}`} target="_blank">
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="h-7 px-2"
+            >
+              <Eye className="w-3 h-3" />
+            </Button>
+          </Link>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={onDelete}
+            className="h-7 px-2 text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        </div>
+      </td>
+    </tr>
+  )
+}
 
 interface Plan {
   id: string
@@ -189,6 +341,31 @@ export default function AdminPlansPage() {
     } catch (error) {
       console.error('Error deleting plan:', error)
       alert('Error deleting plan. Please try again.')
+    }
+  }
+
+  // Inline update function for quick edits
+  const updatePlanInline = async (id: string, field: string, value: any) => {
+    try {
+      const response = await fetch(`/api/plans/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ [field]: value }),
+      })
+
+      if (response.ok) {
+        // Update local state
+        setPlans(prev => prev.map(p => 
+          p.id === id ? { ...p, [field]: value } : p
+        ))
+      } else {
+        alert('Failed to update plan')
+      }
+    } catch (error) {
+      console.error('Error updating plan:', error)
+      alert('Error updating plan')
     }
   }
 
@@ -530,92 +707,46 @@ export default function AdminPlansPage() {
           </Card>
         )}
 
-        {/* Plans List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plans.map((plan) => (
-            <Card key={plan.id} className="overflow-hidden">
-              <div className="relative h-48 bg-gray-200">
-                {plan.is_featured && (
-                  <Badge className="absolute top-2 left-2 z-10 bg-red-600">
-                    <Star className="w-3 h-3 mr-1 fill-current" />
-                    Featured
-                  </Badge>
-                )}
-                
-                {plan.main_image ? (
-                  <Image
-                    src={plan.main_image}
-                    alt={plan.title}
-                    fill
-                    className="object-cover"
+        {/* Plans Table */}
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Plan</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Size</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Bed/Bath/Garage</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Price</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">Featured</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {plans.map((plan) => (
+                  <PlanRow
+                    key={plan.id}
+                    plan={plan}
+                    onEdit={() => handleEdit(plan)}
+                    onDelete={() => handleDelete(plan.id)}
+                    onUpdate={updatePlanInline}
                   />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-                    <Home className="w-12 h-12 text-gray-500" />
-                  </div>
-                )}
+                ))}
+              </tbody>
+            </table>
+            
+            {plans.length === 0 && (
+              <div className="text-center py-12 bg-white">
+                <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 text-lg mb-2">No plans yet</p>
+                <p className="text-gray-400 text-sm mb-4">Add your first house plan to get started</p>
+                <Button onClick={() => setShowAddForm(true)} className="bg-red-600 hover:bg-red-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Your First Plan
+                </Button>
               </div>
-              
-              <CardContent className="p-4">
-                <div className="mb-3">
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">{plan.title}</h3>
-                  <Badge variant="outline" className="text-xs">{plan.style}</Badge>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
-                  <div className="flex items-center gap-1">
-                    <Square className="w-3 h-3 text-red-600" />
-                    <span>{plan.square_footage?.toLocaleString()} sq ft</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Bed className="w-3 h-3 text-red-600" />
-                    <span>{plan.bedrooms} bed</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Bath className="w-3 h-3 text-red-600" />
-                    <span>{plan.bathrooms} bath</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="w-3 h-3 text-red-600" />
-                    <span>${plan.price?.toLocaleString()}</span>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => handleEdit(plan)}
-                    className="flex-1"
-                  >
-                    <Edit className="w-3 h-3 mr-1" />
-                    Edit
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => handleDelete(plan.id)}
-                    className="text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        
-        {plans.length === 0 && (
-          <div className="text-center py-12">
-            <Home className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No plans yet</h3>
-            <p className="text-gray-600 mb-4">Add your first house plan to get started.</p>
-            <Button onClick={() => setShowAddForm(true)} className="bg-red-600 hover:bg-red-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Plan
-            </Button>
+            )}
           </div>
-        )}
+        </Card>
       </div>
     </div>
   )
