@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Heart, MapPin, Bed, Bath, Square, Phone, Mail, Search, Filter, X, SlidersHorizontal } from "lucide-react"
 import PropertiesMap from "@/components/properties-map"
 import Script from "next/script"
+import { optimizeForCard } from "@/lib/image-utils"
 
 interface Property {
   id: string
@@ -399,7 +400,7 @@ export default function AvailableHomes() {
               <div className="relative overflow-hidden">
                 <Link href={`/available-homes/${property.id}`}>
                   <img
-                    src={property.image || property.main_image || "/placeholder.svg"}
+                    src={optimizeForCard(property.image || property.main_image || "/placeholder.svg")}
                     alt={`${property.title} - ${property.beds} bed, ${property.baths} bath, ${property.sqft} sqft home in ${property.location}. ${property.status}. Drake Homes quality construction.`}
                     className="w-full h-56 object-cover cursor-pointer group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"

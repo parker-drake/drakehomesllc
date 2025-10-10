@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import Script from "next/script"
 import { faqSchema } from "./faq-schema"
 import { TestimonialsSection } from "@/components/testimonials-section"
+import { optimizeForHero } from "@/lib/image-utils"
 
 interface Property {
   id: string
@@ -101,7 +102,7 @@ export default function Home() {
                 >
                   {(property.image || property.main_image) ? (
                     <img
-                      src={property.image || property.main_image || "/placeholder.svg"}
+                      src={optimizeForHero(property.image || property.main_image || "")}
                       alt={`${property.title} - ${property.beds} bedroom, ${property.baths} bath home in ${property.location}. Drake Homes LLC quality construction.`}
                       className="absolute inset-0 w-full h-full object-cover"
                       loading={index === 0 ? "eager" : "lazy"}
