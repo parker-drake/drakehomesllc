@@ -4,14 +4,44 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { DollarSign, Percent, Calendar, TrendingUp, Home } from 'lucide-react'
+import { DollarSign, Percent, Calendar, TrendingUp, Home, X, Calculator } from 'lucide-react'
 
 interface MortgageCalculatorProps {
   homePrice: number
   propertyTitle?: string
 }
 
-export function MortgageCalculator({ homePrice, propertyTitle }: MortgageCalculatorProps) {
+export function MortgageCalculatorButton({ homePrice, propertyTitle }: MortgageCalculatorProps) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <>
+      {/* Compact Button */}
+      <Button 
+        onClick={() => setIsOpen(true)}
+        className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white h-12 text-base font-semibold"
+      >
+        <Calculator className="w-5 h-5 mr-2" />
+        Calculate Monthly Payment
+      </Button>
+
+      {/* Modal */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4" onClick={() => setIsOpen(false)}>
+          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <MortgageCalculatorContent 
+              homePrice={homePrice} 
+              propertyTitle={propertyTitle}
+              onClose={() => setIsOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function MortgageCalculatorContent({ homePrice, propertyTitle, onClose }: MortgageCalculatorProps & { onClose: () => void }) {
   const [price, setPrice] = useState(homePrice)
   const [downPaymentPercent, setDownPaymentPercent] = useState(20)
   const [interestRate, setInterestRate] = useState(7.0)
@@ -71,20 +101,30 @@ export function MortgageCalculator({ homePrice, propertyTitle }: MortgageCalcula
   const loanAmount = price - downPaymentAmount
 
   return (
-    <Card className="overflow-hidden">
-      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="bg-white/20 p-2 rounded-lg">
-            <DollarSign className="w-6 h-6" />
+    <div className="overflow-hidden">
+      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-t-lg">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-2 rounded-lg">
+              <Calculator className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold">Mortgage Calculator</h3>
+              <p className="text-red-100 text-sm">
+                Estimate your monthly payment for {propertyTitle || 'this property'}
+              </p>
+            </div>
           </div>
-          <h3 className="text-2xl font-bold">Mortgage Calculator</h3>
+          <button 
+            onClick={onClose}
+            className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
         </div>
-        <p className="text-red-100 text-sm">
-          Estimate your monthly payment for {propertyTitle || 'this property'}
-        </p>
       </div>
 
-      <CardContent className="p-6 space-y-6">
+      <div className="p-6 space-y-6 bg-white">
         {/* Home Price */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
@@ -267,9 +307,19 @@ export function MortgageCalculator({ homePrice, propertyTitle }: MortgageCalcula
           <p className="mt-6 text-xs text-gray-500 text-center">
             * This calculator provides estimates only. Actual payments may vary. Contact a lender for accurate quotes.
           </p>
+
+          {/* Action Button */}
+          <div className="mt-6 pt-4 border-t">
+            <Button 
+              onClick={onClose}
+              className="w-full bg-red-600 hover:bg-red-700"
+            >
+              Done
+            </Button>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

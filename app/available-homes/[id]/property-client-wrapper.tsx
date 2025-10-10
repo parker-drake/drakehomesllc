@@ -25,7 +25,7 @@ import {
   Download
 } from "lucide-react"
 import PropertyMap from "@/components/property-map"
-import { MortgageCalculator } from "@/components/mortgage-calculator"
+import { MortgageCalculatorButton } from "@/components/mortgage-calculator"
 import emailjs from '@emailjs/browser'
 
 interface PropertyImage {
@@ -565,13 +565,7 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
 
           {/* Contact Form - Right Column */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-6">
-              {/* Mortgage Calculator */}
-              <MortgageCalculator 
-                homePrice={parseFloat(property.price.replace(/[$,]/g, ''))} 
-                propertyTitle={property.title}
-              />
-
+            <div className="sticky top-24 space-y-4">
               {/* Contact Form */}
               <Card>
                 <CardContent className="p-6">
@@ -639,6 +633,12 @@ export default function PropertyClientWrapper({ property, relatedProperties }: P
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Mortgage Calculator */}
+              <MortgageCalculatorButton 
+                homePrice={parseFloat(property.price.replace(/[$,]/g, ''))} 
+                propertyTitle={property.title}
+              />
             </div>
           </div>
         </div>
