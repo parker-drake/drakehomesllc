@@ -24,7 +24,8 @@ import {
   UserCheck,
   Image as ImageIcon,
   FileText,
-  Settings
+  Settings,
+  Quote
 } from "lucide-react"
 
 interface Property {
