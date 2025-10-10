@@ -7,6 +7,7 @@ import { ArrowRight, Award, CheckCircle, Clock, Mail, MapPin, Phone } from "luci
 import { Button } from "@/components/ui/button"
 import Script from "next/script"
 import { faqSchema } from "./faq-schema"
+import { TestimonialsSection } from "@/components/testimonials-section"
 
 interface Property {
   id: string
@@ -219,7 +220,8 @@ export default function Home() {
         </div>
       </section>
 
-
+      {/* Testimonials Section */}
+      <TestimonialsSection />
 
       {/* Contact Section */}
       <section className="py-16 md:py-24 bg-red-600 text-white">
