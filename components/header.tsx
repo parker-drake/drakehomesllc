@@ -56,6 +56,9 @@ export function Header() {
             <Link href="/gallery" className="text-base font-medium hover:underline underline-offset-4">
               Gallery
             </Link>
+            <Link href="/testimonials" className="text-base font-medium hover:underline underline-offset-4">
+              Testimonials
+            </Link>
             <Link href="/about" className="text-base font-medium hover:underline underline-offset-4">
               About
             </Link>
@@ -130,6 +133,13 @@ export function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Gallery
+              </Link>
+              <Link 
+                href="/testimonials" 
+                className="text-lg font-medium hover:text-red-600 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Testimonials
               </Link>
               <Link 
                 href="/about" 

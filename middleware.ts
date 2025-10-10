@@ -74,7 +74,8 @@ export async function middleware(request: NextRequest) {
     '/api/properties',
     '/api/plans',
     '/api/gallery',
-    '/api/upload'
+    '/api/upload',
+    '/api/testimonials'
   ]
 
   const isProtectedApiRoute = protectedApiRoutes.some(route => 
@@ -103,6 +104,7 @@ export const config = {
     '/api/properties/:path*',
     '/api/plans/:path*', 
     '/api/gallery/:path*',
-    '/api/upload/:path*'
+    '/api/upload/:path*',
+    '/api/testimonials/:path*'
   ]
 } 

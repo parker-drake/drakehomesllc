@@ -1,36 +1,47 @@
 "use client"
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Star, Quote } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import Link from 'next/link'
 
 interface Testimonial {
   id: string
-  name: string
+  customer_name: string
   location: string
   rating: number
-  text: string
-  date: string
-  projectType?: string
+  testimonial_text: string
+  completion_date?: string
+  project_type?: string
+  is_featured: boolean
 }
 
-// Real customer testimonials - add your reviews here
-const testimonials: Testimonial[] = [
-  // Add your real testimonials here in this format:
-  // {
-  //   id: '1',
-  //   name: 'Customer Name',
-  //   location: 'City, WI',
-  //   rating: 5,
-  //   text: 'Their review text here...',
-  //   date: '2024',
-  //   projectType: 'Custom Home Build'
-  // },
-]
-
 export function TestimonialsSection() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchFeaturedTestimonials()
+  }, [])
+
+  const fetchFeaturedTestimonials = async () => {
+    try {
+      const response = await fetch('/api/testimonials')
+      if (response.ok) {
+        const data = await response.json()
+        // Only show featured testimonials on homepage (max 3)
+        const featured = data.filter((t: Testimonial) => t.is_featured).slice(0, 3)
+        setTestimonials(featured)
+      }
+    } catch (error) {
+      console.error('Error fetching testimonials:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Don't display section if no testimonials
-  if (testimonials.length === 0) {
+  if (loading || testimonials.length === 0) {
     return null
   }
 
@@ -65,41 +76,39 @@ export function TestimonialsSection() {
                   ))}
                 </div>
 
-                {/* Testimonial Text */}
-                <p className="text-gray-700 mb-6 leading-relaxed italic">
-                  "{testimonial.text}"
-                </p>
-
-                {/* Author Info */}
-                <div className="border-t pt-4">
-                  <p className="font-semibold text-gray-900">
-                    {testimonial.name}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {testimonial.location}
-                  </p>
-                  {testimonial.projectType && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      {testimonial.projectType} • {testimonial.date}
+                    {/* Testimonial Text */}
+                    <p className="text-gray-700 mb-6 leading-relaxed italic">
+                      "{testimonial.testimonial_text}"
                     </p>
-                  )}
+
+                    {/* Author Info */}
+                    <div className="border-t pt-4">
+                      <p className="font-semibold text-gray-900">
+                        {testimonial.customer_name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {testimonial.location}
+                      </p>
+                      {testimonial.project_type && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {testimonial.project_type}
+                          {testimonial.completion_date && ` • ${testimonial.completion_date}`}
+                        </p>
+                      )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Call to Action */}
+        {/* View All Link */}
         <div className="text-center mt-12 animate-fade-in animate-delay-400">
-          <p className="text-gray-600 mb-4">
-            Ready to start your dream home project?
-          </p>
-          <a 
-            href="/contact" 
-            className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+          <Link 
+            href="/testimonials" 
+            className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-red-600 border-2 border-red-600 rounded-md hover:bg-red-50 transition-colors"
           >
-            Get Your Free Consultation
-          </a>
+            View All Customer Reviews
+          </Link>
         </div>
       </div>
     </section>
