@@ -6,10 +6,222 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon, Star, StarOff, ArrowLeft, Search, Filter, SlidersHorizontal, RotateCcw, Check, CheckSquare, Square, Users, Edit2, Trash, MapPin, Bed, Bath, Home } from "lucide-react"
+import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon, Star, StarOff, ArrowLeft, Search, Filter, SlidersHorizontal, RotateCcw, Check, CheckSquare, Square, Users, Edit2, Trash, MapPin, Bed, Bath, Home, Eye } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { v4 as uuidv4 } from "uuid"
 import { BulkImageUpload } from "@/components/ui/bulk-image-upload"
+
+// Inline editable property row component
+function PropertyRow({ 
+  property, 
+  isSelected, 
+  onToggleSelect, 
+  onEdit, 
+  onDelete,
+  onUpdate 
+}: { 
+  property: Property
+  isSelected: boolean
+  onToggleSelect: () => void
+  onEdit: () => void
+  onDelete: () => void
+  onUpdate: (id: string, field: string, value: any) => void
+}) {
+  const [isEditingPrice, setIsEditingPrice] = useState(false)
+  const [editedPrice, setEditedPrice] = useState(property.price)
+  
+  const handlePriceSave = () => {
+    onUpdate(property.id, 'price', editedPrice)
+    setIsEditingPrice(false)
+  }
+
+  const handleStatusChange = (newStatus: string) => {
+    onUpdate(property.id, 'status', newStatus)
+  }
+
+  const handleAvailabilityChange = (newStatus: string) => {
+    onUpdate(property.id, 'availability_status', newStatus)
+  }
+
+  return (
+    <tr className={`hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : ''}`}>
+      {/* Checkbox */}
+      <td className="px-4 py-3">
+        <button
+          onClick={onToggleSelect}
+          className="p-0.5 rounded hover:bg-gray-200 transition-colors"
+        >
+          {isSelected ? (
+            <CheckSquare className="w-4 h-4 text-blue-600" />
+          ) : (
+            <Square className="w-4 h-4 text-gray-400" />
+          )}
+        </button>
+      </td>
+
+      {/* Property Title */}
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <div className="flex-shrink-0">
+            {property.main_image ? (
+              <img 
+                src={property.main_image} 
+                alt={property.title}
+                className="w-10 h-10 rounded object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded bg-gray-200 flex items-center justify-center">
+                <Home className="w-5 h-5 text-gray-400" />
+              </div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{property.title}</p>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Bed className="w-3 h-3" />
+              <span>{property.beds}</span>
+              <Bath className="w-3 h-3" />
+              <span>{property.baths}</span>
+              <span>• {property.sqft}</span>
+            </div>
+          </div>
+        </div>
+      </td>
+
+      {/* Location */}
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-1 text-sm text-gray-600">
+          <MapPin className="w-3 h-3 flex-shrink-0" />
+          <span className="truncate max-w-[150px]">{property.location}</span>
+        </div>
+      </td>
+
+      {/* Price - Editable */}
+      <td className="px-4 py-3">
+        {isEditingPrice ? (
+          <div className="flex items-center gap-2">
+            <Input
+              value={editedPrice}
+              onChange={(e) => setEditedPrice(e.target.value)}
+              className="w-32 h-8 text-sm"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handlePriceSave()
+                if (e.key === 'Escape') {
+                  setEditedPrice(property.price)
+                  setIsEditingPrice(false)
+                }
+              }}
+              autoFocus
+            />
+            <Button size="sm" onClick={handlePriceSave} className="h-6 px-2">
+              <Check className="w-3 h-3" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => {
+                setEditedPrice(property.price)
+                setIsEditingPrice(false)
+              }}
+              className="h-6 px-2"
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsEditingPrice(true)}
+            className="text-sm font-semibold text-red-600 hover:text-red-700 hover:underline"
+          >
+            {property.price}
+          </button>
+        )}
+      </td>
+
+      {/* Details */}
+      <td className="px-4 py-3 text-sm text-gray-600">
+        <div>
+          <span className="text-xs text-gray-500">Completion:</span>
+          <br />
+          <span className="text-xs">{property.completion_date}</span>
+        </div>
+      </td>
+
+      {/* Status - Editable */}
+      <td className="px-4 py-3">
+        <select
+          value={property.status}
+          onChange={(e) => handleStatusChange(e.target.value)}
+          className={`text-xs px-2 py-1 rounded border-0 font-medium cursor-pointer ${
+            property.status === 'Move-In Ready' ? 'bg-green-100 text-green-800' :
+            property.status === 'Nearly Complete' ? 'bg-blue-100 text-blue-800' :
+            property.status === 'Under Construction' ? 'bg-orange-100 text-orange-800' :
+            'bg-purple-100 text-purple-800'
+          }`}
+        >
+          <option value="Move-In Ready">Move-In Ready</option>
+          <option value="Nearly Complete">Nearly Complete</option>
+          <option value="Under Construction">Under Construction</option>
+          <option value="Pre-Construction">Pre-Construction</option>
+        </select>
+      </td>
+
+      {/* Availability - Editable */}
+      <td className="px-4 py-3">
+        <select
+          value={property.availability_status || 'Available'}
+          onChange={(e) => handleAvailabilityChange(e.target.value)}
+          className={`text-xs px-2 py-1 rounded border-0 font-medium cursor-pointer ${
+            property.availability_status === 'Available' ? 'bg-green-100 text-green-800' :
+            property.availability_status === 'Under Contract' ? 'bg-yellow-100 text-yellow-800' :
+            property.availability_status === 'Coming Soon' ? 'bg-blue-100 text-blue-800' :
+            property.availability_status === 'Sold' ? 'bg-red-100 text-red-800' :
+            'bg-gray-100 text-gray-800'
+          }`}
+        >
+          <option value="Available">Available</option>
+          <option value="Under Contract">Under Contract</option>
+          <option value="Coming Soon">Coming Soon</option>
+          <option value="Sold">Sold</option>
+        </select>
+      </td>
+
+      {/* Actions */}
+      <td className="px-4 py-3">
+        <div className="flex items-center justify-end gap-2">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={onEdit}
+            className="h-7 px-2"
+            title="Edit full details"
+          >
+            <Edit className="w-3 h-3" />
+          </Button>
+          <Link href={`/available-homes/${property.id}`} target="_blank">
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="h-7 px-2"
+              title="View public page"
+            >
+              <Eye className="w-3 h-3" />
+            </Button>
+          </Link>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={onDelete}
+            className="h-7 px-2 text-red-600 hover:bg-red-50"
+            title="Delete property"
+          >
+            <Trash className="w-3 h-3" />
+          </Button>
+        </div>
+      </td>
+    </tr>
+  )
+}
 
 interface PropertyImage {
   id: string
@@ -1043,6 +1255,34 @@ export default function AdminProperties() {
     
     if (successCount > 0) {
       alert(`Successfully uploaded ${successCount} of ${totalFiles} images`)
+    }
+  }
+
+  // Inline update function for quick edits
+  const updatePropertyInline = async (id: string, field: string, value: any) => {
+    try {
+      const response = await fetch(`/api/properties/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ [field]: value }),
+      })
+
+      if (response.ok) {
+        // Update local state
+        setProperties(prev => prev.map(p => 
+          p.id === id ? { ...p, [field]: value } : p
+        ))
+        setFilteredProperties(prev => prev.map(p => 
+          p.id === id ? { ...p, [field]: value } : p
+        ))
+      } else {
+        alert('Failed to update property')
+      }
+    } catch (error) {
+      console.error('Error updating property:', error)
+      alert('Error updating property')
     }
   }
 
@@ -2142,138 +2382,67 @@ export default function AdminProperties() {
           </div>
         )}
 
-        {/* Properties Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProperties.map((property) => (
-            <Card key={property.id} className={`hover:shadow-md transition-shadow duration-200 border ${selectedProperties.has(property.id) ? 'ring-2 ring-blue-500 border-blue-300 bg-blue-50' : 'hover:border-gray-300'}`}>
-              <CardContent className="p-4">
-                {/* Header with Checkbox and Title */}
-                <div className="flex items-start gap-3 mb-3">
-                  <button
-                    onClick={() => togglePropertySelection(property.id)}
-                    className="mt-1 p-0.5 rounded hover:bg-gray-100 transition-colors"
-                  >
-                    {selectedProperties.has(property.id) ? (
-                      <CheckSquare className="w-4 h-4 text-blue-600" />
-                    ) : (
-                      <Square className="w-4 h-4 text-gray-400" />
-                    )}
-                  </button>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1 line-clamp-2">{property.title}</h3>
-                    <p className="text-lg font-bold text-red-600">{property.price}</p>
-                  </div>
-                </div>
-                
-                {/* Location */}
-                <div className="flex items-center text-gray-600 mb-3">
-                  <MapPin className="w-3 h-3 mr-1.5 flex-shrink-0" />
-                  <p className="text-sm line-clamp-1">{property.location}</p>
-                </div>
-                
-                {/* Property Details - Simple Row */}
-                <div className="flex items-center justify-between text-sm text-gray-700 mb-3 py-2 px-3 bg-gray-50 rounded-md">
-                  <div className="flex items-center">
-                    <Bed className="w-3 h-3 mr-1" />
-                    <span className="font-medium">{property.beds} bed</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Bath className="w-3 h-3 mr-1" />
-                    <span className="font-medium">{property.baths} bath</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Square className="w-3 h-3 mr-1" />
-                    <span className="font-medium">{property.sqft}</span>
-                  </div>
-                </div>
-                
-                {/* Status and Date Row */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex gap-2">
-                    <Badge 
-                      className={`text-xs px-2 py-1 font-medium ${
-                        property.status === 'Move-In Ready' ? 'bg-green-500' :
-                        property.status === 'Nearly Complete' ? 'bg-blue-500' :
-                        property.status === 'Under Construction' ? 'bg-orange-500' :
-                        'bg-purple-500'
-                      } text-white`}
+        {/* Properties Table */}
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="px-4 py-3 text-left w-10">
+                    <button
+                      onClick={() => {
+                        if (selectedProperties.size === filteredProperties.length) {
+                          setSelectedProperties(new Set())
+                        } else {
+                          setSelectedProperties(new Set(filteredProperties.map(p => p.id)))
+                        }
+                      }}
+                      className="p-0.5 rounded hover:bg-gray-200 transition-colors"
                     >
-                      {property.status}
-                    </Badge>
-                    {property.availability_status && (
-                      <Badge 
-                        className={`text-xs px-2 py-1 font-medium ${
-                          property.availability_status === 'Available' ? 'bg-green-600' :
-                          property.availability_status === 'Under Contract' ? 'bg-yellow-600' :
-                          property.availability_status === 'Coming Soon' ? 'bg-blue-600' :
-                          property.availability_status === 'Sold' ? 'bg-red-600' :
-                          'bg-gray-600'
-                        } text-white`}
-                      >
-                        {property.availability_status}
-                      </Badge>
-                    )}
-                  </div>
-                  <span className="text-xs text-gray-600">{property.completion_date}</span>
-                </div>
-                
-                {/* Features - Simplified */}
-                {property.features.length > 0 && (
-                  <div className="mb-4">
-                    <div className="flex flex-wrap gap-1">
-                      {property.features.slice(0, 2).map((feature, index) => (
-                        <span key={index} className="inline-block text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                          {feature}
-                        </span>
-                      ))}
-                      {property.features.length > 2 && (
-                        <span className="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                          +{property.features.length - 2} more
-                        </span>
+                      {selectedProperties.size === filteredProperties.length && filteredProperties.length > 0 ? (
+                        <CheckSquare className="w-4 h-4 text-blue-600" />
+                      ) : (
+                        <Square className="w-4 h-4 text-gray-400" />
                       )}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Action Buttons */}
-                <div className="flex gap-2 pt-3 border-t border-gray-100">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 h-8 text-xs"
-                    onClick={() => startEdit(property)}
-                  >
-                    <Edit className="w-3 h-3 mr-1" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-8 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => handleDelete(property.id)}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        
-        {/* Empty State */}
-        {filteredProperties.length === 0 && (
-          <div className="text-center py-12">
-            <div className="bg-gray-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-              <Plus className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
-            <p className="text-gray-600 mb-4">Try adjusting your search or filters.</p>
-            <Button onClick={startAddNew} className="bg-red-600 hover:bg-red-700 shadow-lg hover:shadow-xl transition-all duration-200">
-              <Plus className="w-5 h-5 mr-2" />
-              Add Your First Property
-            </Button>
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Property</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Location</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Price</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Completion</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Availability</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {filteredProperties.map((property) => (
+                  <PropertyRow
+                    key={property.id}
+                    property={property}
+                    isSelected={selectedProperties.has(property.id)}
+                    onToggleSelect={() => togglePropertySelection(property.id)}
+                    onEdit={() => startEdit(property)}
+                    onDelete={() => handleDelete(property.id)}
+                    onUpdate={updatePropertyInline}
+                  />
+                ))}
+              </tbody>
+            </table>
+            
+            {filteredProperties.length === 0 && (
+              <div className="text-center py-12 bg-white">
+                <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 text-lg mb-2">No properties found</p>
+                <p className="text-gray-400 text-sm mb-4">Try adjusting your filters or add a new property</p>
+                <Button onClick={() => setShowAddModal(true)} className="bg-red-600 hover:bg-red-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add First Property
+                </Button>
+              </div>
+            )}
           </div>
-        )}
+        </Card>
 
         {/* Bulk Actions Toolbar */}
         {showBulkActions && (
