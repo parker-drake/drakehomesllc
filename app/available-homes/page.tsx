@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-// import Image from "next/image" // Using standard img tags instead due to Next.js Image optimization issues with external URLs
+import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -185,15 +185,18 @@ export default function AvailableHomes() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {properties.map((property) => (
-            <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
+            <Card key={property.id} className="overflow-hidden hover-lift group">
               <div className="relative overflow-hidden">
                 <Link href={`/available-homes/${property.id}`}>
-                  <img
-                    src={property.image || property.main_image || "/placeholder.svg"}
-                    alt={property.title}
-                    className="w-full h-56 object-cover cursor-pointer group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                  />
+                  <div className="relative w-full h-56 cursor-pointer">
+                    <Image
+                      src={property.image || property.main_image || "/placeholder.svg"}
+                      alt={`${property.title} - ${property.beds} bed, ${property.baths} bath, ${property.sqft} sqft home in ${property.location}. ${property.status}. Drake Homes quality construction.`}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
                 </Link>
                 
                 {/* Construction Status Badge - Top Left */}

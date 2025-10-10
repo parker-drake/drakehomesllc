@@ -16,7 +16,7 @@ export const metadata = {
     default: "Drake Homes LLC - Quality Home Construction in Wisconsin",
     template: "%s | Drake Homes LLC"
   },
-  description: "Drake Homes LLC: Wisconsin's trusted custom home builder with 20+ years experience. Quality construction, no shortcuts. Move-in ready & custom homes from $250K. Free consultation: (920) 740-6660",
+  description: "Drake Homes LLC - Wisconsin's trusted custom home builder with 20+ years experience. Quality construction, no shortcuts. Move-in ready homes from $250K. Call (920) 740-6660 for free consultation!",
   keywords: ["home construction", "custom homes", "Wisconsin builder", "Fox Valley construction", "quality homes", "Drake Homes", "residential construction"],
   authors: [{ name: "Drake Homes LLC" }],
   creator: "Drake Homes LLC",
@@ -32,7 +32,7 @@ export const metadata = {
   },
   openGraph: {
     title: "Drake Homes LLC - Quality Home Construction in Wisconsin",
-    description: "Quality construction services with over 20 years of experience. Building custom homes in Wisconsin's Fox Valley area with excellence and reliability.",
+    description: "Wisconsin's trusted custom home builder with 20+ years experience. Move-in ready & custom homes in Fox Valley. Call (920) 740-6660 for free consultation!",
     url: 'https://drakehomesllc.com',
     siteName: 'Drake Homes LLC',
     images: [
@@ -49,7 +49,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: "Drake Homes LLC - Quality Home Construction",
-    description: "Quality construction services with over 20 years of experience in Wisconsin's Fox Valley area.",
+    description: "Wisconsin's trusted builder with 20+ years experience. Call (920) 740-6660 for your free consultation!",
     images: ['/DrakeHomes_Logo.jpg'],
   },
   robots: {
@@ -76,10 +76,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Preconnect to critical domains */}
         <link rel="preconnect" href="https://dkzfcltmpaskscaynfsm.supabase.co" />
         <link rel="preconnect" href="https://fxaowczkvopxnmbkthtv.supabase.co" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://vercel.live" />
+        <link rel="dns-prefetch" href="https://api.emailjs.com" />
+        
+        {/* Preload critical assets */}
+        <link rel="preload" href="/DrakeHomes_Logo.jpg" as="image" type="image/jpeg" />
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>

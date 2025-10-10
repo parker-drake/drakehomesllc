@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
-// import Image from "next/image" // Using standard img tags instead due to Next.js Image optimization issues with external URLs
+import Image from "next/image"
 import { ArrowRight, Award, CheckCircle, Clock, Mail, MapPin, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Script from "next/script"
@@ -98,11 +98,13 @@ export default function Home() {
                   }`}
                 >
                   {(property.image || property.main_image) ? (
-                    <img
+                    <Image
                       src={property.image || property.main_image || "/placeholder.svg"}
-                      alt={property.title}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loading={index === 0 ? "eager" : "lazy"}
+                      alt={`${property.title} - ${property.beds} bedroom, ${property.baths} bath home in ${property.location}. Drake Homes LLC quality construction.`}
+                      fill
+                      className="object-cover"
+                      priority={index === 0}
+                      sizes="100vw"
                     />
                   ) : (
                     <div className="bg-gradient-to-r from-red-600 to-red-800 w-full h-full"></div>
@@ -160,11 +162,11 @@ export default function Home() {
       {/* Welcome Section */}
       <section className="py-16 md:py-24">
         <div className="container px-4 md:px-6">
-          <div className="text-center space-y-6">
+          <div className="text-center space-y-6 animate-fade-in">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter">
               Welcome to Drake Homes LLC
             </h2>
-            <p className="max-w-[900px] text-gray-500 text-lg sm:text-xl md:text-xl leading-relaxed mx-auto px-4">
+            <p className="max-w-[900px] text-gray-500 text-lg sm:text-xl md:text-xl leading-relaxed mx-auto px-4 animate-fade-in animate-delay-200">
               "Where Quality and Value Meet" - Your trusted partner in home construction with over 20 years of experience.
             </p>
           </div>
@@ -179,21 +181,21 @@ export default function Home() {
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Why Choose Drake Homes LLC?</h2>
               <div className="space-y-6">
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 animate-fade-in animate-delay-100">
                   <CheckCircle className="w-6 h-6 text-red-600 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="text-xl font-semibold mb-2">No Shortcuts, Only Quality</h3>
                     <p className="text-gray-600">While others cut corners to boost profits, we increase quality and customer satisfaction.</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 animate-fade-in animate-delay-200">
                   <Clock className="w-6 h-6 text-red-600 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="text-xl font-semibold mb-2">20+ Years Experience</h3>
                     <p className="text-gray-600">Over two decades of real estate and construction experience building homes customers expect.</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 animate-fade-in animate-delay-300">
                   <Award className="w-6 h-6 text-red-600 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="text-xl font-semibold mb-2">Strong Partnerships</h3>

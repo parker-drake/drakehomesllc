@@ -134,8 +134,11 @@ export default function ContactPage() {
                       <MapPin className="w-5 h-5 text-red-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Location</h3>
-                      <p className="text-gray-600">Fox Valley and surrounding areas</p>
+                      <h3 className="font-semibold text-gray-900">Service Area</h3>
+                      <p className="text-gray-600">Fox Valley, WI and surrounding areas</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Proudly serving Appleton, Green Bay, Oshkosh, and nearby communities
+                      </p>
                     </div>
                   </div>
                 </div>

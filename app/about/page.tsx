@@ -19,7 +19,7 @@ import { getBreadcrumbSchema } from "../breadcrumb-schema"
 
 export const metadata: Metadata = {
   title: "About Us - 20+ Years of Quality Home Construction",
-  description: "Learn about Drake Homes LLC's commitment to quality construction in Wisconsin's Fox Valley. Over 20 years of experience building custom homes with no shortcuts, only excellence.",
+  description: "Learn about Drake Homes LLC - 20+ years building quality custom homes in Wisconsin's Fox Valley. No shortcuts, only excellence. Call (920) 740-6660 for your free consultation today!",
   keywords: ["about Drake Homes", "Wisconsin home builder", "Fox Valley construction company", "quality home construction", "custom home builder Wisconsin", "construction experience"],
   openGraph: {
     title: "About Drake Homes LLC - Quality Home Construction in Wisconsin",
