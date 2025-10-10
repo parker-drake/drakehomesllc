@@ -14,38 +14,26 @@ interface Testimonial {
   projectType?: string
 }
 
-// Placeholder testimonials - replace with real customer reviews
+// Real customer testimonials - add your reviews here
 const testimonials: Testimonial[] = [
-  {
-    id: '1',
-    name: 'John & Sarah M.',
-    location: 'Appleton, WI',
-    rating: 5,
-    text: 'Drake Homes exceeded our expectations in every way. The quality of workmanship and attention to detail is outstanding. They built our dream home exactly as we envisioned it, and the whole process was smooth and professional.',
-    date: '2024',
-    projectType: 'Custom Home Build'
-  },
-  {
-    id: '2',
-    name: 'Michael R.',
-    location: 'Green Bay, WI',
-    rating: 5,
-    text: 'After seeing shortcuts taken by other builders, we chose Drake Homes for their commitment to quality. Best decision we made! Our home is beautiful and built to last. The team was fantastic to work with.',
-    date: '2024',
-    projectType: 'Semi-Custom Home'
-  },
-  {
-    id: '3',
-    name: 'Jennifer K.',
-    location: 'Oshkosh, WI',
-    rating: 5,
-    text: 'The Drake Homes team made our home building experience stress-free. They were responsive, professional, and went above and beyond. The quality of our home is exceptional - you can really see where quality and value meet!',
-    date: '2023',
-    projectType: 'Move-In Ready Home'
-  }
+  // Add your real testimonials here in this format:
+  // {
+  //   id: '1',
+  //   name: 'Customer Name',
+  //   location: 'City, WI',
+  //   rating: 5,
+  //   text: 'Their review text here...',
+  //   date: '2024',
+  //   projectType: 'Custom Home Build'
+  // },
 ]
 
 export function TestimonialsSection() {
+  // Don't display section if no testimonials
+  if (testimonials.length === 0) {
+    return null
+  }
+
   return (
     <section className="py-16 md:py-24 bg-white">
       <div className="container px-4 md:px-6">
