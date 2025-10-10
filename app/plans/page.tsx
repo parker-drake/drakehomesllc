@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
+// import Image from "next/image" // Using standard img tags for Supabase external URLs
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -172,11 +172,11 @@ export default function PlansPage() {
                       )}
                       
                       {plan.main_image ? (
-                        <Image
+                        <img
                           src={plan.main_image}
-                          alt={plan.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          alt={`${plan.title} - ${plan.bedrooms} bed, ${plan.bathrooms} bath, ${plan.square_footage?.toLocaleString()} sqft ${plan.style} floor plan. Starting at $${plan.price?.toLocaleString()}.`}
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
