@@ -84,11 +84,12 @@ export default function Home() {
       />
       {/* Hero Section with Background Image Slider */}
       <section className="relative w-full py-16 md:py-24 lg:py-32 xl:py-48 min-h-[60vh] md:min-h-[70vh] flex items-center overflow-hidden">
-        {/* Background Image Slider */}
+        {/* Static Background - Loads Instantly for Fast LCP */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-r from-red-600 to-red-800"></div>
+        
+        {/* Background Image Slider - Fades in after loading */}
         <div className="absolute inset-0 z-0">
-          {loading ? (
-            <div className="bg-gradient-to-r from-red-600 to-red-800 w-full h-full opacity-90"></div>
-          ) : properties.length > 0 ? (
+          {!loading && properties.length > 0 ? (
             <>
               {/* Background Images */}
               {properties.slice(0, 4).map((property, index) => (
@@ -104,10 +105,9 @@ export default function Home() {
                       alt={`${property.title} - ${property.beds} bedroom, ${property.baths} bath home in ${property.location}. Drake Homes LLC quality construction.`}
                       className="absolute inset-0 w-full h-full object-cover"
                       loading={index === 0 ? "eager" : "lazy"}
+                      fetchPriority={index === 0 ? "high" : "low"}
                     />
-                  ) : (
-                    <div className="bg-gradient-to-r from-red-600 to-red-800 w-full h-full"></div>
-                  )}
+                  ) : null}
                   <div className="absolute inset-0 bg-black bg-opacity-50"></div>
                 </div>
               ))}
@@ -128,14 +128,12 @@ export default function Home() {
                 </div>
               </div>
             </>
-          ) : (
-            <div className="bg-gradient-to-r from-red-600 to-red-800 w-full h-full opacity-90"></div>
-          )}
+          ) : null}
         </div>
 
         <div className="container relative z-10 px-4 md:px-6 w-full">
           <div className="flex flex-col items-start gap-6 text-white md:gap-8 md:max-w-[60%]">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter leading-tight animate-fade-in">
               Building Your Dreams From The Ground Up
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl text-gray-200 leading-relaxed max-w-2xl">
