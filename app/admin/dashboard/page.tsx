@@ -454,6 +454,12 @@ export default function AdminDashboard() {
                     </Link>
                   </Button>
                   <Button variant="outline" asChild className="w-full justify-start">
+                    <Link href="/admin/testimonials">
+                      <Quote className="w-4 h-4 mr-2" />
+                      Manage Testimonials
+                    </Link>
+                  </Button>
+                  <Button variant="outline" asChild className="w-full justify-start">
                     <Link href="/admin/property-flyers">
                       <FileText className="w-4 h-4 mr-2" />
                       Property Flyers
