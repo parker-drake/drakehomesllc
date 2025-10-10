@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon, Star, StarOff, ArrowLeft, Search, Filter, SlidersHorizontal, RotateCcw, Check, CheckSquare, Square, Users, Edit2, Trash, MapPin, Bed, Bath, Home } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { v4 as uuidv4 } from "uuid"
+import { BulkImageUpload } from "@/components/ui/bulk-image-upload"
 
 interface PropertyImage {
   id: string
@@ -1539,102 +1540,80 @@ export default function AdminProperties() {
                 <label className="text-sm font-medium mb-4 block">Property Images</label>
                 
                 {editingProperty ? (
-                  // Existing property - show gallery management
+                  // Existing property - show enhanced bulk upload
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => document.getElementById('image-upload')?.click()}
-                          disabled={uploading}
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          {uploading ? 'Uploading...' : 'Upload Images'}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => document.getElementById('single-image-upload')?.click()}
-                          disabled={uploading}
-                        >
-                          <ImageIcon className="w-4 h-4 mr-2" />
-                          Single Image
-                        </Button>
-                      </div>
-                      <p className="text-sm text-gray-500 mt-3">
-                        Upload multiple images at once • PNG, JPG, GIF up to 5MB each
-                      </p>
-                      
-                      {/* Upload Progress */}
-                      {Object.keys(uploadProgress).length > 0 && (
-                        <div className="mt-4 space-y-2">
-                          <p className="text-sm font-medium text-gray-700">Upload Progress:</p>
-                          {Object.entries(uploadProgress).map(([fileId, progress]) => {
-                            const fileName = fileId.split('-')[0]
-                            return (
-                              <div key={fileId} className="flex items-center gap-2 text-sm">
-                                <span className="truncate max-w-[200px]">{fileName}</span>
-                                {progress === -1 ? (
-                                  <span className="text-red-500">Failed</span>
-                                ) : progress === 100 ? (
-                                  <span className="text-green-500">Complete</span>
-                                ) : (
-                                  <span className="text-blue-500">Uploading...</span>
+                    {/* Enhanced Bulk Upload Component */}
+                    <BulkImageUpload
+                      maxFiles={50}
+                      maxSizeMB={5}
+                      existingImages={propertyImages.map(img => ({
+                        url: img.image_url,
+                        isMain: img.is_main,
+                        altText: img.alt_text
+                      }))}
+                      onUploadComplete={async (images) => {
+                        // Add uploaded images to database
+                        for (const image of images) {
+                          await addPropertyImage(image.url, image.isMain)
+                        }
+                        // Refresh the property images
+                        await fetchPropertyImages(editingProperty.id)
+                      }}
+                      onUploadError={(error) => {
+                        console.error('Upload error:', error)
+                        alert(error)
+                      }}
+                    />
+
+                    {/* Existing Images Gallery */}
+                    {propertyImages.length > 0 && (
+                      <div className="mt-6">
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="text-sm font-medium text-gray-700">
+                            Existing Images ({propertyImages.length})
+                          </h3>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          {propertyImages.map((image, index) => (
+                            <div key={image.id} className="relative group">
+                              <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
+                                <img
+                                  src={image.image_url}
+                                  alt={image.alt_text || `Property image ${index + 1}`}
+                                  className="absolute inset-0 w-full h-full object-cover"
+                                />
+                                {image.is_main && (
+                                  <div className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs font-medium">
+                                    Main Image
+                                  </div>
                                 )}
                               </div>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Images Gallery */}
-                    {propertyImages.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {propertyImages.map((image, index) => (
-                          <div key={image.id} className="relative group">
-                            <div className="relative aspect-square rounded-lg overflow-hidden">
-                              <img
-                                src={image.image_url}
-                                alt={image.alt_text || `Property image ${index + 1}`}
-                                className="absolute inset-0 w-full h-full object-cover"
-                              />
-                              {image.is_main && (
-                                <div className="absolute top-2 left-2 bg-yellow-500 text-white p-1 rounded">
-                                  <Star className="w-4 h-4" />
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="bg-white text-black hover:bg-gray-100"
+                                    onClick={() => setMainImage(image.id)}
+                                    disabled={image.is_main}
+                                    title={image.is_main ? "Already main image" : "Set as main image"}
+                                  >
+                                    {image.is_main ? <Star className="w-4 h-4 fill-yellow-500" /> : <StarOff className="w-4 h-4" />}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="bg-white text-red-600 hover:bg-red-50"
+                                    onClick={() => deletePropertyImage(image.id)}
+                                    title="Delete image"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
                                 </div>
-                              )}
-                              {image.id.startsWith('main-') && (
-                                <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                                  Legacy
-                                </div>
-                              )}
-                            </div>
-                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="bg-white text-black hover:bg-gray-100"
-                                  onClick={() => setMainImage(image.id)}
-                                  disabled={image.is_main}
-                                >
-                                  {image.is_main ? <Star className="w-4 h-4" /> : <StarOff className="w-4 h-4" />}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="bg-white text-red-600 hover:bg-red-50"
-                                  onClick={() => deletePropertyImage(image.id)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
