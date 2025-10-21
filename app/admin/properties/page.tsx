@@ -926,28 +926,43 @@ export default function AdminProperties() {
   }
 
   const addPropertyImage = async (imageUrl: string, isMain: boolean = false) => {
+    console.log('addPropertyImage called with:', { imageUrl, isMain, editingPropertyId: editingProperty?.id })
+    
     if (!editingProperty?.id) {
+      console.error('No editingProperty.id - cannot add image')
       alert('Please save the property first before adding images')
       return
     }
 
     try {
+      console.log('Attempting to insert into property_images table...')
+      const insertData = {
+        property_id: editingProperty.id,
+        image_url: imageUrl,
+        is_main: isMain,
+        display_order: propertyImages.length,
+        alt_text: formData.title
+      }
+      console.log('Insert data:', insertData)
+      
       const { data, error } = await supabase
         .from('property_images')
-        .insert({
-          property_id: editingProperty.id,
-          image_url: imageUrl,
-          is_main: isMain,
-          display_order: propertyImages.length,
-          alt_text: formData.title
-        })
+        .insert(insertData)
         .select()
         .single()
 
-      if (error) throw error
+      console.log('Insert response:', { data, error })
+
+      if (error) {
+        console.error('Database insert error:', error)
+        throw error
+      }
+
+      console.log('Successfully inserted image:', data)
 
       // If this is marked as main, also update the properties table
       if (isMain) {
+        console.log('Updating main_image in properties table...')
         const { error: updateError } = await supabase
           .from('properties')
           .update({ main_image: imageUrl })
@@ -958,11 +973,14 @@ export default function AdminProperties() {
         }
       }
 
+      console.log('Fetching updated property images...')
       await fetchPropertyImages(editingProperty.id)
       await fetchProperties() // Refresh the properties list
+      console.log('Property images fetch complete')
     } catch (error) {
       console.error('Error adding property image:', error)
-      alert('Error adding image to property')
+      alert('Error adding image to property: ' + (error as any).message)
+      throw error
     }
   }
 
@@ -1793,12 +1811,24 @@ export default function AdminProperties() {
                         altText: img.alt_text
                       }))}
                       onUploadComplete={async (images) => {
+                        console.log('BulkImageUpload onUploadComplete called with:', images)
+                        console.log('Current editingProperty:', editingProperty)
+                        
                         // Add uploaded images to database
                         for (const image of images) {
-                          await addPropertyImage(image.url, image.isMain)
+                          console.log('Adding image to database:', image.url)
+                          try {
+                            await addPropertyImage(image.url, image.isMain)
+                            console.log('Successfully added image:', image.url)
+                          } catch (error) {
+                            console.error('Failed to add image:', image.url, error)
+                          }
                         }
+                        
                         // Refresh the property images
+                        console.log('Refreshing property images for:', editingProperty.id)
                         await fetchPropertyImages(editingProperty.id)
+                        console.log('Property images refreshed')
                       }}
                       onUploadError={(error) => {
                         console.error('Upload error:', error)
