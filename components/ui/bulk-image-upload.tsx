@@ -173,18 +173,35 @@ export function BulkImageUpload({
         })
 
         xhr.addEventListener('load', async () => {
+          console.log(`[BulkImageUpload] XHR load event for ${image.file.name}:`, {
+            status: xhr.status,
+            statusText: xhr.statusText,
+            responseText: xhr.responseText.substring(0, 200)
+          })
+          
           if (xhr.status === 200) {
-            const result = JSON.parse(xhr.responseText)
-            setImages(prev => prev.map(img => 
-              img.id === image.id 
-                ? { ...img, status: 'success', progress: 100, url: result.url } 
-                : img
-            ))
-            resolve()
+            try {
+              const result = JSON.parse(xhr.responseText)
+              console.log(`[BulkImageUpload] Upload SUCCESS for ${image.file.name}:`, result)
+              setImages(prev => prev.map(img => 
+                img.id === image.id 
+                  ? { ...img, status: 'success', progress: 100, url: result.url } 
+                  : img
+              ))
+              resolve()
+            } catch (parseError) {
+              console.error(`[BulkImageUpload] Failed to parse response for ${image.file.name}:`, parseError)
+              setImages(prev => prev.map(img => 
+                img.id === image.id 
+                  ? { ...img, status: 'error', error: 'Invalid response from server' } 
+                  : img
+              ))
+              reject('Invalid response from server')
+            }
           } else if (xhr.status === 429 && retryCount < 3) {
             // Rate limited - retry with exponential backoff
             const delay = Math.pow(2, retryCount) * 1000 // 1s, 2s, 4s
-            console.log(`Rate limited, retrying in ${delay}ms (attempt ${retryCount + 1}/3)`)
+            console.log(`[BulkImageUpload] Rate limited for ${image.file.name}, retrying in ${delay}ms (attempt ${retryCount + 1}/3)`)
             setImages(prev => prev.map(img => 
               img.id === image.id 
                 ? { ...img, status: 'pending', progress: 0, error: `Rate limited, retrying in ${delay/1000}s...` } 
@@ -199,7 +216,18 @@ export function BulkImageUpload({
               }
             }, delay)
           } else {
-            const error = JSON.parse(xhr.responseText).error || 'Upload failed'
+            console.error(`[BulkImageUpload] Upload FAILED for ${image.file.name}:`, {
+              status: xhr.status,
+              statusText: xhr.statusText,
+              response: xhr.responseText
+            })
+            let error = 'Upload failed'
+            try {
+              const errorData = JSON.parse(xhr.responseText)
+              error = errorData.error || error
+            } catch (e) {
+              error = `Upload failed (${xhr.status}): ${xhr.statusText}`
+            }
             setImages(prev => prev.map(img => 
               img.id === image.id 
                 ? { ...img, status: 'error', error } 
