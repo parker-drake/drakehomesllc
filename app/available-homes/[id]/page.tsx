@@ -26,8 +26,8 @@ export async function generateStaticParams() {
   })) || []
 }
 
-// Revalidate property pages every 60 seconds
-export const revalidate = 60
+// Revalidate property pages every 10 seconds for faster updates
+export const revalidate = 10
 
 export default async function PropertyPage({ params }: PropertyPageProps) {
   // Fetch property data
