@@ -148,6 +148,8 @@ export function BulkImageUpload({
   const uploadSingleImage = async (image: UploadedImage, retryCount = 0): Promise<void> => {
     return new Promise(async (resolve, reject) => {
       try {
+        console.log(`[BulkImageUpload] Starting upload for: ${image.file.name}`)
+        
         setImages(prev => prev.map(img => 
           img.id === image.id ? { ...img, status: 'uploading', progress: 0 } : img
         ))
@@ -156,6 +158,8 @@ export function BulkImageUpload({
         formData.append('file', image.file)
         formData.append('type', 'image')
         formData.append('context', uploadContext)
+        
+        console.log(`[BulkImageUpload] Upload context: ${uploadContext}`)
 
         const xhr = new XMLHttpRequest()
 
@@ -232,7 +236,12 @@ export function BulkImageUpload({
   const uploadAllImages = async () => {
     const pendingImages = images.filter(img => img.status === 'pending')
     
+    console.log('[BulkImageUpload] uploadAllImages called')
+    console.log('[BulkImageUpload] Total images:', images.length)
+    console.log('[BulkImageUpload] Pending images:', pendingImages.length)
+    
     if (pendingImages.length === 0) {
+      console.warn('[BulkImageUpload] No images to upload')
       onUploadError?.('No images to upload')
       return
     }
@@ -246,12 +255,16 @@ export function BulkImageUpload({
       batches.push(pendingImages.slice(i, i + batchSize))
     }
 
+    console.log(`[BulkImageUpload] Created ${batches.length} batches of max ${batchSize} images each`)
+
     try {
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i]
-        console.log(`Uploading batch ${i + 1}/${batches.length} (${batch.length} images)`)
+        console.log(`[BulkImageUpload] Uploading batch ${i + 1}/${batches.length} (${batch.length} images)`)
         
         await Promise.all(batch.map(image => uploadSingleImage(image)))
+        
+        console.log(`[BulkImageUpload] Batch ${i + 1} complete`)
         
         // Small delay between batches to avoid rate limiting
         if (i < batches.length - 1) {
@@ -259,6 +272,8 @@ export function BulkImageUpload({
         }
       }
 
+      console.log('[BulkImageUpload] All batches complete, checking for successful uploads...')
+      
       // Get all successfully uploaded images
       const successfulImages = images
         .filter(img => img.status === 'success' && img.url)
@@ -269,16 +284,26 @@ export function BulkImageUpload({
           altText: img.altText
         }))
 
+      console.log(`[BulkImageUpload] Successfully uploaded ${successfulImages.length} images`)
+      console.log('[BulkImageUpload] Successful images:', successfulImages)
+
       if (successfulImages.length > 0) {
-        onUploadComplete(successfulImages)
+        console.log('[BulkImageUpload] Calling onUploadComplete with successful images')
+        await onUploadComplete(successfulImages)
+        console.log('[BulkImageUpload] onUploadComplete callback finished')
+        
         // Clear successfully uploaded images
         setImages(prev => prev.filter(img => img.status !== 'success'))
+        console.log('[BulkImageUpload] Cleared successful images from UI')
+      } else {
+        console.warn('[BulkImageUpload] No successful uploads to report')
       }
     } catch (error) {
-      console.error('Upload error:', error)
+      console.error('[BulkImageUpload] Upload error:', error)
       onUploadError?.('Some uploads failed. Please retry failed images.')
     } finally {
       setIsUploading(false)
+      console.log('[BulkImageUpload] Upload process complete, isUploading set to false')
     }
   }
 
