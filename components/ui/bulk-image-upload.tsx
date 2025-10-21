@@ -145,7 +145,7 @@ export function BulkImageUpload({
     ))
   }
 
-  const uploadSingleImage = async (image: UploadedImage, retryCount = 0): Promise<void> => {
+  const uploadSingleImage = async (image: UploadedImage, retryCount = 0): Promise<{url: string, fileName: string, isMain: boolean, altText?: string} | null> => {
     return new Promise(async (resolve, reject) => {
       try {
         console.log(`[BulkImageUpload] Starting upload for: ${image.file.name}`)
@@ -188,7 +188,13 @@ export function BulkImageUpload({
                   ? { ...img, status: 'success', progress: 100, url: result.url } 
                   : img
               ))
-              resolve()
+              // Return the upload result
+              resolve({
+                url: result.url,
+                fileName: image.file.name,
+                isMain: image.isMain || false,
+                altText: image.altText
+              })
             } catch (parseError) {
               console.error(`[BulkImageUpload] Failed to parse response for ${image.file.name}:`, parseError)
               setImages(prev => prev.map(img => 
@@ -209,8 +215,8 @@ export function BulkImageUpload({
             ))
             setTimeout(async () => {
               try {
-                await uploadSingleImage(image, retryCount + 1)
-                resolve()
+                const result = await uploadSingleImage(image, retryCount + 1)
+                resolve(result)
               } catch (err) {
                 reject(err)
               }
@@ -285,14 +291,27 @@ export function BulkImageUpload({
 
     console.log(`[BulkImageUpload] Created ${batches.length} batches of max ${batchSize} images each`)
 
+    const allSuccessfulUploads: Array<{url: string, fileName: string, isMain: boolean, altText?: string}> = []
+
     try {
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i]
         console.log(`[BulkImageUpload] Uploading batch ${i + 1}/${batches.length} (${batch.length} images)`)
         
-        await Promise.all(batch.map(image => uploadSingleImage(image)))
+        // Collect results from Promise.allSettled to handle partial failures
+        const results = await Promise.allSettled(batch.map(image => uploadSingleImage(image)))
         
-        console.log(`[BulkImageUpload] Batch ${i + 1} complete`)
+        // Extract successful uploads
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled' && result.value) {
+            allSuccessfulUploads.push(result.value)
+            console.log(`[BulkImageUpload] Added successful upload: ${result.value.fileName}`)
+          } else if (result.status === 'rejected') {
+            console.error(`[BulkImageUpload] Upload rejected:`, result.reason)
+          }
+        })
+        
+        console.log(`[BulkImageUpload] Batch ${i + 1} complete - ${allSuccessfulUploads.length} successful so far`)
         
         // Small delay between batches to avoid rate limiting
         if (i < batches.length - 1) {
@@ -301,30 +320,20 @@ export function BulkImageUpload({
       }
 
       console.log('[BulkImageUpload] All batches complete, checking for successful uploads...')
-      
-      // Get all successfully uploaded images
-      const successfulImages = images
-        .filter(img => img.status === 'success' && img.url)
-        .map(img => ({
-          url: img.url!,
-          fileName: img.file.name,
-          isMain: img.isMain || false,
-          altText: img.altText
-        }))
+      console.log(`[BulkImageUpload] Successfully uploaded ${allSuccessfulUploads.length} images`)
+      console.log('[BulkImageUpload] Successful images:', allSuccessfulUploads)
 
-      console.log(`[BulkImageUpload] Successfully uploaded ${successfulImages.length} images`)
-      console.log('[BulkImageUpload] Successful images:', successfulImages)
-
-      if (successfulImages.length > 0) {
+      if (allSuccessfulUploads.length > 0) {
         console.log('[BulkImageUpload] Calling onUploadComplete with successful images')
-        await onUploadComplete(successfulImages)
+        await onUploadComplete(allSuccessfulUploads)
         console.log('[BulkImageUpload] onUploadComplete callback finished')
         
-        // Clear successfully uploaded images
+        // Clear successfully uploaded images from UI
         setImages(prev => prev.filter(img => img.status !== 'success'))
         console.log('[BulkImageUpload] Cleared successful images from UI')
       } else {
         console.warn('[BulkImageUpload] No successful uploads to report')
+        onUploadError?.('All uploads failed. Please try again.')
       }
     } catch (error) {
       console.error('[BulkImageUpload] Upload error:', error)
