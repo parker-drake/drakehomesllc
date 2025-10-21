@@ -1786,6 +1786,7 @@ export default function AdminProperties() {
                     <BulkImageUpload
                       maxFiles={50}
                       maxSizeMB={5}
+                      uploadContext="property"
                       existingImages={propertyImages.map(img => ({
                         url: img.image_url,
                         isMain: img.is_main,

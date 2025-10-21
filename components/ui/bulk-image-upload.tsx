@@ -24,6 +24,7 @@ interface BulkImageUploadProps {
   maxSizeMB?: number
   className?: string
   existingImages?: Array<{ url: string; isMain: boolean; altText?: string }>
+  uploadContext?: 'plan' | 'property' // Determines the storage path
 }
 
 export function BulkImageUpload({
@@ -32,7 +33,8 @@ export function BulkImageUpload({
   maxFiles = 50,
   maxSizeMB = 5,
   className = '',
-  existingImages = []
+  existingImages = [],
+  uploadContext = 'plan'
 }: BulkImageUploadProps) {
   const [images, setImages] = useState<UploadedImage[]>([])
   const [dragActive, setDragActive] = useState(false)
@@ -143,7 +145,7 @@ export function BulkImageUpload({
     ))
   }
 
-  const uploadSingleImage = async (image: UploadedImage): Promise<void> => {
+  const uploadSingleImage = async (image: UploadedImage, retryCount = 0): Promise<void> => {
     return new Promise(async (resolve, reject) => {
       try {
         setImages(prev => prev.map(img => 
@@ -153,6 +155,7 @@ export function BulkImageUpload({
         const formData = new FormData()
         formData.append('file', image.file)
         formData.append('type', 'image')
+        formData.append('context', uploadContext)
 
         const xhr = new XMLHttpRequest()
 
@@ -165,7 +168,7 @@ export function BulkImageUpload({
           }
         })
 
-        xhr.addEventListener('load', () => {
+        xhr.addEventListener('load', async () => {
           if (xhr.status === 200) {
             const result = JSON.parse(xhr.responseText)
             setImages(prev => prev.map(img => 
@@ -174,6 +177,23 @@ export function BulkImageUpload({
                 : img
             ))
             resolve()
+          } else if (xhr.status === 429 && retryCount < 3) {
+            // Rate limited - retry with exponential backoff
+            const delay = Math.pow(2, retryCount) * 1000 // 1s, 2s, 4s
+            console.log(`Rate limited, retrying in ${delay}ms (attempt ${retryCount + 1}/3)`)
+            setImages(prev => prev.map(img => 
+              img.id === image.id 
+                ? { ...img, status: 'pending', progress: 0, error: `Rate limited, retrying in ${delay/1000}s...` } 
+                : img
+            ))
+            setTimeout(async () => {
+              try {
+                await uploadSingleImage(image, retryCount + 1)
+                resolve()
+              } catch (err) {
+                reject(err)
+              }
+            }, delay)
           } else {
             const error = JSON.parse(xhr.responseText).error || 'Upload failed'
             setImages(prev => prev.map(img => 
@@ -219,16 +239,24 @@ export function BulkImageUpload({
 
     setIsUploading(true)
 
-    // Upload in batches of 5 for better performance
-    const batchSize = 5
+    // Upload in smaller batches with delays to avoid rate limiting
+    const batchSize = 3 // Reduced batch size for more reliable uploads
     const batches = []
     for (let i = 0; i < pendingImages.length; i += batchSize) {
       batches.push(pendingImages.slice(i, i + batchSize))
     }
 
     try {
-      for (const batch of batches) {
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i]
+        console.log(`Uploading batch ${i + 1}/${batches.length} (${batch.length} images)`)
+        
         await Promise.all(batch.map(image => uploadSingleImage(image)))
+        
+        // Small delay between batches to avoid rate limiting
+        if (i < batches.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
       }
 
       // Get all successfully uploaded images
@@ -247,6 +275,7 @@ export function BulkImageUpload({
         setImages(prev => prev.filter(img => img.status !== 'success'))
       }
     } catch (error) {
+      console.error('Upload error:', error)
       onUploadError?.('Some uploads failed. Please retry failed images.')
     } finally {
       setIsUploading(false)

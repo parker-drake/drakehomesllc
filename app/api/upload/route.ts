@@ -14,7 +14,7 @@ function isRateLimited(ip: string): boolean {
     return false
   }
   
-  if (attempts.count >= 10) { // Max 10 uploads per minute
+  if (attempts.count >= 100) { // Max 100 uploads per minute (increased for bulk uploads)
     return true
   }
   
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const clientIP = getClientIP(request)
     if (isRateLimited(clientIP)) {
       return NextResponse.json(
-        { error: 'Too many upload attempts. Please try again later.' },
+        { error: 'Too many upload attempts. Please try again in a moment.' },
         { status: 429 }
       )
     }
@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File
     const fileType = formData.get('type') as string // 'image' or 'document'
+    const uploadContext = formData.get('context') as string || 'plan' // 'plan' or 'property'
     
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -94,8 +95,13 @@ export async function POST(request: NextRequest) {
     const sanitizedExtension = fileExtension?.replace(/[^a-zA-Z0-9]/g, '')
     const fileName = `${timestamp}_${randomString}.${sanitizedExtension}`
     
-    // Determine storage bucket path
-    const bucketPath = fileType === 'image' ? `plan-images/${fileName}` : `plan-documents/${fileName}`
+    // Determine storage bucket path based on context
+    let bucketPath: string
+    if (fileType === 'image') {
+      bucketPath = uploadContext === 'property' ? `property-images/${fileName}` : `plan-images/${fileName}`
+    } else {
+      bucketPath = uploadContext === 'property' ? `property-documents/${fileName}` : `plan-documents/${fileName}`
+    }
     
     // Convert file to buffer
     const bytes = await file.arrayBuffer()
