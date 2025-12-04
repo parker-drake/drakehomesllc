@@ -95,16 +95,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'monthly' as const,
         priority: 0.7,
       }))
-      
-      // Add plan configuration pages
-      plans.forEach((plan) => {
-        planPages.push({
-          url: formatUrl(`${baseUrl}/plans/${plan.id}/configure`),
-          lastModified: new Date(plan.updated_at),
-          changeFrequency: 'monthly' as const,
-          priority: 0.6,
-        })
-      })
+      // Note: /configure pages are excluded - they're interactive tools, not content
     }
   } catch (error) {
     console.error('Error fetching plans for sitemap:', error)
@@ -130,5 +121,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching lots for sitemap:', error)
   }
 
-  return [...staticPages, ...propertyPages, ...planPages, ...lotPages]
+  // Fetch gallery pages (only galleries with images)
+  let galleryPages: MetadataRoute.Sitemap = []
+  try {
+    const { data: galleries, error } = await supabaseAdmin
+      .from('galleries')
+      .select('slug, updated_at, image_count')
+      .gt('image_count', 0)
+      .order('created_at', { ascending: false })
+
+    if (!error && galleries) {
+      galleryPages = galleries.map((gallery) => ({
+        url: formatUrl(`${baseUrl}/gallery/${gallery.slug}`),
+        lastModified: new Date(gallery.updated_at),
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
+      }))
+    }
+  } catch (error) {
+    console.error('Error fetching galleries for sitemap:', error)
+  }
+
+  return [...staticPages, ...propertyPages, ...planPages, ...lotPages, ...galleryPages]
 } 

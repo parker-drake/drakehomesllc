@@ -19,6 +19,7 @@ export default function robots(): MetadataRoute.Robots {
           '/plans/*',
           '/gallery',
           '/gallery/*',
+          '/testimonials',
           '/_next/static/',
           '/*.css$',
           '/*.js$',
@@ -35,6 +36,7 @@ export default function robots(): MetadataRoute.Robots {
           '/_next/image*',
           '/test-image',
           '/debug-image',
+          '/plans/*/configure',  // Interactive tool, not content
         ],
       },
       {
