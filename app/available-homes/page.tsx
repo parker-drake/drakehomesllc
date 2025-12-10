@@ -46,6 +46,7 @@ export default function AvailableHomes() {
   const [bathroomsFilter, setBathroomsFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const [sortBy, setSortBy] = useState('availability')
 
   useEffect(() => {
     fetchProperties()
@@ -54,7 +55,7 @@ export default function AvailableHomes() {
   // Apply filters whenever search/filter criteria change
   useEffect(() => {
     applyFilters()
-  }, [properties, searchTerm, minPrice, maxPrice, bedroomsFilter, bathroomsFilter, statusFilter])
+  }, [properties, searchTerm, minPrice, maxPrice, bedroomsFilter, bathroomsFilter, statusFilter, sortBy])
 
   const fetchProperties = async () => {
     try {
@@ -123,19 +124,48 @@ export default function AvailableHomes() {
       filtered = filtered.filter(p => p.status === statusFilter)
     }
 
-    // Sort by availability: Available first, then Under Contract, Coming Soon, then Sold last
-    const availabilityOrder: { [key: string]: number } = {
-      'Available': 1,
-      'Under Contract': 2,
-      'Coming Soon': 3,
-      'Sold': 4
+    // Apply sorting based on sortBy state
+    switch (sortBy) {
+      case 'price-low':
+        filtered.sort((a, b) => {
+          const priceA = parseFloat(a.price.replace(/[$,]/g, '')) || 0
+          const priceB = parseFloat(b.price.replace(/[$,]/g, '')) || 0
+          return priceA - priceB
+        })
+        break
+      case 'price-high':
+        filtered.sort((a, b) => {
+          const priceA = parseFloat(a.price.replace(/[$,]/g, '')) || 0
+          const priceB = parseFloat(b.price.replace(/[$,]/g, '')) || 0
+          return priceB - priceA
+        })
+        break
+      case 'completion':
+        filtered.sort((a, b) => {
+          const dateA = new Date(a.completion_date).getTime()
+          const dateB = new Date(b.completion_date).getTime()
+          return dateA - dateB
+        })
+        break
+      case 'bedrooms':
+        filtered.sort((a, b) => b.beds - a.beds)
+        break
+      case 'availability':
+      default:
+        // Sort by availability: Available first, then Under Contract, Coming Soon, then Sold last
+        const availabilityOrder: { [key: string]: number } = {
+          'Available': 1,
+          'Under Contract': 2,
+          'Coming Soon': 3,
+          'Sold': 4
+        }
+        filtered.sort((a, b) => {
+          const orderA = availabilityOrder[a.availability_status || 'Available'] || 5
+          const orderB = availabilityOrder[b.availability_status || 'Available'] || 5
+          return orderA - orderB
+        })
+        break
     }
-    
-    filtered.sort((a, b) => {
-      const orderA = availabilityOrder[a.availability_status || 'Available'] || 5
-      const orderB = availabilityOrder[b.availability_status || 'Available'] || 5
-      return orderA - orderB
-    })
 
     setFilteredProperties(filtered)
   }
@@ -147,6 +177,7 @@ export default function AvailableHomes() {
     setBedroomsFilter('')
     setBathroomsFilter('')
     setStatusFilter('')
+    setSortBy('availability')
   }
 
   const toggleFavorite = (id: string) => {
@@ -395,11 +426,12 @@ export default function AvailableHomes() {
               )}
             </p>
           </div>
-          <Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-full sm:w-48 h-12">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="availability">Availability</SelectItem>
               <SelectItem value="price-low">Price: Low to High</SelectItem>
               <SelectItem value="price-high">Price: High to Low</SelectItem>
               <SelectItem value="completion">Completion Date</SelectItem>

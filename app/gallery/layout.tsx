@@ -3,7 +3,7 @@ import { generateCanonicalUrl, generateMetaTags } from '@/lib/seo-utils'
 
 export function generateMetadata(): Metadata {
   return generateMetaTags({
-    title: 'Project Gallery | Drake Homes LLC',
+    title: 'Project Gallery',
     description: 'Browse our portfolio of completed homes showcasing quality construction, custom features, and attention to detail in Wisconsin\'s Fox Valley area.',
     canonical: generateCanonicalUrl('/gallery'),
     ogImage: '/DrakeHomes_Logo.jpg',

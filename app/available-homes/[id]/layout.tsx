@@ -29,13 +29,13 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
     if (error || !property) {
       return {
-        title: "Property Not Found | Drake Homes LLC",
+        title: "Property Not Found",
         description: "This property listing is no longer available.",
       }
     }
 
     // Create SEO-friendly title with address
-    const title = `${property.location} - ${property.beds} Bed ${property.baths} Bath Home | Drake Homes LLC`
+    const title = `${property.location} - ${property.beds} Bed ${property.baths} Bath Home`
     
     // Create detailed description with key property features
     const description = `${property.location} - ${property.description.slice(0, 120)}... ${property.beds} bedrooms, ${property.baths} bathrooms, ${property.sqft} sq ft. ${property.status}. Call (920) 740-6660 for details.`
@@ -98,7 +98,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   } catch (error) {
     console.error("Error generating metadata:", error)
     return {
-      title: "Property Details | Drake Homes LLC",
+      title: "Property Details",
       description: "View property details from Drake Homes LLC in Wisconsin's Fox Valley area.",
     }
   }

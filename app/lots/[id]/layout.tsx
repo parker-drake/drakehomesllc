@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
     if (error || !lot) {
       return {
-        title: 'Lot Not Found | Drake Homes LLC',
+        title: 'Lot Not Found',
         description: 'This lot listing is no longer available.',
         robots: 'noindex, nofollow',
       }
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   } catch (error) {
     console.error('Error generating lot metadata:', error)
     return {
-      title: 'Lot Details | Drake Homes LLC',
+      title: 'Lot Details',
       description: 'View available building lots in Wisconsin\'s Fox Valley area.',
     }
   }

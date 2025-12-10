@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
     if (error || !galleries) {
       return {
-        title: "Gallery Not Found | Drake Homes LLC",
+        title: "Gallery Not Found",
         description: "This gallery is no longer available.",
         robots: "noindex, nofollow",
       }
@@ -21,13 +21,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
     if (!gallery) {
       return {
-        title: "Gallery Not Found | Drake Homes LLC",
+        title: "Gallery Not Found",
         description: "This gallery is no longer available.",
         robots: "noindex, nofollow",
       }
     }
 
-    const title = `${gallery.name} - Project Gallery | Drake Homes LLC`
+    const title = `${gallery.name} - Project Gallery`
     const description = gallery.description 
       ? `${gallery.description.slice(0, 140)}... View photos from Drake Homes LLC.`
       : `View photos from ${gallery.name} by Drake Homes LLC. Quality custom home construction in Wisconsin's Fox Valley area.`
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   } catch (error) {
     console.error("Error generating gallery metadata:", error)
     return {
-      title: "Project Gallery | Drake Homes LLC",
+      title: "Project Gallery",
       description: "View project photos from Drake Homes LLC in Wisconsin's Fox Valley area.",
     }
   }

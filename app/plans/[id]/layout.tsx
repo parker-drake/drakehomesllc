@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
     if (error || !plan) {
       return {
-        title: 'Plan Not Found | Drake Homes LLC',
+        title: 'Plan Not Found',
         description: 'This house plan is no longer available.',
         robots: 'noindex, nofollow',
       }
@@ -35,8 +35,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   } catch (error) {
     console.error('Error generating plan metadata:', error)
     return {
-      title: "House Plan Details | Drake Homes LLC",
-      description: "View detailed information about this custom house plan from Drake Homes LLC.",
+      title: 'House Plan Details',
+      description: 'View detailed information about this custom house plan from Drake Homes LLC.',
     }
   }
 }
