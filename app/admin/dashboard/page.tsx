@@ -218,101 +218,119 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Main Content - 2 columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="space-y-6">
-            {/* Status Pipeline */}
-            <Card>
-              <CardContent className="p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Status Breakdown</h3>
-                <div className="space-y-3">
-                  {Object.entries(stats.statusBreakdown).map(([status, count]) => {
-                    const percentage = (count / stats.totalProperties) * 100
-                    return (
-                      <div key={status} className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
-                        <span className="text-sm text-gray-700 flex-1">{status}</span>
-                        <span className="text-sm font-medium text-gray-900">{count}</span>
-                        <span className="text-xs text-gray-500 w-10 text-right">{percentage.toFixed(0)}%</span>
-                      </div>
-                    )
-                  })}
-                  {Object.keys(stats.statusBreakdown).length === 0 && (
-                    <p className="text-gray-400 text-sm text-center py-2">No properties yet</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Timeline */}
-            <Card>
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-gray-900">Upcoming Completions</h3>
-                  <Link href="/admin/workflow" className="text-xs text-red-600 hover:text-red-700">
-                    View Workflow →
-                  </Link>
-                </div>
-                <div className="space-y-2">
-                  {stats.completionTimeline.slice(0, 4).map((item, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-500 w-16">{item.month}</span>
-                      <div className="flex-1 bg-gray-100 rounded-full h-1.5">
-                        <div
-                          className="h-1.5 rounded-full bg-red-500"
-                          style={{ width: `${Math.min((item.count / 3) * 100, 100)}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-medium text-gray-700 w-4">{item.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column - Recent Properties */}
+        {/* Main Content - 3 columns */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Status Breakdown */}
           <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-900">Recent Properties</h3>
-                <Link href="/admin/properties" className="text-xs text-red-600 hover:text-red-700">
-                  View All →
-                </Link>
-              </div>
-              
+            <CardContent className="p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Status Breakdown</h3>
               <div className="space-y-2">
-                {stats.recentProperties.slice(0, 5).map((property) => (
-                  <div key={property.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                    <div className={`w-1.5 h-8 rounded-full ${getStatusColor(property.status)}`} />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 text-sm truncate">{property.title}</h4>
-                      <p className="text-xs text-gray-500 truncate">{property.location}</p>
+                {Object.entries(stats.statusBreakdown).map(([status, count]) => {
+                  const percentage = (count / stats.totalProperties) * 100
+                  return (
+                    <div key={status} className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(status)}`} />
+                      <span className="text-sm text-gray-700 flex-1 truncate">{status}</span>
+                      <span className="text-sm font-medium text-gray-900">{count}</span>
+                      <span className="text-xs text-gray-400 w-8 text-right">{percentage.toFixed(0)}%</span>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900 text-sm">{property.price}</p>
-                      <p className="text-xs text-gray-500">{property.status.split(' ')[0]}</p>
-                    </div>
-                  </div>
-                ))}
-                
-                {stats.recentProperties.length === 0 && (
-                  <div className="text-center py-8">
-                    <Home className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-400 text-sm">No properties yet</p>
-                    <Button asChild size="sm" className="mt-3 bg-red-600 hover:bg-red-700">
-                      <Link href="/admin/properties">
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Property
-                      </Link>
-                    </Button>
-                  </div>
+                  )
+                })}
+                {Object.keys(stats.statusBreakdown).length === 0 && (
+                  <p className="text-gray-400 text-sm text-center py-2">No data</p>
                 )}
               </div>
             </CardContent>
           </Card>
+
+          {/* Upcoming Completions */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-900">Completions</h3>
+                <Link href="/admin/workflow" className="text-xs text-red-600 hover:text-red-700">
+                  Workflow →
+                </Link>
+              </div>
+              <div className="space-y-2">
+                {stats.completionTimeline.slice(0, 4).map((item, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 w-14 flex-shrink-0">{item.month}</span>
+                    <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+                      <div
+                        className="h-1.5 rounded-full bg-red-500"
+                        style={{ width: `${Math.min((item.count / 3) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium text-gray-600 w-3">{item.count}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</h3>
+              <div className="space-y-2">
+                <Button asChild size="sm" className="w-full bg-green-600 hover:bg-green-700">
+                  <Link href="/admin/selection-wizard">
+                    <Plus className="w-4 h-4 mr-1" />
+                    New Selection Book
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="w-full">
+                  <Link href="/admin/properties">
+                    <Home className="w-4 h-4 mr-1" />
+                    Add Property
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Recent Properties - Full Width */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-900">Recent Properties</h3>
+              <Link href="/admin/properties" className="text-xs text-red-600 hover:text-red-700">
+                View All →
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {stats.recentProperties.slice(0, 6).map((property) => (
+                <div key={property.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                  <div className={`w-1 h-10 rounded-full flex-shrink-0 ${getStatusColor(property.status)}`} />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 text-sm truncate">{property.title}</h4>
+                    <p className="text-xs text-gray-500 truncate">{property.location}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-semibold text-gray-900 text-sm">{property.price}</p>
+                    <p className="text-xs text-gray-500">{property.status.split(' ')[0]}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {stats.recentProperties.length === 0 && (
+              <div className="text-center py-6">
+                <Home className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-400 text-sm">No properties yet</p>
+                <Button asChild size="sm" className="mt-3 bg-red-600 hover:bg-red-700">
+                  <Link href="/admin/properties">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Property
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
