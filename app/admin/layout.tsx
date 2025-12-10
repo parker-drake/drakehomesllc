@@ -27,6 +27,20 @@ import {
   Printer
 } from "lucide-react"
 
+// CSS to hide main site header/footer on admin pages
+const adminStyles = `
+  body > div > header,
+  body > div > footer,
+  body header:not(.admin-header),
+  body footer:not(.admin-footer) {
+    display: none !important;
+  }
+  body > div > main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+`
+
 interface NavItem {
   name: string
   href: string
@@ -128,20 +142,30 @@ export default function AdminLayout({
 
   // Show just children for login page
   if (isLoginPage) {
-    return <>{children}</>
+    return (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: adminStyles }} />
+        {children}
+      </>
+    )
   }
 
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-      </div>
+      <>
+        <style dangerouslySetInnerHTML={{ __html: adminStyles }} />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+        </div>
+      </>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <style dangerouslySetInnerHTML={{ __html: adminStyles }} />
+      <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
@@ -290,6 +314,7 @@ export default function AdminLayout({
         </main>
       </div>
     </div>
+    </>
   )
 }
 
