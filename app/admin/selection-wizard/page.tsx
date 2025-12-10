@@ -1,6 +1,8 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,7 +18,9 @@ import {
   Circle,
   Plus,
   Printer,
-  Download
+  Download,
+  List,
+  Loader2
 } from "lucide-react"
 
 // Types for the Selection Book
@@ -655,9 +659,14 @@ const defaultCategories: SelectionCategory[] = [
 ]
 
 export default function SelectionWizardPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const editId = searchParams.get('id')
+  
   const [plans, setPlans] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
   const [currentStep, setCurrentStep] = useState(0)
+  const [selectionBookId, setSelectionBookId] = useState<string | null>(null)
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     date: new Date().toISOString().split('T')[0],
     customerName: '',
@@ -675,6 +684,12 @@ export default function SelectionWizardPage() {
     fetchPlans()
   }, [])
 
+  useEffect(() => {
+    if (editId) {
+      loadSelectionBook(editId)
+    }
+  }, [editId])
+
   const fetchPlans = async () => {
     try {
       const response = await fetch('/api/plans')
@@ -684,6 +699,71 @@ export default function SelectionWizardPage() {
       }
     } catch (error) {
       console.error('Error fetching plans:', error)
+    } finally {
+      if (!editId) setLoading(false)
+    }
+  }
+
+  const loadSelectionBook = async (id: string) => {
+    try {
+      const response = await fetch(`/api/selection-books/${id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setSelectionBookId(data.id)
+        setCustomerInfo({
+          date: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+          customerName: data.customer_name || '',
+          phoneNumber: data.customer_phone || '',
+          email: data.customer_email || '',
+          jobAddress: data.job_address || '',
+          housePlan: data.house_plan_id || ''
+        })
+        setGeneralNotes(data.notes || '')
+        
+        // Restore selections if they exist
+        if (data.selections && typeof data.selections === 'object') {
+          setCategories(prev => {
+            // Merge saved selections with default structure
+            return prev.map(cat => {
+              const savedCat = data.selections[cat.id]
+              if (!savedCat) return cat
+              
+              return {
+                ...cat,
+                groups: cat.groups.map(group => {
+                  const savedGroup = savedCat.groups?.find((g: any) => g.id === group.id)
+                  if (!savedGroup) return group
+                  
+                  return {
+                    ...group,
+                    textValue: savedGroup.textValue || group.textValue,
+                    options: group.options.map(opt => {
+                      const savedOpt = savedGroup.options?.find((o: any) => o.id === opt.id)
+                      if (!savedOpt) return opt
+                      return { ...opt, checked: savedOpt.checked, textValue: savedOpt.textValue }
+                    })
+                  }
+                }),
+                upgrades: cat.upgrades?.map(group => {
+                  const savedGroup = savedCat.upgrades?.find((g: any) => g.id === group.id)
+                  if (!savedGroup) return group
+                  
+                  return {
+                    ...group,
+                    options: group.options.map(opt => {
+                      const savedOpt = savedGroup.options?.find((o: any) => o.id === opt.id)
+                      if (!savedOpt) return opt
+                      return { ...opt, checked: savedOpt.checked, textValue: savedOpt.textValue }
+                    })
+                  }
+                })
+              }
+            })
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error loading selection book:', error)
     } finally {
       setLoading(false)
     }
@@ -788,69 +868,107 @@ export default function SelectionWizardPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      // Compile all selections
-      const selections = categories.flatMap(cat => {
-        const catSelections: any[] = []
-        
-        const processGroup = (group: SelectionGroup) => {
-          group.options.forEach(opt => {
-            if (opt.checked) {
-              catSelections.push({
-                category: cat.name,
-                group: group.title,
-                option: opt.label,
-                value: opt.value,
-                textValue: opt.textValue || '',
-                price: opt.price || 0,
-                isUpgrade: opt.isUpgrade || false
-              })
-            }
-          })
-          if (group.textValue) {
-            catSelections.push({
-              category: cat.name,
-              group: group.title,
-              option: group.textLabel || 'Value',
-              value: group.textValue,
-              textValue: group.textValue,
-              price: 0,
-              isUpgrade: false
-            })
-          }
+      // Build selections object keyed by category ID
+      const selectionsObject: any = {}
+      categories.forEach(cat => {
+        selectionsObject[cat.id] = {
+          name: cat.name,
+          section: cat.section,
+          groups: cat.groups.map(group => ({
+            id: group.id,
+            title: group.title,
+            textValue: group.textValue,
+            options: group.options.map(opt => ({
+              id: opt.id,
+              label: opt.label,
+              checked: opt.checked,
+              textValue: opt.textValue,
+              price: opt.price,
+              isUpgrade: opt.isUpgrade
+            }))
+          })),
+          upgrades: cat.upgrades?.map(group => ({
+            id: group.id,
+            title: group.title,
+            options: group.options.map(opt => ({
+              id: opt.id,
+              label: opt.label,
+              checked: opt.checked,
+              textValue: opt.textValue,
+              price: opt.price,
+              isUpgrade: opt.isUpgrade
+            }))
+          }))
         }
-        
-        cat.groups.forEach(processGroup)
-        cat.upgrades?.forEach(processGroup)
-        
-        return catSelections
       })
 
+      // Calculate total upgrades price
+      let totalUpgradesPrice = 0
+      categories.forEach(cat => {
+        cat.upgrades?.forEach(group => {
+          group.options.forEach(opt => {
+            if (opt.checked && opt.price) {
+              totalUpgradesPrice += opt.price
+            }
+          })
+        })
+      })
+
+      const selectedPlan = plans.find(p => p.id === customerInfo.housePlan)
+      
       const payload = {
-        customerInfo,
-        selections,
-        generalNotes,
-        totalUpgradesPrice: selections
-          .filter(s => s.isUpgrade)
-          .reduce((sum, s) => sum + (s.price || 0), 0)
+        customer_name: customerInfo.customerName,
+        customer_email: customerInfo.email,
+        customer_phone: customerInfo.phoneNumber,
+        job_address: customerInfo.jobAddress,
+        house_plan: selectedPlan?.title || '',
+        house_plan_id: customerInfo.housePlan || null,
+        selections: selectionsObject,
+        notes: generalNotes,
+        total_upgrades_price: totalUpgradesPrice,
+        created_by: 'admin'
       }
 
-      console.log('Saving selection book:', payload)
-      
-      // For now, just log it - we'll add the API endpoint next
-      // const response = await fetch('/api/selection-books', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(payload)
-      // })
+      let response
+      if (selectionBookId) {
+        // Update existing
+        response = await fetch(`/api/selection-books/${selectionBookId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+      } else {
+        // Create new
+        response = await fetch('/api/selection-books', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+      }
 
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      if (response.ok) {
+        const data = await response.json()
+        if (!selectionBookId && data.selectionBook?.id) {
+          setSelectionBookId(data.selectionBook.id)
+          // Update URL without reload
+          window.history.replaceState({}, '', `/admin/selection-wizard?id=${data.selectionBook.id}`)
+        }
+        setSaved(true)
+        setTimeout(() => setSaved(false), 3000)
+      } else {
+        throw new Error('Failed to save')
+      }
     } catch (error) {
       console.error('Error saving:', error)
       alert('Error saving selection book')
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleExportPDF = () => {
+    // Open print dialog which can be saved as PDF
+    window.print()
   }
 
   const renderCustomerInfoStep = () => (
@@ -865,7 +983,7 @@ export default function SelectionWizardPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Customer Name</label>
           <Input
             type="text"
             value={customerInfo.customerName}
@@ -901,7 +1019,7 @@ export default function SelectionWizardPage() {
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">House Plan *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">House Plan</label>
           <select
             value={customerInfo.housePlan}
             onChange={(e) => setCustomerInfo({ ...customerInfo, housePlan: e.target.value })}
@@ -1110,9 +1228,19 @@ export default function SelectionWizardPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Selection Book</h1>
-        <p className="text-gray-600">Complete home customization selections</p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {selectionBookId ? 'Edit Selection Book' : 'New Selection Book'}
+          </h1>
+          <p className="text-gray-600">Complete home customization selections</p>
+        </div>
+        <Button variant="outline" asChild>
+          <Link href="/admin/selection-books">
+            <List className="w-4 h-4 mr-2" />
+            View All
+          </Link>
+        </Button>
       </div>
 
       {/* Progress Steps */}
@@ -1191,7 +1319,7 @@ export default function SelectionWizardPage() {
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={saving || !customerInfo.customerName}
+                disabled={saving}
                 className="bg-red-600 hover:bg-red-700"
               >
                 {saving ? (

@@ -38,7 +38,32 @@ ADD COLUMN IF NOT EXISTS created_by VARCHAR(255),  -- staff member who created i
 ADD COLUMN IF NOT EXISTS total_upgrades_price DECIMAL(10,2) DEFAULT 0;
 
 -- =====================================================
--- 5. CREATE SELECTION BOOK TEMPLATES TABLE (optional - for saving common setups)
+-- 5. CREATE SELECTION BOOKS TABLE (main table for saved selections)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS selection_books (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_name VARCHAR(255),
+  customer_email VARCHAR(255),
+  customer_phone VARCHAR(50),
+  job_address TEXT,
+  house_plan VARCHAR(255),
+  house_plan_id UUID,
+  selections JSONB NOT NULL DEFAULT '{}',  -- all selections stored as JSON
+  notes TEXT,
+  total_upgrades_price DECIMAL(10,2) DEFAULT 0,
+  status VARCHAR(50) DEFAULT 'draft',  -- draft, submitted, in_progress, completed
+  created_by VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_selection_books_status ON selection_books(status);
+CREATE INDEX IF NOT EXISTS idx_selection_books_customer ON selection_books(customer_name);
+CREATE INDEX IF NOT EXISTS idx_selection_books_created ON selection_books(created_at DESC);
+
+-- =====================================================
+-- 6. CREATE SELECTION BOOK TEMPLATES TABLE (optional - for saving common setups)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS selection_book_templates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

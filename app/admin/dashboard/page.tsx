@@ -417,12 +417,26 @@ export default function AdminDashboard() {
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                 <div className="space-y-3">
-                  <Button asChild className="w-full justify-start bg-green-600 hover:bg-green-700">
-                    <Link href="/admin/selection-wizard">
-                      <FileText className="w-4 h-4 mr-2" />
-                      Selection Book
-                    </Link>
-                  </Button>
+                  {/* Selection Book Section */}
+                  <div className="pb-3 border-b border-gray-200">
+                    <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Selection Book</p>
+                    <div className="space-y-2">
+                      <Button asChild className="w-full justify-start bg-green-600 hover:bg-green-700">
+                        <Link href="/admin/selection-wizard">
+                          <Plus className="w-4 h-4 mr-2" />
+                          New Selection Book
+                        </Link>
+                      </Button>
+                      <Button variant="outline" asChild className="w-full justify-start">
+                        <Link href="/admin/selection-books">
+                          <FileText className="w-4 h-4 mr-2" />
+                          View All Selection Books
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Properties Section */}
                   <Button asChild className="w-full justify-start bg-red-600 hover:bg-red-700">
                     <Link href="/admin/properties">
                       <Plus className="w-4 h-4 mr-2" />
