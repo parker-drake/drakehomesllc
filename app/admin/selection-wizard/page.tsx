@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -658,7 +658,7 @@ const defaultCategories: SelectionCategory[] = [
   },
 ]
 
-export default function SelectionWizardPage() {
+function SelectionWizardContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const editId = searchParams.get('id')
@@ -1362,6 +1362,22 @@ export default function SelectionWizardPage() {
         </div>
       )}
     </div>
+  )
+}
+
+// Wrapper component with Suspense for useSearchParams
+export default function SelectionWizardPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Selection Wizard...</p>
+        </div>
+      </div>
+    }>
+      <SelectionWizardContent />
+    </Suspense>
   )
 }
 
