@@ -1280,7 +1280,7 @@ export default function AdminProperties() {
   const updatePropertyInline = async (id: string, field: string, value: any) => {
     try {
       const response = await fetch(`/api/properties/${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -1296,6 +1296,8 @@ export default function AdminProperties() {
           p.id === id ? { ...p, [field]: value } : p
         ))
       } else {
+        const error = await response.json()
+        console.error('Update failed:', error)
         alert('Failed to update property')
       }
     } catch (error) {

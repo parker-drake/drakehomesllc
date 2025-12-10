@@ -188,6 +188,72 @@ export async function PUT(
   }
 }
 
+// PATCH /api/properties/[id] - Partial update a property (for inline edits)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await request.json()
+    
+    // Only update the fields that are provided
+    const updateData: any = {}
+    
+    // List of allowed fields for partial update
+    const allowedFields = [
+      'title', 'price', 'location', 'beds', 'baths', 'sqft', 'main_image',
+      'status', 'availability_status', 'description', 'features', 'completion_date',
+      'latitude', 'longitude', 'lot_size', 'year_built', 'property_type',
+      'garage_spaces', 'heating_cooling', 'flooring_type', 'school_district',
+      'hoa_fee', 'utilities_included', 'exterior_materials'
+    ]
+    
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        // Handle numeric fields
+        if (['beds', 'baths', 'year_built', 'garage_spaces'].includes(field) && body[field] !== null) {
+          updateData[field] = parseInt(body[field])
+        } else if (['latitude', 'longitude'].includes(field) && body[field] !== null && body[field] !== '') {
+          updateData[field] = parseFloat(body[field].toString())
+        } else {
+          updateData[field] = body[field]
+        }
+      }
+    }
+    
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: 'No valid fields to update' },
+        { status: 400 }
+      )
+    }
+
+    const { data: property, error } = await supabaseAdmin
+      .from('properties')
+      .update(updateData)
+      .eq('id', params.id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json(
+        { error: 'Failed to update property', details: error.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json(property)
+  } catch (error) {
+    console.error('Error updating property:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json(
+      { error: 'Failed to update property', details: errorMessage },
+      { status: 500 }
+    )
+  }
+}
+
 // DELETE /api/properties/[id] - Delete a property
 export async function DELETE(
   request: NextRequest,
