@@ -417,6 +417,12 @@ export default function AdminDashboard() {
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                 <div className="space-y-3">
+                  <Button asChild className="w-full justify-start bg-green-600 hover:bg-green-700">
+                    <Link href="/admin/selection-wizard">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Selection Book
+                    </Link>
+                  </Button>
                   <Button asChild className="w-full justify-start bg-red-600 hover:bg-red-700">
                     <Link href="/admin/properties">
                       <Plus className="w-4 h-4 mr-2" />
