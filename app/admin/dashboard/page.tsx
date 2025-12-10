@@ -9,13 +9,8 @@ import {
   Plus, 
   Home, 
   DollarSign, 
-  MapPin, 
   TrendingUp, 
-  Clock,
-  BarChart3,
-  PieChart,
-  Calendar,
-  ArrowUpRight
+  Clock
 } from "lucide-react"
 
 interface Property {
@@ -157,147 +152,155 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="mb-8">
+        <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Overview of your property portfolio</p>
+          <p className="text-gray-500 text-sm">Overview of your property portfolio</p>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Key Metrics - 4 columns */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
-            <CardContent className="p-6 h-24 flex items-center">
-              <div className="flex items-center justify-between w-full">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Properties</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalProperties}</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Properties</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{stats.totalProperties}</p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full flex-shrink-0">
-                  <Home className="w-6 h-6 text-blue-600" />
+                <div className="bg-blue-50 p-2 rounded-lg">
+                  <Home className="w-5 h-5 text-blue-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6 h-24 flex items-center">
-              <div className="flex items-center justify-between w-full">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Average Price</p>
-                  <p className="text-3xl font-bold text-gray-900">{formatPrice(stats.averagePrice)}</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Avg Price</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatPrice(stats.averagePrice)}</p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full flex-shrink-0">
-                  <DollarSign className="w-6 h-6 text-green-600" />
+                <div className="bg-green-50 p-2 rounded-lg">
+                  <DollarSign className="w-5 h-5 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6 h-24 flex items-center">
-              <div className="flex items-center justify-between w-full">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Move-In Ready</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.statusBreakdown["Move-In Ready"] || 0}</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Move-In Ready</p>
+                  <p className="text-2xl font-bold text-green-600 mt-1">{stats.statusBreakdown["Move-In Ready"] || 0}</p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full flex-shrink-0">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
+                <div className="bg-green-50 p-2 rounded-lg">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6 h-24 flex items-center">
-              <div className="flex items-center justify-between w-full">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Under Construction</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.statusBreakdown["Under Construction"] || 0}</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">In Progress</p>
+                  <p className="text-2xl font-bold text-orange-600 mt-1">{stats.statusBreakdown["Under Construction"] || 0}</p>
                 </div>
-                <div className="bg-orange-100 p-3 rounded-full flex-shrink-0">
-                  <Clock className="w-6 h-6 text-orange-600" />
+                <div className="bg-orange-50 p-2 rounded-lg">
+                  <Clock className="w-5 h-5 text-orange-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Status Pipeline */}
-          <Card className="lg:col-span-2">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Property Status Pipeline</h3>
-                <PieChart className="w-5 h-5 text-gray-400" />
-              </div>
-              
-              <div className="space-y-4">
-                {Object.entries(stats.statusBreakdown).map(([status, count]) => {
-                  const percentage = (count / stats.totalProperties) * 100
-                  return (
-                    <div key={status} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Badge className={`${getStatusColor(status)} text-white`}>
-                          {status}
-                        </Badge>
-                        <span className="text-sm text-gray-600">{count} properties</span>
+        {/* Main Content - 2 columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Status Pipeline */}
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Status Breakdown</h3>
+                <div className="space-y-3">
+                  {Object.entries(stats.statusBreakdown).map(([status, count]) => {
+                    const percentage = (count / stats.totalProperties) * 100
+                    return (
+                      <div key={status} className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
+                        <span className="text-sm text-gray-700 flex-1">{status}</span>
+                        <span className="text-sm font-medium text-gray-900">{count}</span>
+                        <span className="text-xs text-gray-500 w-10 text-right">{percentage.toFixed(0)}%</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${getStatusColor(status)}`}
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium text-gray-900 w-12">
-                          {percentage.toFixed(0)}%
-                        </span>
+                    )
+                  })}
+                  {Object.keys(stats.statusBreakdown).length === 0 && (
+                    <p className="text-gray-400 text-sm text-center py-2">No properties yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Timeline */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900">Upcoming Completions</h3>
+                  <Link href="/admin/workflow" className="text-xs text-red-600 hover:text-red-700">
+                    View Workflow →
+                  </Link>
+                </div>
+                <div className="space-y-2">
+                  {stats.completionTimeline.slice(0, 4).map((item, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <span className="text-xs text-gray-500 w-16">{item.month}</span>
+                      <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+                        <div
+                          className="h-1.5 rounded-full bg-red-500"
+                          style={{ width: `${Math.min((item.count / 3) * 100, 100)}%` }}
+                        />
                       </div>
+                      <span className="text-xs font-medium text-gray-700 w-4">{item.count}</span>
                     </div>
-                  )
-                })}
-                
-                {Object.keys(stats.statusBreakdown).length === 0 && (
-                  <p className="text-gray-500 text-center py-4">No properties yet</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Recent Properties */}
+          {/* Right Column - Recent Properties */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Recent Properties</h3>
-                <Link href="/admin/properties" className="text-sm text-red-600 hover:text-red-700 flex items-center">
-                  View all <ArrowUpRight className="w-3 h-3 ml-1" />
+                <h3 className="text-sm font-semibold text-gray-900">Recent Properties</h3>
+                <Link href="/admin/properties" className="text-xs text-red-600 hover:text-red-700">
+                  View All →
                 </Link>
               </div>
               
-              <div className="space-y-3">
-                {stats.recentProperties.slice(0, 4).map((property) => (
-                  <div key={property.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div className="space-y-2">
+                {stats.recentProperties.slice(0, 5).map((property) => (
+                  <div key={property.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className={`w-1.5 h-8 rounded-full ${getStatusColor(property.status)}`} />
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-gray-900 text-sm truncate">{property.title}</h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                        <span className="text-xs text-gray-600 truncate">{property.location}</span>
-                      </div>
+                      <p className="text-xs text-gray-500 truncate">{property.location}</p>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-medium text-green-600 text-sm">{property.price}</p>
-                      <Badge className={`${getStatusColor(property.status)} text-white text-xs mt-1`}>
-                        {property.status.split(' ')[0]}
-                      </Badge>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900 text-sm">{property.price}</p>
+                      <p className="text-xs text-gray-500">{property.status.split(' ')[0]}</p>
                     </div>
                   </div>
                 ))}
                 
                 {stats.recentProperties.length === 0 && (
-                  <div className="text-center py-6">
-                    <Home className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500 text-sm">No properties yet</p>
+                  <div className="text-center py-8">
+                    <Home className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">No properties yet</p>
                     <Button asChild size="sm" className="mt-3 bg-red-600 hover:bg-red-700">
                       <Link href="/admin/properties">
                         <Plus className="w-4 h-4 mr-1" />
@@ -306,70 +309,6 @@ export default function AdminDashboard() {
                     </Button>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Completion Timeline */}
-          <Card className="lg:col-span-2">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Completion Timeline</h3>
-                <Link href="/admin/workflow" className="text-sm text-red-600 hover:text-red-700 flex items-center">
-                  Workflow <ArrowUpRight className="w-3 h-3 ml-1" />
-                </Link>
-              </div>
-              
-              <div className="space-y-3">
-                {stats.completionTimeline.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">{item.month}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="h-2 rounded-full bg-red-500"
-                          style={{ width: `${Math.min((item.count / 3) * 100, 100)}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900 w-8">
-                        {item.count}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Stats */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Total Portfolio Value</span>
-                  <span className="font-bold text-green-600">{formatPrice(calculateTotalPortfolioValue())}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Completion Rate</span>
-                  <span className="font-bold text-blue-600">
-                    {stats.totalProperties > 0 ? Math.round(((stats.statusBreakdown["Move-In Ready"] || 0) / stats.totalProperties) * 100) : 0}%
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">In Pipeline</span>
-                  <span className="font-bold text-purple-600">
-                    {(stats.statusBreakdown["Under Construction"] || 0) + (stats.statusBreakdown["Pre-Construction"] || 0)}
-                  </span>
-                </div>
-                <div className="pt-4 border-t">
-                  <Button variant="outline" asChild className="w-full">
-                    <Link href="/admin/analytics">
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      View Analytics
-                    </Link>
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>
