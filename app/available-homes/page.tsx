@@ -123,6 +123,20 @@ export default function AvailableHomes() {
       filtered = filtered.filter(p => p.status === statusFilter)
     }
 
+    // Sort by availability: Available first, then Under Contract, Coming Soon, then Sold last
+    const availabilityOrder: { [key: string]: number } = {
+      'Available': 1,
+      'Under Contract': 2,
+      'Coming Soon': 3,
+      'Sold': 4
+    }
+    
+    filtered.sort((a, b) => {
+      const orderA = availabilityOrder[a.availability_status || 'Available'] || 5
+      const orderB = availabilityOrder[b.availability_status || 'Available'] || 5
+      return orderA - orderB
+    })
+
     setFilteredProperties(filtered)
   }
 
